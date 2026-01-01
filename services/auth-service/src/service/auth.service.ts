@@ -8,6 +8,10 @@ export async function register(input: RegisterInput) {
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
 
+  if (!name) {
+    throw new AppError("VALIDATION_ERROR", 400, "Name is required.");
+  }
+
   const existing = await findUserByEmail(email);
   if (existing) {
     throw new AppError(
