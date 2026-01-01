@@ -1,0 +1,1 @@
+# kada_mandiya_microservice
