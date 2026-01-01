@@ -29,15 +29,6 @@ const AUTH_SERVICE_URL =
   process.env.AUTH_SERVICE_URL ?? "http://localhost:4000";
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 
-// Helper: re-stream parsed JSON body to target (needed because express.json() consumes the stream)
-function restreamBody(proxyReq: any, req: express.Request) {
-  if (!req.body || !Object.keys(req.body).length) return;
-  const bodyData = JSON.stringify(req.body);
-  proxyReq.setHeader("Content-Type", "application/json");
-  proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-  proxyReq.write(bodyData);
-}
-
 // Minimal proxy: /auth/* -> auth-service (strip /auth prefix)
 app.use("/auth", async (req, res) => {
   const correlationId = (req as any).correlationId;
@@ -84,11 +75,9 @@ app.use("/auth", async (req, res) => {
     return res.send(buffer);
   } catch (err) {
     console.error("Proxy error to auth-service:", err);
-    return res
-      .status(502)
-      .json({
-        error: { code: "BAD_GATEWAY", message: "Auth service unreachable" },
-      });
+    return res.status(502).json({
+      error: { code: "BAD_GATEWAY", message: "Auth service unreachable" },
+    });
   }
 });
 
@@ -99,6 +88,60 @@ app.get("/protected", isAuthenticated({ secret: JWT_SECRET }), (req, res) => {
     user: (req as any).user,
     correlationId: (req as any).correlationId,
   });
+});
+
+const USER_SERVICE_URL =
+  process.env.USER_SERVICE_URL ?? "http://localhost:4002";
+app.use("/users", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
+  const correlationId = (req as any).correlationId;
+  const targetPath = req.originalUrl.replace(/^\/users/, "") || "/";
+  const url = `${USER_SERVICE_URL}${targetPath}`;
+
+  try {
+    const headers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(req.headers)) {
+      const lower = key.toLowerCase();
+      if (
+        lower === "host" ||
+        lower === "content-length" ||
+        lower === "transfer-encoding"
+      )
+        continue;
+      if (Array.isArray(value)) {
+        headers[key] = value.join(", ");
+      } else if (value !== undefined) {
+        headers[key] = value as string;
+      }
+    }
+    headers["x-correlation-id"] = correlationId;
+    headers["x-user-id"] = (req as any).user?.id ?? "";
+    if ((req as any).user?.email) headers["x-user-email"] = (req as any).user.email;
+
+    const hasBody = !["GET", "HEAD"].includes(req.method.toUpperCase());
+    const body = hasBody && req.body ? JSON.stringify(req.body) : undefined;
+    if (body)
+      headers["content-type"] = headers["content-type"] ?? "application/json";
+
+    const upstream = await fetch(url, {
+      method: req.method,
+      headers,
+      body,
+    });
+
+    res.status(upstream.status);
+    upstream.headers.forEach((value, key) => {
+      if (key.toLowerCase() === "content-length") return;
+      res.setHeader(key, value);
+    });
+
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    return res.send(buffer);
+  } catch (err) {
+    console.error("Proxy error to user-service:", err);
+    return res.status(502).json({
+      error: { code: "BAD_GATEWAY", message: "User service unreachable" },
+    });
+  }
 });
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4001;
