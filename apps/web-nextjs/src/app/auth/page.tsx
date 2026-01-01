@@ -1,22 +1,28 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { Suspense, useEffect, useMemo, useState } from "react"
-import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { ArrowLeft, Loader2, LogIn, ShieldCheck, UserPlus } from "lucide-react"
-import { toast } from "sonner"
+import type React from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Loader2, LogIn, ShieldCheck, UserPlus } from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ThemeToggle } from "@/components/theme-toggle";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001"
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
 
-type Mode = "login" | "register"
+type Mode = "login" | "register";
 
 export default function AuthPage() {
   return (
@@ -29,61 +35,73 @@ export default function AuthPage() {
     >
       <AuthShell />
     </Suspense>
-  )
+  );
 }
 
 function AuthShell() {
-  const params = useSearchParams()
+  const params = useSearchParams();
   const initialMode = useMemo<Mode>(() => {
-    return params.get("mode") === "register" ? "register" : "login"
-  }, [params])
+    return params.get("mode") === "register" ? "register" : "login";
+  }, [params]);
 
-  const [mode, setMode] = useState<Mode>(initialMode)
-  const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({ name: "", email: "", password: "" })
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
 
-  useEffect(() => setMode(initialMode), [initialMode])
+  useEffect(() => setMode(initialMode), [initialMode]);
 
   const handleChange =
     (key: "name" | "email" | "password") =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setForm((prev) => ({ ...prev, [key]: e.target.value }))
-    }
+      setForm((prev) => ({ ...prev, [key]: e.target.value }));
+    };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
-    const toastId = toast.loading(mode === "register" ? "Creating account..." : "Signing in...")
+    const toastId = toast.loading(
+      mode === "register" ? "Creating account..." : "Signing in..."
+    );
     try {
       const payload =
         mode === "register"
-          ? { name: form.name.trim(), email: form.email.trim(), password: form.password }
-          : { email: form.email.trim(), password: form.password }
+          ? {
+              name: form.name.trim(),
+              email: form.email.trim(),
+              password: form.password,
+            }
+          : { email: form.email.trim(), password: form.password };
 
       const res = await fetch(`${API_BASE}/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
+      });
 
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.error?.message ?? "Request failed")
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error?.message ?? "Request failed");
 
       if (mode === "login" && data?.accessToken) {
-        localStorage.setItem("accessToken", String(data.accessToken))
+        localStorage.setItem("accessToken", String(data.accessToken));
       }
 
-      toast.success(mode === "register" ? "Account created. Please log in." : "Welcome back.", {
-        id: toastId,
-      })
+      toast.success(
+        mode === "register"
+          ? "Account created. Please log in."
+          : "Welcome back.",
+        {
+          id: toastId,
+        }
+      );
 
-      if (mode === "register") setMode("login")
+      if (mode === "register") setMode("login");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong"
-      toast.error(message, { id: toastId })
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      toast.error(message, { id: toastId });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -117,10 +135,13 @@ function AuthShell() {
               {mode === "register" ? "Create your account" : "Welcome back"}
             </h1>
             <p className="text-muted-foreground">
-              Clean, fast sign-in for Kada Mandiya. Your token stays in the browser for testing.
+              Clean, fast sign-in for Kada Mandiya. Your token stays in the
+              browser for testing.
             </p>
             <div className="rounded-2xl border bg-background p-6 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">What you can do next</p>
+              <p className="font-medium text-foreground">
+                What you can do next
+              </p>
               <ul className="mt-3 list-disc space-y-1 pl-5">
                 <li>Register with name, email, password</li>
                 <li>Login and call protected routes via the API Gateway</li>
@@ -131,7 +152,9 @@ function AuthShell() {
 
           <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-2xl">{mode === "register" ? "Register" : "Login"}</CardTitle>
+              <CardTitle className="text-2xl">
+                {mode === "register" ? "Register" : "Login"}
+              </CardTitle>
               <CardDescription>
                 {mode === "register"
                   ? "Create your account to start exploring."
@@ -202,5 +225,5 @@ function AuthShell() {
         </main>
       </div>
     </div>
-  )
+  );
 }
