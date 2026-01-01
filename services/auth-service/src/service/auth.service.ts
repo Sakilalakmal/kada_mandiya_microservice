@@ -5,6 +5,7 @@ import { findUserByEmail, insertUser } from "../repositories/user.repo";
 import { LoginInput, RegisterInput } from "../schema/auth.schema";
 
 export async function register(input: RegisterInput) {
+  const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
 
   const existing = await findUserByEmail(email);
@@ -20,6 +21,7 @@ export async function register(input: RegisterInput) {
 
   return insertUser({
     id: randomUUID(),
+    name,
     email,
     passwordHash,
   });
@@ -46,5 +48,5 @@ export async function login(input: LoginInput) {
     );
   }
 
-  return { id: user.id, email: user.email };
+  return { id: user.id, name: user.name, email: user.email };
 }
