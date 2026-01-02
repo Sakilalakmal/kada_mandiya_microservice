@@ -3,6 +3,7 @@ import { AppError } from "../utils/errors";
 import { hashPassword, verifyPassword } from "../utils/password";
 import { findUserByEmail, insertUser } from "../repositories/user.repo";
 import { LoginInput, RegisterInput } from "../schema/auth.schema";
+import { getRolesByUserId, grantRoleToUser } from "../repositories/roles.repo";
 
 export async function register(input: RegisterInput) {
   const name = input.name.trim();
@@ -23,12 +24,18 @@ export async function register(input: RegisterInput) {
 
   const passwordHash = await hashPassword(input.password);
 
-  return insertUser({
+  const newUser = await insertUser({
     id: randomUUID(),
     name,
     email,
     passwordHash,
   });
+
+  await grantRoleToUser(newUser.id, "customer");
+
+  const roles = await getRolesByUserId(newUser.id);
+
+  return { id: newUser.id, name: newUser.name, email: newUser.email, roles };
 }
 
 export async function login(input: LoginInput) {
@@ -52,5 +59,7 @@ export async function login(input: LoginInput) {
     );
   }
 
-  return { id: user.id, name: user.name, email: user.email };
+  const roles = await getRolesByUserId(user.id);
+
+  return { id: user.id, name: user.name, email: user.email, roles };
 }

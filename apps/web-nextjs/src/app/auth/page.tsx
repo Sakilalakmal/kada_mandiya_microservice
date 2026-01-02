@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/hooks/use-auth";
 
 type Mode = "login" | "register";
 
@@ -39,6 +40,7 @@ export default function AuthPage() {
 function AuthShell() {
   const router = useRouter();
   const params = useSearchParams();
+  const { setAuthToken } = useAuth();
   const initialMode = useMemo<Mode>(() => {
     return params.get("mode") === "register" ? "register" : "login";
   }, [params]);
@@ -58,7 +60,7 @@ function AuthShell() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    if (mode === "login") localStorage.removeItem("accessToken");
+    if (mode === "login") setAuthToken(null);
 
     const toastId = toast.loading(
       mode === "register" ? "Creating account..." : "Signing in..."
@@ -85,7 +87,7 @@ function AuthShell() {
       if (mode === "login") {
         const token = data?.accessToken;
         if (!token) throw new Error("Login failed: missing access token.");
-        localStorage.setItem("accessToken", String(token));
+        setAuthToken(String(token));
       }
 
       toast.success(
@@ -105,7 +107,7 @@ function AuthShell() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";
-      if (mode === "login") localStorage.removeItem("accessToken");
+      if (mode === "login") setAuthToken(null);
       toast.error(message, { id: toastId });
     } finally {
       setLoading(false);

@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { UserRound } from "lucide-react";
 
-import { getAccessToken } from "@/lib/api";
 import {
   fetchMe,
   profileDisplayName,
@@ -12,6 +11,7 @@ import {
 } from "@/lib/user-profile";
 import { resolveProfileImageSrc } from "@/lib/profile-schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/use-auth";
 
 function initialsFromName(name: string) {
   const parts = name
@@ -32,7 +32,7 @@ function errorStatus(err: unknown): number | undefined {
 }
 
 export function UserNav() {
-  const token = getAccessToken();
+  const { token, setAuthToken } = useAuth();
 
   const { data: profile, isFetching } = useQuery<UserProfile | null>({
     queryKey: ["me", token],
@@ -42,9 +42,7 @@ export function UserNav() {
         return await fetchMe();
       } catch (err) {
         if (errorStatus(err) === 401) {
-          try {
-            window.localStorage.removeItem("accessToken");
-          } catch {}
+          setAuthToken(null);
           return null;
         }
         throw err;

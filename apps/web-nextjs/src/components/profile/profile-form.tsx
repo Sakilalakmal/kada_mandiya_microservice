@@ -9,13 +9,13 @@ import { Loader2, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { clearAccessToken, getAccessToken } from "@/lib/api";
 import {
   fetchMe,
   profileDisplayName,
   updateMe,
   type UserProfile,
 } from "@/lib/user-profile";
+import { clearToken, getToken } from "@/lib/auth";
 import {
   resolveProfileImageSrc,
   updateProfileSchema,
@@ -74,7 +74,7 @@ export function ProfileForm() {
     },
   });
 
-  const token = getAccessToken();
+  const token = getToken();
   const {
     data: profile,
     isLoading,
@@ -91,7 +91,7 @@ export function ProfileForm() {
             ? (err as Record<string, unknown>).status
             : undefined;
         if (status === 401) {
-          clearAccessToken();
+          clearToken();
           router.replace("/auth");
           router.refresh();
           throw err;
@@ -139,7 +139,7 @@ export function ProfileForm() {
           ? (err as Record<string, unknown>).status
           : undefined;
       if (status === 401) {
-        clearAccessToken();
+        clearToken();
         router.replace("/auth");
         router.refresh();
         return;
@@ -165,7 +165,7 @@ export function ProfileForm() {
           ? (err as Record<string, unknown>).status
           : undefined;
       if (status === 401) {
-        clearAccessToken();
+        clearToken();
         router.replace("/auth");
         router.refresh();
         return;
