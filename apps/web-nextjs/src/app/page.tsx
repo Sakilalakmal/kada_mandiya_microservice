@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowRight, ChevronRight } from "lucide-react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
+import { UserNav } from "@/components/user-nav"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -52,11 +53,12 @@ export default function Home() {
             <ThemeToggle />
             <Button
               asChild
-              variant="outline"
+              size="sm"
               className="border-white/20 bg-white/10 text-white hover:bg-white/20"
             >
-              <Link href="/auth">Sign in</Link>
+              <Link href="/auth?mode=register">Sign up</Link>
             </Button>
+            <UserNav />
           </div>
         </header>
 
