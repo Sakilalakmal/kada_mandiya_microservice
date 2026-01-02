@@ -3,7 +3,7 @@
 import type React from "react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, LogIn, ShieldCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +39,7 @@ export default function AuthPage() {
 }
 
 function AuthShell() {
+  const router = useRouter();
   const params = useSearchParams();
   const initialMode = useMemo<Mode>(() => {
     return params.get("mode") === "register" ? "register" : "login";
@@ -96,6 +97,10 @@ function AuthShell() {
       );
 
       if (mode === "register") setMode("login");
+      if (mode === "login") {
+        router.push("/");
+        router.refresh();
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";

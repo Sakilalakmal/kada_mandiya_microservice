@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { randomUUID } from "crypto";
+import type { Request } from "express";
+import { Readable } from "stream";
 import { isAuthenticated } from "@npmkadamandiya/auth";
 
 const app = express();
@@ -29,6 +31,31 @@ const AUTH_SERVICE_URL =
   process.env.AUTH_SERVICE_URL ?? "http://localhost:4000";
 const JWT_SECRET = process.env.JWT_SECRET ?? "dev-secret-change-me";
 
+function buildUpstreamBody(req: Request, headers: Record<string, string>) {
+  const method = req.method.toUpperCase();
+  if (["GET", "HEAD"].includes(method)) return undefined;
+
+  const contentType = String(req.headers["content-type"] ?? "");
+
+  if (contentType.includes("application/json")) {
+    const body = req.body ? JSON.stringify(req.body) : undefined;
+    if (body)
+      headers["content-type"] = headers["content-type"] ?? "application/json";
+    return body;
+  }
+
+  if (contentType.startsWith("multipart/form-data")) {
+    return req as unknown as Readable;
+  }
+
+  // Fallback: attempt to stream raw request (works when body was not consumed)
+  return req as unknown as Readable;
+}
+
+function needsDuplex(body: unknown) {
+  return typeof body === "object" && body !== null && "pipe" in body;
+}
+
 // Minimal proxy: /auth/* -> auth-service (strip /auth prefix)
 app.use("/auth", async (req, res) => {
   const correlationId = (req as any).correlationId;
@@ -54,15 +81,12 @@ app.use("/auth", async (req, res) => {
     }
     headers["x-correlation-id"] = correlationId;
 
-    const hasBody = !["GET", "HEAD"].includes(req.method.toUpperCase());
-    const body = hasBody && req.body ? JSON.stringify(req.body) : undefined;
-    if (body)
-      headers["content-type"] = headers["content-type"] ?? "application/json";
-
+    const body = buildUpstreamBody(req, headers);
     const upstream = await fetch(url, {
       method: req.method,
       headers,
-      body,
+      body: body as any,
+      ...(needsDuplex(body) ? { duplex: "half" as any } : {}),
     });
 
     res.status(upstream.status);
@@ -117,15 +141,12 @@ app.use("/users", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
     headers["x-user-id"] = (req as any).user?.id ?? "";
     if ((req as any).user?.email) headers["x-user-email"] = (req as any).user.email;
 
-    const hasBody = !["GET", "HEAD"].includes(req.method.toUpperCase());
-    const body = hasBody && req.body ? JSON.stringify(req.body) : undefined;
-    if (body)
-      headers["content-type"] = headers["content-type"] ?? "application/json";
-
+    const body = buildUpstreamBody(req, headers);
     const upstream = await fetch(url, {
       method: req.method,
       headers,
-      body,
+      body: body as any,
+      ...(needsDuplex(body) ? { duplex: "half" as any } : {}),
     });
 
     res.status(upstream.status);
