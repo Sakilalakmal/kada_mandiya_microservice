@@ -56,6 +56,20 @@ function needsDuplex(body: unknown) {
   return typeof body === "object" && body !== null && "pipe" in body;
 }
 
+async function fetchWithFallback(
+  primaryUrl: string,
+  fallbackUrl: string | null,
+  init: RequestInit
+) {
+  const primary = await fetch(primaryUrl, init);
+  if (primary.status !== 404 || !fallbackUrl) return primary;
+  try {
+    return await fetch(fallbackUrl, init);
+  } catch {
+    return primary;
+  }
+}
+
 // Minimal proxy: /auth/* -> auth-service (strip /auth prefix)
 app.use("/auth", async (req, res) => {
   const correlationId = (req as any).correlationId;
@@ -116,10 +130,13 @@ app.get("/protected", isAuthenticated({ secret: JWT_SECRET }), (req, res) => {
 
 const USER_SERVICE_URL =
   process.env.USER_SERVICE_URL ?? "http://localhost:4002";
+
+// The /users route must come BEFORE /me to ensure /users/me is handled correctly
 app.use("/users", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
   const correlationId = (req as any).correlationId;
   const targetPath = req.originalUrl.replace(/^\/users/, "") || "/";
   const url = `${USER_SERVICE_URL}${targetPath}`;
+  const fallbackUrl = `${USER_SERVICE_URL}/users${targetPath}`;
 
   try {
     const headers: Record<string, string> = {};
@@ -142,7 +159,7 @@ app.use("/users", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
     if ((req as any).user?.email) headers["x-user-email"] = (req as any).user.email;
 
     const body = buildUpstreamBody(req, headers);
-    const upstream = await fetch(url, {
+    const upstream = await fetchWithFallback(url, fallbackUrl, {
       method: req.method,
       headers,
       body: body as any,
@@ -159,6 +176,57 @@ app.use("/users", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
     return res.send(buffer);
   } catch (err) {
     console.error("Proxy error to user-service:", err);
+    return res.status(502).json({
+      error: { code: "BAD_GATEWAY", message: "User service unreachable" },
+    });
+  }
+});
+
+// Convenience alias: `/me` -> user-service `/me` (requires auth).
+// This comes AFTER /users so /users/me is handled correctly first
+app.use("/me", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
+  const correlationId = (req as any).correlationId;
+  const url = `${USER_SERVICE_URL}${req.originalUrl}`;
+  const fallbackUrl = `${USER_SERVICE_URL}/users${req.originalUrl}`;
+
+  try {
+    const headers: Record<string, string> = {};
+    for (const [key, value] of Object.entries(req.headers)) {
+      const lower = key.toLowerCase();
+      if (
+        lower === "host" ||
+        lower === "content-length" ||
+        lower === "transfer-encoding"
+      )
+        continue;
+      if (Array.isArray(value)) {
+        headers[key] = value.join(", ");
+      } else if (value !== undefined) {
+        headers[key] = value as string;
+      }
+    }
+    headers["x-correlation-id"] = correlationId;
+    headers["x-user-id"] = (req as any).user?.id ?? "";
+    if ((req as any).user?.email) headers["x-user-email"] = (req as any).user.email;
+
+    const body = buildUpstreamBody(req, headers);
+    const upstream = await fetchWithFallback(url, fallbackUrl, {
+      method: req.method,
+      headers,
+      body: body as any,
+      ...(needsDuplex(body) ? { duplex: "half" as any } : {}),
+    });
+
+    res.status(upstream.status);
+    upstream.headers.forEach((value, key) => {
+      if (key.toLowerCase() === "content-length") return;
+      res.setHeader(key, value);
+    });
+
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    return res.send(buffer);
+  } catch (err) {
+    console.error("Proxy error to user-service /me:", err);
     return res.status(502).json({
       error: { code: "BAD_GATEWAY", message: "User service unreachable" },
     });

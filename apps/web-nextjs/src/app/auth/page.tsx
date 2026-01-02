@@ -20,8 +20,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001";
-
 type Mode = "login" | "register";
 
 export default function AuthPage() {
@@ -60,6 +58,7 @@ function AuthShell() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    if (mode === "login") localStorage.removeItem("accessToken");
 
     const toastId = toast.loading(
       mode === "register" ? "Creating account..." : "Signing in..."
@@ -74,7 +73,7 @@ function AuthShell() {
             }
           : { email: form.email.trim(), password: form.password };
 
-      const res = await fetch(`${API_BASE}/auth/${mode}`, {
+      const res = await fetch(`/auth/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -83,8 +82,10 @@ function AuthShell() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error?.message ?? "Request failed");
 
-      if (mode === "login" && data?.accessToken) {
-        localStorage.setItem("accessToken", String(data.accessToken));
+      if (mode === "login") {
+        const token = data?.accessToken;
+        if (!token) throw new Error("Login failed: missing access token.");
+        localStorage.setItem("accessToken", String(token));
       }
 
       toast.success(
@@ -104,6 +105,7 @@ function AuthShell() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong";
+      if (mode === "login") localStorage.removeItem("accessToken");
       toast.error(message, { id: toastId });
     } finally {
       setLoading(false);

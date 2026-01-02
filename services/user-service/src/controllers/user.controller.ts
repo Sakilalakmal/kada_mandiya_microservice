@@ -33,8 +33,8 @@ const UpdateProfileSchema = z
       .string()
       .max(500)
       .optional()
-      .refine((v) => !v || /^https?:\/\//i.test(v) || v.startsWith("/uploads/"), {
-        message: "Must be a valid URL or /uploads path",
+      .refine((v) => !v || /^https?:\/\//i.test(v), {
+        message: "Must be a valid URL",
       }),
   })
   .strict()
@@ -110,38 +110,3 @@ export const updateMe = async (req: Request, res: Response) => {
     return res.status(500).json({ ok: false, message: "Server error" });
   }
 };
-
-export async function updateMyPhoto(req: Request, res: Response) {
-  try {
-    const userId = requireUserId(req, res);
-    if (!userId) return;
-    const email = req.header("x-user-email") ?? "";
-
-    const profile = await ensureProfile(userId, email);
-    if (!profile) {
-      return res.status(500).json({ ok: false, message: "Failed to create profile" });
-    }
-
-    const file = (req as Request & { file?: Express.Multer.File }).file;
-    if (!file) {
-      return res.status(400).json({
-        error: { code: "MISSING_FILE", message: "Missing photo file." },
-      });
-    }
-
-    const photoUrl = `/uploads/${file.filename}`;
-    const updated = await updateProfileByUserId(userId, {
-      profileImageUrl: photoUrl,
-    });
-
-    return res.json({
-      ok: true,
-      message: "Profile photo updated",
-      photoUrl,
-      profile: updated,
-    });
-  } catch (err) {
-    console.error("updateMyPhoto error:", err);
-    return res.status(500).json({ ok: false, message: "Server error" });
-  }
-}
