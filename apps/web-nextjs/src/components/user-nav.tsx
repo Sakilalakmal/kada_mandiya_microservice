@@ -24,6 +24,13 @@ function initialsFromName(name: string) {
   return (first + last).toUpperCase();
 }
 
+function errorStatus(err: unknown): number | undefined {
+  if (typeof err !== "object" || err === null) return undefined;
+  if (!("status" in err)) return undefined;
+  const status = (err as Record<string, unknown>).status;
+  return typeof status === "number" ? status : undefined;
+}
+
 export function UserNav() {
   const token = getAccessToken();
 
@@ -31,7 +38,17 @@ export function UserNav() {
     queryKey: ["me", token],
     queryFn: async () => {
       if (!token) return null;
-      return fetchMe();
+      try {
+        return await fetchMe();
+      } catch (err) {
+        if (errorStatus(err) === 401) {
+          try {
+            window.localStorage.removeItem("accessToken");
+          } catch {}
+          return null;
+        }
+        throw err;
+      }
     },
     enabled: !!token,
     staleTime: 5 * 60 * 1000,

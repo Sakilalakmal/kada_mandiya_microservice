@@ -54,7 +54,10 @@ export async function fetchMe(): Promise<UserProfile> {
   const data = (await res.json().catch(() => null)) as unknown;
 
   if (!res.ok) {
-    throw new Error(readErrorMessage(data) ?? "Request failed");
+    const message = readErrorMessage(data) ?? "Request failed";
+    const err = new Error(message) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
   }
 
   return data as UserProfile;
@@ -70,9 +73,14 @@ export async function updateMe(
   const data = (await res.json().catch(() => null)) as unknown;
 
   if (!res.ok) {
-    throw new Error(readErrorMessage(data) ?? "Request failed");
+    const message = readErrorMessage(data) ?? "Request failed";
+    console.error("updateMe failed:", { status: res.status, data });
+    const err = new Error(message) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
   }
 
+  // Backend returns { ok: true, message: string, profile: UserProfile }
   if (isRecord(data) && isRecord(data.profile)) return data.profile as UserProfile;
   return data as UserProfile;
 }

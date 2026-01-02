@@ -3,12 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Pencil, Upload } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { apiFetch, getAccessToken } from "@/lib/api";
+import { clearAccessToken, getAccessToken } from "@/lib/api";
 import {
   fetchMe,
   profileDisplayName,
@@ -20,6 +21,7 @@ import {
   updateProfileSchema,
   type UpdateProfileFormValues,
 } from "@/lib/profile-schema";
+import { UploadButton } from "@/lib/uploadthing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,8 +59,8 @@ function initialsFromName(name: string) {
 }
 
 export function ProfileForm() {
+  const router = useRouter();
   const queryClient = useQueryClient();
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const form = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -84,7 +86,19 @@ export function ProfileForm() {
       try {
         return await fetchMe();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to load profile");
+        const status =
+          typeof err === "object" && err !== null && "status" in err
+            ? (err as Record<string, unknown>).status
+            : undefined;
+        if (status === 401) {
+          clearAccessToken();
+          router.replace("/auth");
+          router.refresh();
+          throw err;
+        }
+        toast.error(
+          err instanceof Error ? err.message : "Failed to load profile"
+        );
         throw err;
       }
     },
@@ -120,6 +134,16 @@ export function ProfileForm() {
       toast.success("Profile updated");
     },
     onError: (err) => {
+      const status =
+        typeof err === "object" && err !== null && "status" in err
+          ? (err as Record<string, unknown>).status
+          : undefined;
+      if (status === 401) {
+        clearAccessToken();
+        router.replace("/auth");
+        router.refresh();
+        return;
+      }
       toast.error(
         err instanceof Error ? err.message : "Failed to update profile"
       );
@@ -127,29 +151,25 @@ export function ProfileForm() {
   });
 
   const photoMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.set("photo", file);
-
-      const res = await apiFetch("/users/me/photo", {
-        method: "POST",
-        body: formData,
-      });
-      const data = (await res.json().catch(() => null)) as unknown;
-      if (!res.ok) {
-        throw new Error(readErrorMessage(data) ?? "Upload failed");
-      }
-      return data as { profile?: UserProfile };
+    mutationFn: async (url: string) => {
+      return updateMe({ profileImageUrl: url });
     },
-    onSuccess: (data) => {
-      const updated = data.profile;
-      if (updated) {
-        queryClient.setQueryData(["me", token], updated);
-        form.setValue("profileImageUrl", updated.profileImageUrl ?? "");
-      }
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["me", token], updated);
+      form.setValue("profileImageUrl", updated.profileImageUrl ?? "");
       toast.success("Profile photo updated");
     },
     onError: (err) => {
+      const status =
+        typeof err === "object" && err !== null && "status" in err
+          ? (err as Record<string, unknown>).status
+          : undefined;
+      if (status === 401) {
+        clearAccessToken();
+        router.replace("/auth");
+        router.refresh();
+        return;
+      }
       toast.error(err instanceof Error ? err.message : "Photo upload failed");
     },
   });
@@ -220,33 +240,34 @@ export function ProfileForm() {
                 <AvatarImage src={avatarSrc} alt={name} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
-              <Button
-                type="button"
-                size="icon"
-                variant="secondary"
-                className="absolute -bottom-2 -right-2 h-9 w-9 rounded-full shadow"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={photoMutation.isPending}
-                aria-label="Upload profile photo"
-              >
-                {photoMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  photoMutation.mutate(file);
-                  e.currentTarget.value = "";
-                }}
-              />
+              <div className="absolute -bottom-2 -right-2">
+                <UploadButton
+                  endpoint="imageUploader"
+                  onClientUploadComplete={(res) => {
+                    const url = res?.[0]?.url;
+                    if (!url) {
+                      toast.error("Upload failed");
+                      return;
+                    }
+                    photoMutation.mutate(url);
+                  }}
+                  onUploadError={(error) => {
+                    toast.error(error?.message ?? "Upload failed");
+                  }}
+                  appearance={{
+                    button:
+                      "h-9 w-9 rounded-full bg-secondary text-secondary-foreground shadow hover:bg-secondary/90",
+                  }}
+                  content={{
+                    button({ ready }) {
+                      if (photoMutation.isPending) {
+                        return <Loader2 className="h-4 w-4 animate-spin" />;
+                      }
+                      return ready ? "Up" : "...";
+                    },
+                  }}
+                />
+              </div>
             </div>
             <div className="text-sm">
               <p className="font-medium leading-tight">{name}</p>
