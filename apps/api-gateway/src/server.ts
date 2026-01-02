@@ -233,6 +233,67 @@ app.use("/me", isAuthenticated({ secret: JWT_SECRET }), async (req, res) => {
   }
 });
 
+const VENDOR_SERVICE_URL =
+  process.env.VENDOR_SERVICE_URL ?? "http://localhost:4003";
+
+app.use(
+  "/vendors",
+  isAuthenticated({ secret: JWT_SECRET }),
+  async (req, res) => {
+    const correlationId = (req as any).correlationId;
+    const targetPath = req.originalUrl.replace(/^\/vendors/, "") || "/";
+    const url = `${VENDOR_SERVICE_URL}${targetPath}`;
+
+    try {
+      const headers: Record<string, string> = {};
+      for (const [key, value] of Object.entries(req.headers)) {
+        const lower = key.toLowerCase();
+        if (
+          lower === "host" ||
+          lower === "content-length" ||
+          lower === "transfer-encoding"
+        )
+          continue;
+
+        if (Array.isArray(value)) headers[key] = value.join(", ");
+        else if (value !== undefined) headers[key] = value as string;
+      }
+
+      headers["x-correlation-id"] = correlationId;
+      headers["x-user-id"] = (req as any).user?.id ?? "";
+      if ((req as any).user?.email)
+        headers["x-user-email"] = (req as any).user.email;
+
+      const hasBody = !["GET", "HEAD"].includes(req.method.toUpperCase());
+      const body = hasBody && req.body ? JSON.stringify(req.body) : undefined;
+      if (body)
+        headers["content-type"] =
+          headers["content-type"] ?? "application/json";
+
+      const upstream = await fetch(url, {
+        method: req.method,
+        headers,
+        body,
+      });
+
+      res.status(upstream.status);
+      upstream.headers.forEach((value, key) => {
+        if (key.toLowerCase() === "content-length") return;
+        res.setHeader(key, value);
+      });
+
+      const buffer = Buffer.from(await upstream.arrayBuffer());
+      return res.send(buffer);
+    } catch (err) {
+      console.error("Proxy error to vendor-service:", err);
+      return res.status(502).json({
+        error: { code: "BAD_GATEWAY", message: "Vendor service unreachable" },
+      });
+    }
+  }
+);
+
+
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4001;
 app.listen(PORT, () => {
   console.log(`api-gateway running on http://localhost:${PORT}`);

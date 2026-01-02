@@ -93,8 +93,8 @@ export default function Home() {
 
             <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200 flex flex-wrap items-center gap-3 pt-2">
               <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
-                <Link href="/auth?mode=register" className="inline-flex items-center gap-2">
-                  Create account <ArrowRight className="h-4 w-4" />
+                <Link href="/become-vendor" className="inline-flex items-center gap-2">
+                  Start to sell <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-white/35 bg-white/20 text-slate-900 hover:bg-white/30">
