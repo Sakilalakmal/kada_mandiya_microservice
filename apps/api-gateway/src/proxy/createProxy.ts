@@ -5,6 +5,7 @@ type CreateProxyOptions = {
   baseUrl: string;
   stripPrefix: string; // e.g. "/users"
   addUserHeaders?: boolean; // x-user-id / x-user-email
+  addVendorHeaders?: boolean; // x-vendor-id
 };
 
 export function createProxy(opts: CreateProxyOptions) {
@@ -21,6 +22,10 @@ export function createProxy(opts: CreateProxyOptions) {
       if (opts.addUserHeaders) {
         headers["x-user-id"] = (req as any).user?.id ?? "";
         if ((req as any).user?.email) headers["x-user-email"] = (req as any).user.email;
+      }
+
+      if (opts.addVendorHeaders) {
+        headers["x-vendor-id"] = (req as any).user?.id ?? "";
       }
 
       const body = buildUpstreamBody(req, headers);
