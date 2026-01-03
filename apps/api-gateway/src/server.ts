@@ -11,6 +11,7 @@ import { vendorsRoutes } from "./routes/vendors.routes";
 import { productsRoutes } from "./routes/products.routes";
 import { cartRoutes } from "./routes/cart.routes";
 import { ordersRoutes, vendorOrdersRoutes } from "./routes/orders.routes";
+import { productReviewRoutes, reviewsRoutes } from "./routes/reviews.routes";
 
 const app = express();
 app.use(cors());
@@ -32,6 +33,8 @@ app.use("/products", productsRoutes(JWT_SECRET));
 app.use("/api/cart", cartRoutes(JWT_SECRET));
 app.use("/api/orders", ordersRoutes(JWT_SECRET));
 app.use("/api/vendor/orders", vendorOrdersRoutes(JWT_SECRET));
+app.use("/api/reviews", reviewsRoutes(JWT_SECRET));
+app.use("/api/products", productReviewRoutes());
 app.use("/me", meRoutes(JWT_SECRET));  // Convenience alias, comes last
 
 // Example protected route
