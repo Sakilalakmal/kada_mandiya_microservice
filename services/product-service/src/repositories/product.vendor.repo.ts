@@ -287,3 +287,28 @@ export async function deactivateProductForVendor(params: {
     throw new Error("Product not found or not owned by vendor");
   }
 }
+
+export async function reactivateProductForVendor(params: {
+  vendorUserId: string;
+  productId: string;
+}): Promise<void> {
+  const pool = await getPool();
+
+  const result = await pool
+    .request()
+    .input("productId", sql.UniqueIdentifier, params.productId)
+    .input("vendorUserId", sql.UniqueIdentifier, params.vendorUserId)
+    .query(`
+      UPDATE products
+      SET is_active = 1, updated_at = GETUTCDATE()
+      WHERE id = @productId
+        AND vendor_user_id = @vendorUserId;
+
+      SELECT @@ROWCOUNT AS affected;
+    `);
+
+  const affected = Number(result.recordset?.[0]?.affected ?? 0);
+  if (affected === 0) {
+    throw new Error("Product not found or not owned by vendor");
+  }
+}

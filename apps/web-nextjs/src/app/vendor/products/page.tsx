@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, Package, Plus, ShieldAlert } from "lucide-react";
+import { Ban, Package, Plus, RotateCcw, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ApiError } from "@/lib/api";
-import { fetchMyProducts, deactivateProduct, productKeys } from "@/lib/products";
+import type { ProductListItem } from "@/lib/products";
+import { fetchMyProducts, deactivateProduct, reactivateProduct, productKeys } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { vendorAccessToast, toastApiError } from "@/components/ui/feedback";
@@ -28,6 +29,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 const MotionTableRow = motion(TableRow);
+const vendorProductsKey = ["vendor-products"] as const;
 
 function formatPrice(value: number, currency: string) {
   try {
@@ -52,7 +54,7 @@ export default function VendorProductsPage() {
     isFetching,
     isError,
   } = useQuery({
-    queryKey: productKeys.mine,
+    queryKey: vendorProductsKey,
     queryFn: fetchMyProducts,
     enabled: isVendor,
     retry: false,
@@ -71,21 +73,38 @@ export default function VendorProductsPage() {
     },
   });
 
-  const [deactivatingId, setDeactivatingId] = React.useState<string | null>(null);
+  const [pendingActionById, setPendingActionById] = React.useState<Record<string, "deactivate" | "reactivate">>({});
+
+  const setCachedIsActive = React.useCallback(
+    (productId: string, isActive: boolean) => {
+      queryClient.setQueryData<ProductListItem[]>(vendorProductsKey, (old) => {
+        if (!old) return old;
+        return old.map((product) =>
+          product.id === productId ? { ...product, isActive } : product
+        );
+      });
+    },
+    [queryClient]
+  );
 
   const deactivateMutation = useMutation({
-    mutationFn: async (productId: string) => {
-      setDeactivatingId(productId);
-      await deactivateProduct(productId);
+    mutationFn: deactivateProduct,
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey: vendorProductsKey });
+      const previous = queryClient.getQueryData<ProductListItem[]>(vendorProductsKey);
+
+      setPendingActionById((current) => ({ ...current, [productId]: "deactivate" }));
+      setCachedIsActive(productId, false);
+
+      return { previous, productId };
     },
-    onSuccess: async (_, productId) => {
+    onSuccess: () => {
       toast.success("Product deactivated");
-      setDeactivatingId(null);
-      await queryClient.invalidateQueries({ queryKey: productKeys.mine });
-      await queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
     },
-    onError: (err: ApiError) => {
-      setDeactivatingId(null);
+    onError: (err: ApiError, _productId, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData<ProductListItem[]>(vendorProductsKey, ctx.previous);
+      }
       if (err?.status === 401) {
         setAuthToken(null);
         router.push("/login");
@@ -96,6 +115,57 @@ export default function VendorProductsPage() {
         return;
       }
       toastApiError(err, "Could not deactivate product");
+    },
+    onSettled: async (_data, _err, productId) => {
+      setPendingActionById((current) => {
+        if (!(productId in current)) return current;
+        const next = { ...current };
+        delete next[productId];
+        return next;
+      });
+      await queryClient.invalidateQueries({ queryKey: vendorProductsKey });
+      await queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
+    },
+  });
+
+  const reactivateMutation = useMutation({
+    mutationFn: reactivateProduct,
+    onMutate: async (productId) => {
+      await queryClient.cancelQueries({ queryKey: vendorProductsKey });
+      const previous = queryClient.getQueryData<ProductListItem[]>(vendorProductsKey);
+
+      setPendingActionById((current) => ({ ...current, [productId]: "reactivate" }));
+      setCachedIsActive(productId, true);
+
+      return { previous, productId };
+    },
+    onSuccess: () => {
+      toast.success("Product reactivated");
+    },
+    onError: (err: ApiError, _productId, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData<ProductListItem[]>(vendorProductsKey, ctx.previous);
+      }
+      if (err?.status === 401) {
+        setAuthToken(null);
+        router.push("/login");
+        return;
+      }
+      if (err?.status === 403) {
+        vendorAccessToast(() => router.push("/become-vendor"));
+        return;
+      }
+      toastApiError(err, "Could not reactivate product");
+    },
+    onSettled: async (_data, _err, productId) => {
+      setPendingActionById((current) => {
+        if (!(productId in current)) return current;
+        const next = { ...current };
+        delete next[productId];
+        return next;
+      });
+      await queryClient.invalidateQueries({ queryKey: vendorProductsKey });
+      await queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
     },
   });
 
@@ -196,7 +266,8 @@ export default function VendorProductsPage() {
             </TableHeader>
             <TableBody>
               {products.map((product) => {
-                const isDeactivating = deactivatingId === product.id && deactivateMutation.isPending;
+                const pendingAction = pendingActionById[product.id] ?? null;
+                const isUpdating = Boolean(pendingAction);
                 return (
                   <MotionTableRow
                     key={product.id}
@@ -255,20 +326,34 @@ export default function VendorProductsPage() {
                           size="sm"
                           className={cn(
                             "gap-1 active:scale-95",
-                            isDeactivating && "opacity-70"
+                            isUpdating && "opacity-70"
                           )}
-                          disabled={isDeactivating}
-                          onClick={() => deactivateMutation.mutate(product.id)}
+                          disabled={isUpdating}
+                          onClick={() => {
+                            if (product.isActive) {
+                              deactivateMutation.mutate(product.id);
+                            } else {
+                              reactivateMutation.mutate(product.id);
+                            }
+                          }}
                         >
-                          {isDeactivating ? (
+                          {pendingAction ? (
                             <div className="flex items-center gap-1 text-xs">
-                              <Ban className="h-3 w-3" />
-                              Deactivating...
+                              {pendingAction === "deactivate" ? (
+                                <Ban className="h-3 w-3" />
+                              ) : (
+                                <RotateCcw className="h-3 w-3" />
+                              )}
+                              {pendingAction === "deactivate" ? "Deactivating..." : "Reactivating..."}
                             </div>
                           ) : (
                             <>
-                              <Ban className="h-3 w-3" />
-                              Deactivate
+                              {product.isActive ? (
+                                <Ban className="h-3 w-3" />
+                              ) : (
+                                <RotateCcw className="h-3 w-3" />
+                              )}
+                              {product.isActive ? "Deactivate" : "Reactivate"}
                             </>
                           )}
                         </Button>
