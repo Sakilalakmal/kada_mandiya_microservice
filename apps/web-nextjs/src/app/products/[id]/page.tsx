@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductReviewsSection } from "@/features/reviews/components/product-reviews-section";
 
 const MotionButton = motion(Button);
 
@@ -150,123 +151,129 @@ export default function ProductDetailPage() {
           </CardContent>
         </Card>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="grid gap-10 lg:grid-cols-2"
-        >
-          <div className="space-y-4">
-            <div className="overflow-hidden rounded-2xl border bg-card">
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={activeImage?.id ?? "placeholder"}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.22 }}
-                  className="relative aspect-[4/3] overflow-hidden bg-muted"
-                >
-                  {activeImage ? (
-                    <Image
-                      src={activeImage.imageUrl}
-                      alt={data.name}
-                      fill
-                      sizes="(min-width: 1024px) 45vw, 100vw"
-                      unoptimized
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                      No images available
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {images.length > 0 ? (
-              <div className="grid grid-cols-4 gap-3">
-                {images.map((img, idx) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setActiveIndex(idx)}
-                    className={cn(
-                      "overflow-hidden rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                      idx === activeIndex ? "border-foreground" : "border-border hover:border-foreground/60"
-                    )}
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="grid gap-10 lg:grid-cols-2"
+          >
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-2xl border bg-card">
+                <AnimatePresence mode="popLayout">
+                  <motion.div
+                    key={activeImage?.id ?? "placeholder"}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.22 }}
+                    className="relative aspect-[4/3] overflow-hidden bg-muted"
                   >
-                    <div className="relative aspect-square w-full">
+                    {activeImage ? (
                       <Image
-                        src={img.imageUrl}
-                        alt={`Image ${idx + 1}`}
+                        src={activeImage.imageUrl}
+                        alt={data.name}
                         fill
-                        sizes="96px"
+                        sizes="(min-width: 1024px) 45vw, 100vw"
                         unoptimized
                         className="object-cover"
                       />
-                    </div>
-                  </button>
-                ))}
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                        No images available
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
-            ) : null}
-          </div>
 
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              {data.category ? (
-                <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
-                  {data.category}
-                </Badge>
+              {images.length > 0 ? (
+                <div className="grid grid-cols-4 gap-3">
+                  {images.map((img, idx) => (
+                    <button
+                      key={img.id}
+                      onClick={() => setActiveIndex(idx)}
+                      className={cn(
+                        "overflow-hidden rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                        idx === activeIndex ? "border-foreground" : "border-border hover:border-foreground/60"
+                      )}
+                    >
+                      <div className="relative aspect-square w-full">
+                        <Image
+                          src={img.imageUrl}
+                          alt={`Image ${idx + 1}`}
+                          fill
+                          sizes="96px"
+                          unoptimized
+                          className="object-cover"
+                        />
+                      </div>
+                    </button>
+                  ))}
+                </div>
               ) : null}
-              <Badge variant={data.stockQty > 0 ? "secondary" : "outline"}>
-                {data.stockQty > 0 ? "In stock" : "Out of stock"}
-              </Badge>
             </div>
 
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground">{data.name}</h1>
-              <p className="text-lg font-medium text-foreground">{formatPrice(data.price, data.currency)}</p>
-            </div>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                {data.category ? (
+                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">
+                    {data.category}
+                  </Badge>
+                ) : null}
+                <Badge variant={data.stockQty > 0 ? "secondary" : "outline"}>
+                  {data.stockQty > 0 ? "In stock" : "Out of stock"}
+                </Badge>
+              </div>
 
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {data.description ?? "No description provided."}
-            </p>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground">{data.name}</h1>
+                <p className="text-lg font-medium text-foreground">{formatPrice(data.price, data.currency)}</p>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <MotionButton
-                size="lg"
-                onClick={handleAddToCart}
-                disabled={addToCart.isPending || data.stockQty <= 0}
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full sm:w-auto"
-              >
-                {addToCart.isPending ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                )}
-                Add to cart
-              </MotionButton>
-              <Button
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => router.refresh()}
-              >
-                Refresh
-              </Button>
-            </div>
-
-            <div className="rounded-xl border bg-card/60 p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">Stock</p>
-              <p className="text-base text-foreground">{data.stockQty > 0 ? data.stockQty : 0}</p>
-              <p className="text-xs text-muted-foreground">
-                Updated at {new Date(data.updatedAt).toLocaleString()}
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {data.description ?? "No description provided."}
               </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <MotionButton
+                  size="lg"
+                  onClick={handleAddToCart}
+                  disabled={addToCart.isPending || data.stockQty <= 0}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="w-full sm:w-auto"
+                >
+                  {addToCart.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                  )}
+                  Add to cart
+                </MotionButton>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => router.refresh()}
+                >
+                  Refresh
+                </Button>
+              </div>
+
+              <div className="rounded-xl border bg-card/60 p-4 text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">Stock</p>
+                <p className="text-base text-foreground">{data.stockQty > 0 ? data.stockQty : 0}</p>
+                <p className="text-xs text-muted-foreground">
+                  Updated at {new Date(data.updatedAt).toLocaleString()}
+                </p>
+              </div>
             </div>
+          </motion.div>
+
+          <div className="pt-10">
+            <ProductReviewsSection productId={data.id} />
           </div>
-        </motion.div>
+        </>
       )}
     </main>
   );
