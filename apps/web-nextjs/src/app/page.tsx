@@ -4,6 +4,7 @@ import { ArrowRight, ChevronRight } from "lucide-react"
 
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserNav } from "@/components/user-nav"
+import { CartNavButton } from "@/components/cart-nav-button"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -51,6 +52,7 @@ export default function Home() {
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <CartNavButton className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white" />
             <Button
               asChild
               size="sm"

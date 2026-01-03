@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2, ShoppingCart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 import { fetchProductDetail, productKeys } from "@/lib/products";
 import { cn } from "@/lib/utils";
+import { useAddToCartMutation } from "@/features/cart/queries";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -68,6 +68,8 @@ export default function ProductDetailPage() {
     enabled: Boolean(productId),
   });
 
+  const addToCart = useAddToCartMutation();
+
   const images = data?.images ?? [];
   const activeImage = images[activeIndex];
 
@@ -100,8 +102,14 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = () => {
-    toast("Added to cart (coming soon)", {
-      description: "Cart service is not wired yet.",
+    if (!data) return;
+    addToCart.mutate({
+      productId: data.id,
+      title: data.name,
+      unitPrice: data.price,
+      imageUrl: data.images?.[0]?.imageUrl ?? undefined,
+      vendorId: data.vendorUserId,
+      qty: 1,
     });
   };
 
@@ -229,10 +237,16 @@ export default function ProductDetailPage() {
               <MotionButton
                 size="lg"
                 onClick={handleAddToCart}
+                disabled={addToCart.isPending || data.stockQty <= 0}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 className="w-full sm:w-auto"
               >
+                {addToCart.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                )}
                 Add to cart
               </MotionButton>
               <Button
