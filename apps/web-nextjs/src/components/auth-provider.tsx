@@ -2,10 +2,10 @@
 
 import * as React from "react";
 
-import { apiFetch } from "@/lib/api";
+import { apiFetch, type ApiError } from "@/lib/api";
 import {
   clearToken as clearStoredToken,
-  getRolesFromToken,
+  getRoles,
   getToken,
   setToken as persistToken,
 } from "@/lib/auth";
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const roles = React.useMemo(() => getRolesFromToken(token), [token]);
+  const roles = React.useMemo(() => getRoles(token), [token]);
   const isVendor = roles.includes("vendor");
 
   const refreshAuth = React.useCallback(async () => {
@@ -57,37 +57,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Not authenticated");
     }
 
-    const res = await apiFetch(
-      "/auth/refresh",
-      {
-        method: "POST",
-      },
-      current
-    );
-    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    try {
+      const data = await apiFetch<{ accessToken?: string; token?: string }>(
+        "/auth/refresh",
+        { method: "POST", token: current }
+      );
 
-    if (!res.ok) {
-      if (res.status === 401) {
+      const next =
+        (data?.accessToken as string | undefined) ??
+        (data?.token as string | undefined);
+
+      if (!next) {
+        throw new Error("Refresh failed: missing access token");
+      }
+
+      setAuthToken(String(next));
+      return String(next);
+    } catch (error) {
+      const status = (error as ApiError | undefined)?.status;
+      if (status === 401) {
         setAuthToken(null);
       }
-      const err = new Error(
-        (data?.error as any)?.message ??
-          (data?.message as string | undefined) ??
-          "Failed to refresh session"
-      ) as Error & { status?: number };
-      err.status = res.status;
-      throw err;
+      throw error;
     }
-
-    const next =
-      (data.accessToken as string | undefined) ??
-      (data.token as string | undefined);
-    if (!next) {
-      throw new Error("Refresh failed: missing access token");
-    }
-
-    setAuthToken(String(next));
-    return String(next);
   }, [setAuthToken, token]);
 
   const value = React.useMemo<AuthContextValue>(

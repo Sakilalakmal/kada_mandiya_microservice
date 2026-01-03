@@ -10,27 +10,13 @@ import { z } from "zod";
 import { toast } from "sonner";
 
 import { UploadButton } from "@/lib/uploadthing";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, type ApiError } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-type ApiError = Error & { status?: number };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function readErrorMessage(data: unknown): string | null {
-  if (!isRecord(data)) return null;
-  const err = data.error;
-  if (isRecord(err) && typeof err.message === "string") return err.message;
-  if (typeof data.message === "string") return data.message;
-  return null;
-}
 
 const trimmedOptional = <T extends z.ZodString>(schema: T) =>
   z.preprocess(
@@ -100,26 +86,16 @@ export default function BecomeVendorPage() {
 
   const becomeMutation = useMutation({
     mutationFn: async (values: BecomeVendorFormValues) => {
-      const res = await apiFetch("/vendors/become", {
+      return apiFetch("/vendors/become", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           storeName: values.storeName,
           description: values.description,
           phone: values.phone,
           address: values.address,
           shopImageUrl: values.shopImageUrl,
-        }),
+        },
       });
-
-      const data = (await res.json().catch(() => null)) as unknown;
-      if (!res.ok) {
-        const message = readErrorMessage(data) ?? "Failed to create vendor profile";
-        const error = new Error(message) as ApiError;
-        error.status = res.status;
-        throw error;
-      }
-
-      return data;
     },
     onSuccess: async () => {
       await refreshMutation.mutateAsync();

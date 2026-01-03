@@ -3,7 +3,7 @@ import { UploadThingError } from "uploadthing/server";
 
 const f = createUploadthing();
 
-const auth = (req: Request) => ({ id: "fakeId" }); // Fake auth function
+const auth = () => ({ id: "fakeId" }); // Fake auth function
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
@@ -33,10 +33,14 @@ export const ourFileRouter = {
       // This code RUNS ON YOUR SERVER after upload
       console.log("Upload complete for userId:", metadata.userId);
 
-      console.log("file url", file.ufsUrl);
+      const url =
+        "url" in file && typeof file.url === "string" && file.url.length > 0
+          ? file.url
+          : file.ufsUrl;
+      console.log("file url", url);
 
-      // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-      return { uploadedBy: metadata.userId };
+      // returned value is sent to the client
+      return { uploadedBy: metadata.userId, url };
     }),
 } satisfies FileRouter;
 

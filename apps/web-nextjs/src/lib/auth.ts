@@ -21,7 +21,11 @@ function base64UrlDecode(segment: string): string | null {
   return null;
 }
 
-function parseJwtPayload(token: string): Record<string, unknown> | null {
+export type JwtPayload = Record<string, unknown> & {
+  roles?: string[];
+};
+
+export function decodeJwtPayload(token: string): JwtPayload | null {
   const parts = token.split(".");
   if (parts.length < 2) return null;
 
@@ -29,7 +33,7 @@ function parseJwtPayload(token: string): Record<string, unknown> | null {
   if (!payload) return null;
 
   try {
-    return JSON.parse(payload) as Record<string, unknown>;
+    return JSON.parse(payload) as JwtPayload;
   } catch (err) {
     console.error("Failed to parse JWT payload", err);
     return null;
@@ -51,16 +55,19 @@ export function clearToken() {
   window.localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
-export function getRolesFromToken(token?: string | null): string[] {
+export function getRoles(token?: string | null): string[] {
   if (!token) return [];
-  const payload = parseJwtPayload(token);
+  const payload = decodeJwtPayload(token);
   const roles = payload?.roles;
   if (!Array.isArray(roles)) return [];
   return roles.filter((role): role is string => typeof role === "string");
 }
 
+// Backwards compatibility
+export const getRolesFromToken = getRoles;
+
 export function hasRole(role: string, token?: string | null) {
-  return getRolesFromToken(token).includes(role);
+  return getRoles(token).includes(role);
 }
 
 export function isVendor(token?: string | null) {

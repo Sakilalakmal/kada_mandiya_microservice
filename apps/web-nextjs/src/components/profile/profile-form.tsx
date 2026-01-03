@@ -30,18 +30,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function readErrorMessage(data: unknown): string | null {
-  if (!isRecord(data)) return null;
-  const err = data.error;
-  if (isRecord(err) && typeof err.message === "string") return err.message;
-  if (typeof data.message === "string") return data.message;
-  return null;
-}
-
 function toOptionalTrimmedString(value: string | undefined) {
   const trimmed = (value ?? "").trim();
   return trimmed ? trimmed : undefined;
