@@ -28,11 +28,17 @@ export function isAuthenticated(opts: AuthMiddlewareOptions) {
 
     try {
       const claims = verifyAccessToken(token, { secret: opts.secret });
+      const roles = Array.isArray(claims.roles)
+        ? claims.roles.filter((role): role is string => typeof role === "string")
+        : claims.role
+          ? [claims.role]
+          : [];
 
       req.user = {
         id: claims.sub,
         email: claims.email,
-        role: claims.role
+        role: claims.role ?? roles[0],
+        roles,
       };
 
       return next();

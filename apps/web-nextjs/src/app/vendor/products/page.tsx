@@ -1,0 +1,298 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { motion } from "framer-motion";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Ban, Package, Plus, ShieldAlert } from "lucide-react";
+import { toast } from "sonner";
+
+import type { ApiError } from "@/lib/api";
+import { fetchMyProducts, deactivateProduct, productKeys } from "@/lib/products";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { vendorAccessToast, toastApiError } from "@/components/ui/feedback";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const MotionTableRow = motion(TableRow);
+
+function formatPrice(value: number, currency: string) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "LKR",
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toFixed(2)}`;
+  }
+}
+
+export default function VendorProductsPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { isVendor, setAuthToken } = useAuth();
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+  } = useQuery({
+    queryKey: productKeys.mine,
+    queryFn: fetchMyProducts,
+    enabled: isVendor,
+    retry: false,
+    staleTime: 15_000,
+    onError: (err: ApiError) => {
+      if (err?.status === 401) {
+        setAuthToken(null);
+        router.push("/login");
+        return;
+      }
+      if (err?.status === 403) {
+        vendorAccessToast(() => router.push("/become-vendor"));
+        return;
+      }
+      toastApiError(err, "Could not load your products");
+    },
+  });
+
+  const [deactivatingId, setDeactivatingId] = React.useState<string | null>(null);
+
+  const deactivateMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      setDeactivatingId(productId);
+      await deactivateProduct(productId);
+    },
+    onSuccess: async (_, productId) => {
+      toast.success("Product deactivated");
+      setDeactivatingId(null);
+      await queryClient.invalidateQueries({ queryKey: productKeys.mine });
+      await queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
+    },
+    onError: (err: ApiError) => {
+      setDeactivatingId(null);
+      if (err?.status === 401) {
+        setAuthToken(null);
+        router.push("/login");
+        return;
+      }
+      if (err?.status === 403) {
+        vendorAccessToast(() => router.push("/become-vendor"));
+        return;
+      }
+      toastApiError(err, "Could not deactivate product");
+    },
+  });
+
+  if (!isVendor) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10 sm:px-10">
+        <Card className="border bg-card shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ShieldAlert className="h-5 w-5" />
+              Vendor access required
+            </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              You need a vendor account to manage products.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <Button asChild className="active:scale-95">
+              <Link href="/become-vendor">Become a vendor</Link>
+            </Button>
+            <Button asChild variant="outline" className="active:scale-95">
+              <Link href="/auth?mode=login">Login</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  const products = data ?? [];
+
+  return (
+    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">Vendor</p>
+          <h1 className="text-3xl font-semibold text-foreground">My products</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            className="gap-2 active:scale-95"
+            variant="default"
+          >
+            <Link href="/vendor/products/new">
+              <Plus className="h-4 w-4" />
+              Add product
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="active:scale-95"
+          >
+            <Link href="/vendor/dashboard">Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <Card className="border bg-card">
+          <CardContent className="space-y-3 px-6 py-6">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+          </CardContent>
+        </Card>
+      ) : products.length === 0 ? (
+        <Card className="border bg-card">
+          <CardContent className="flex flex-col gap-3 px-6 py-8">
+            <div className="flex items-center gap-2 text-foreground">
+              <Package className="h-5 w-5" />
+              <p className="font-semibold">No products yet</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Start by adding your first product listing.
+            </p>
+            <Button asChild className="w-fit active:scale-95">
+              <Link href="/vendor/products/new">Add product</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <div className="flex items-center justify-between border-b px-4 py-3 text-sm text-muted-foreground">
+            <span>{products.length} products</span>
+            {isFetching ? <span>Refreshing...</span> : null}
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Stock</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product) => {
+                const isDeactivating = deactivatingId === product.id && deactivateMutation.isPending;
+                return (
+                  <MotionTableRow
+                    key={product.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="transition hover:bg-muted/50"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 overflow-hidden rounded-lg border bg-muted">
+                          {product.thumbnailImageUrl ? (
+                            <Image
+                              src={product.thumbnailImageUrl}
+                              alt={product.name}
+                              width={48}
+                              height={48}
+                              unoptimized
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                              No image
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.category ?? "Uncategorized"}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {formatPrice(product.price, product.currency)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{product.stockQty}</TableCell>
+                    <TableCell>
+                      <Badge variant={product.isActive ? "secondary" : "outline"}>
+                        {product.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          asChild
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 active:scale-95"
+                        >
+                          <Link href={`/vendor/products/${product.id}/edit`}>Edit</Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "gap-1 active:scale-95",
+                            isDeactivating && "opacity-70"
+                          )}
+                          disabled={isDeactivating}
+                          onClick={() => deactivateMutation.mutate(product.id)}
+                        >
+                          {isDeactivating ? (
+                            <div className="flex items-center gap-1 text-xs">
+                              <Ban className="h-3 w-3" />
+                              Deactivating...
+                            </div>
+                          ) : (
+                            <>
+                              <Ban className="h-3 w-3" />
+                              Deactivate
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </MotionTableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {isError ? (
+        <Card className="border bg-card">
+          <CardContent className="space-y-3 px-6 py-6">
+            <p className="text-sm font-semibold text-foreground">Could not load products.</p>
+            <p className="text-xs text-muted-foreground">Please try again in a moment.</p>
+            <Button variant="outline" onClick={() => router.refresh()} className="active:scale-95">
+              Refresh
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+    </main>
+  );
+}

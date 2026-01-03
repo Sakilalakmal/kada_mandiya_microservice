@@ -1,17 +1,5 @@
 import { apiFetch } from "@/lib/api";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function readErrorMessage(data: unknown): string | null {
-  if (!isRecord(data)) return null;
-  const err = data.error;
-  if (isRecord(err) && typeof err.message === "string") return err.message;
-  if (typeof data.message === "string") return data.message;
-  return null;
-}
-
 export type UserProfile = {
   userId: string;
   email: string;
@@ -50,37 +38,21 @@ export function profileDisplayName(profile: UserProfile) {
 }
 
 export async function fetchMe(): Promise<UserProfile> {
-  const res = await apiFetch("/users/me", { method: "GET" });
-  const data = (await res.json().catch(() => null)) as unknown;
-
-  if (!res.ok) {
-    const message = readErrorMessage(data) ?? "Request failed";
-    const err = new Error(message) as Error & { status?: number };
-    err.status = res.status;
-    throw err;
-  }
-
-  return data as UserProfile;
+  const data = await apiFetch<UserProfile>("/users/me", { method: "GET" });
+  return data;
 }
 
 export async function updateMe(
   patch: UpdateUserProfileInput
 ): Promise<UserProfile> {
-  const res = await apiFetch("/users/me", {
+  const data = await apiFetch<{ profile?: UserProfile } | UserProfile>("/users/me", {
     method: "PUT",
-    body: JSON.stringify(patch),
+    body: patch,
   });
-  const data = (await res.json().catch(() => null)) as unknown;
 
-  if (!res.ok) {
-    const message = readErrorMessage(data) ?? "Request failed";
-    console.error("updateMe failed:", { status: res.status, data });
-    const err = new Error(message) as Error & { status?: number };
-    err.status = res.status;
-    throw err;
+  if (typeof data === "object" && data !== null && "profile" in data && data.profile) {
+    return (data as { profile: UserProfile }).profile;
   }
 
-  // Backend returns { ok: true, message: string, profile: UserProfile }
-  if (isRecord(data) && isRecord(data.profile)) return data.profile as UserProfile;
   return data as UserProfile;
 }

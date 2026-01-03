@@ -14,8 +14,8 @@ app.get("/health", (_req, res) => {
 
 // api-gateway proxies `/products/*` -> `${PRODUCT_SERVICE_URL}/*` (it strips `/products`),
 // so this service must serve routes at the root (e.g. `/`, `/mine`, `/:id`).
-app.use("/", productRoutes);
 app.use("/", ProductVendorRouter);
+app.use("/", productRoutes);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4004;
 app.listen(PORT, () => {
