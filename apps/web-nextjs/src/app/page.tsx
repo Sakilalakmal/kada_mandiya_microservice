@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserNav } from "@/components/user-nav"
 import { CartNavButton } from "@/components/cart-nav-button"
+import { FeaturesSection } from "@/components/landing/features-section"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -130,6 +131,9 @@ export default function Home() {
         </main>
       </section>
 
+      <FeaturesSection />
+
+      {false && (
       <section id="features" className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-10">
         <div className="grid gap-6 md:grid-cols-3">
           {[
@@ -153,6 +157,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+      )}
     </div>
   )
 }
