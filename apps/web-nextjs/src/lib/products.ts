@@ -90,10 +90,11 @@ function pickThumbnailImage(item: unknown): string | null {
   if (Array.isArray(images)) {
     for (const img of images) {
       if (!img || typeof img !== "object") continue;
+      const imgRecord = img as Record<string, unknown>;
       const url =
-        normalizeImageUrl((img as any).imageUrl) ??
-        normalizeImageUrl((img as any).image_url) ??
-        normalizeImageUrl((img as any).url);
+        normalizeImageUrl(imgRecord.imageUrl) ??
+        normalizeImageUrl(imgRecord.image_url) ??
+        normalizeImageUrl(imgRecord.url);
       if (url) return url;
     }
   }
@@ -107,16 +108,17 @@ function normalizeImages(images: unknown[] | undefined): ProductImage[] {
   return images
     .map((img, idx) => {
       if (!img || typeof img !== "object") return null;
+      const imgRecord = img as Record<string, unknown>;
       const url =
-        normalizeImageUrl((img as any).imageUrl) ??
-        normalizeImageUrl((img as any).image_url) ??
-        normalizeImageUrl((img as any).url);
+        normalizeImageUrl(imgRecord.imageUrl) ??
+        normalizeImageUrl(imgRecord.image_url) ??
+        normalizeImageUrl(imgRecord.url);
       if (!url) return null;
 
-      const sortOrderRaw = (img as any).sortOrder ?? (img as any).sort_order ?? idx;
+      const sortOrderRaw = imgRecord.sortOrder ?? imgRecord.sort_order ?? idx;
       const sortOrder = Number(sortOrderRaw);
       return {
-        id: String((img as any).id ?? idx),
+        id: String(imgRecord.id ?? idx),
         imageUrl: url,
         sortOrder: Number.isFinite(sortOrder) ? sortOrder : idx,
       };
@@ -139,10 +141,16 @@ export async function fetchProducts(params: ListProductsParams): Promise<Product
   const query = buildQuery(params);
   const data = await apiFetch<ProductListResponse>(`/products${query}`, { method: "GET" });
 
-  const items: ProductListItem[] = (data.items ?? []).map((item: ProductListItem | any) => ({
-    ...item,
-    thumbnailImageUrl: pickThumbnailImage(item),
-  }));
+  console.log('📦 Raw API response for products:', JSON.stringify(data.items?.[0], null, 2));
+
+  const items: ProductListItem[] = (data.items ?? []).map((item) => {
+    const thumbnailUrl = pickThumbnailImage(item);
+    console.log('🖼️ Product:', item.name, '| Thumbnail URL:', thumbnailUrl, '| Raw item:', JSON.stringify(item, null, 2));
+    return {
+      ...item,
+      thumbnailImageUrl: thumbnailUrl,
+    };
+  });
 
   return {
     items,
@@ -159,8 +167,12 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
     method: "GET",
   });
 
+  console.log('📦 Raw API response for product detail:', JSON.stringify(data, null, 2));
+
   if (data?.product) {
-    const images = normalizeImages((data.product as any).images);
+    const productRecord = data.product as unknown as Record<string, unknown>;
+    const images = normalizeImages(productRecord.images as unknown[] | undefined);
+    console.log('🖼️ Normalized images:', images);
     return {
       ...data.product,
       images,
@@ -175,7 +187,7 @@ export async function fetchMyProducts(): Promise<ProductListItem[]> {
     method: "GET",
   });
 
-  const items: ProductListItem[] = (data.items ?? []).map((item: ProductListItem | any) => ({
+  const items: ProductListItem[] = (data.items ?? []).map((item) => ({
     ...item,
     thumbnailImageUrl: pickThumbnailImage(item),
   }));
@@ -212,4 +224,8 @@ export async function updateProduct(productId: string, patch: ProductPayload) {
 
 export async function deactivateProduct(productId: string) {
   await apiFetch(`/products/${productId}/deactivate`, { method: "PATCH" });
+}
+
+export async function reactivateProduct(productId: string) {
+  await apiFetch(`/products/${productId}/reactivate`, { method: "PATCH" });
 }

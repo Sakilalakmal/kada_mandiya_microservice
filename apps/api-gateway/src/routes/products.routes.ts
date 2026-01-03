@@ -42,6 +42,12 @@ export function productsRoutes(JWT_SECRET: string) {
     requireRole("vendor", { secret: JWT_SECRET }),
     authedProxy
   );
+  router.patch(
+    "/:id/reactivate",
+    isAuthenticated({ secret: JWT_SECRET }),
+    requireRole("vendor", { secret: JWT_SECRET }),
+    authedProxy
+  );
 
   // Public detail (keep last)
   router.get("/:id", publicProxy);

@@ -3,6 +3,7 @@ import {
   createProduct,
   deactivateProduct,
   getMyProducts,
+  reactivateProduct,
   updateProduct,
 } from "../controllers/product.vendor.controller";
 
@@ -14,5 +15,6 @@ ProductVendorRouter.get("/mine", getMyProducts);
 ProductVendorRouter.put("/:id", updateProduct);
 
 ProductVendorRouter.patch("/:id/deactivate", deactivateProduct); 
+ProductVendorRouter.patch("/:id/reactivate", reactivateProduct);
 
 export default ProductVendorRouter;

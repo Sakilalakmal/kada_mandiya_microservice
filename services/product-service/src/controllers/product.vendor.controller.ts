@@ -1,4 +1,4 @@
-import { createProductForVendor, deactivateProductForVendor, listMyProducts, updateProductForVendor } from "../repositories/product.vendor.repo";
+import { createProductForVendor, deactivateProductForVendor, listMyProducts, reactivateProductForVendor, updateProductForVendor } from "../repositories/product.vendor.repo";
 
 export const createProduct = async (req: any, res: any) => {
   try {
@@ -75,6 +75,27 @@ export const deactivateProduct = async (req: any, res: any) => {
     return res.json({ ok: true, message: "Product deactivated" });
   } catch (err: any) {
     console.error("deactivateProduct error:", err);
+    return res
+      .status(400)
+      .json({ ok: false, message: err?.message ?? "Bad request" });
+  }
+};
+
+export const reactivateProduct = async (req: any, res: any) => {
+  try {
+    const vendorUserId = req.header("x-user-id");
+    if (!vendorUserId) {
+      return res.status(401).json({ ok: false, message: "Missing x-user-id" });
+    }
+
+    await reactivateProductForVendor({
+      vendorUserId,
+      productId: req.params.id,
+    });
+
+    return res.json({ ok: true, message: "Product reactivated" });
+  } catch (err: any) {
+    console.error("reactivateProduct error:", err);
     return res
       .status(400)
       .json({ ok: false, message: err?.message ?? "Bad request" });
