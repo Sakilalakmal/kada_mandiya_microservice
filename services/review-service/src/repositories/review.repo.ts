@@ -19,9 +19,28 @@ export async function createReview(input: CreateReviewInput): Promise<string> {
     .input("rating", sql.Int, input.rating)
     .input("comment", sql.NVarChar(1000), input.comment)
     .query(`
-      INSERT INTO dbo.reviews (user_id, product_id, order_id, rating, comment, is_deleted)
-      OUTPUT CONVERT(varchar(36), inserted.review_id) AS reviewId
-      VALUES (@userId, @productId, @orderId, @rating, @comment, 0);
+      DECLARE @out TABLE (review_id UNIQUEIDENTIFIER);
+
+      -- If the user previously deleted the review for this purchase, restore it.
+      UPDATE dbo.reviews
+      SET
+        is_deleted = 0,
+        deleted_at = NULL,
+        created_at = SYSUTCDATETIME(),
+        rating = @rating,
+        comment = @comment,
+        updated_at = SYSUTCDATETIME()
+      OUTPUT inserted.review_id INTO @out(review_id)
+      WHERE user_id = @userId AND product_id = @productId AND order_id = @orderId AND is_deleted = 1;
+
+      IF NOT EXISTS (SELECT 1 FROM @out)
+      BEGIN
+        INSERT INTO dbo.reviews (user_id, product_id, order_id, rating, comment, is_deleted)
+        OUTPUT inserted.review_id INTO @out(review_id)
+        VALUES (@userId, @productId, @orderId, @rating, @comment, 0);
+      END
+
+      SELECT CONVERT(varchar(36), review_id) AS reviewId FROM @out;
     `);
 
   const reviewId = (result.recordset as any[])?.[0]?.reviewId;
