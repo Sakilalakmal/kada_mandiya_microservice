@@ -20,10 +20,10 @@ router.get("/health/db", async (_req, res) => {
   }
 });
 
-router.post("/orders", auth, createOrder);
-router.get("/orders/my", auth, getMyOrders);
-router.get("/orders/:orderId", auth, getOrder);
-router.patch("/orders/:orderId/cancel", auth, cancelOrder);
+router.post("/", auth, createOrder);
+router.get("/my", auth, getMyOrders);
+router.get("/:orderId", auth, getOrder);
+router.patch("/:orderId/cancel", auth, cancelOrder);
 
 export default router;
 

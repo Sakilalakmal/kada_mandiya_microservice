@@ -39,6 +39,9 @@ export default function Home() {
             <a className="hover:text-white" href="#features">
               Products
             </a>
+            <Link className="hover:text-white" href="/orders">
+              Orders
+            </Link>
             <a className="hover:text-white" href="#features">
               Categories
             </a>

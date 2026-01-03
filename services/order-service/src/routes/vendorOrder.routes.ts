@@ -5,8 +5,8 @@ import { getVendorOrders, updateVendorOrderStatus } from "../controllers/vendorO
 
 const router = Router();
 
-router.get("/vendor/orders", auth, vendor, getVendorOrders);
-router.patch("/vendor/orders/:orderId/status", auth, vendor, updateVendorOrderStatus);
+router.get("/", auth, vendor, getVendorOrders);
+router.patch("/:orderId/status", auth, vendor, updateVendorOrderStatus);
 
 export default router;
 
