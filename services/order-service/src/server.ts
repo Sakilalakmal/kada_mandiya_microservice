@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/", orderRoutes);
-app.use("/", vendorOrderRoutes);
+app.use("/vendor/orders", vendorOrderRoutes);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4006;
 app.listen(PORT, () => {

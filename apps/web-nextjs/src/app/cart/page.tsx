@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
 import { cartTotalQty, useCartQuery, useClearCartMutation, useRemoveCartItemMutation, useUpdateCartQtyMutation } from "@/features/cart/queries";
 import { CartItemRow } from "@/features/cart/components/cart-item-row";
+import { useCreateOrderMutation } from "@/features/orders/queries";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { toastApiError } from "@/components/ui/feedback";
 import {
   AlertDialog,
@@ -79,11 +86,16 @@ function CartSkeleton() {
 }
 
 export default function CartPage() {
+  const router = useRouter();
   const { token } = useAuth();
   const cartQuery = useCartQuery();
   const updateQty = useUpdateCartQtyMutation();
   const removeItem = useRemoveCartItemMutation();
   const clearCart = useClearCartMutation();
+  const createOrder = useCreateOrderMutation();
+
+  const [checkoutOpen, setCheckoutOpen] = React.useState(false);
+  const [checkoutForm, setCheckoutForm] = React.useState({ deliveryAddress: "", mobile: "" });
 
   const cart = cartQuery.data;
   const totalQty = React.useMemo(() => cartTotalQty(cart), [cart]);
@@ -96,6 +108,8 @@ export default function CartPage() {
     }
     if (!cartQuery.isError) didToastRef.current = false;
   }, [cartQuery.error, cartQuery.isError]);
+
+  const canPlaceOrder = checkoutForm.deliveryAddress.trim().length >= 5 && !createOrder.isPending;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -226,9 +240,88 @@ export default function CartPage() {
                     </AlertDialogContent>
                   </AlertDialog>
 
-                  <Button disabled className="w-full">
-                    Checkout soon
-                  </Button>
+                  <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full active:scale-95">Place order</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Place your order</DialogTitle>
+                        <DialogDescription>
+                          Minimal details. We&apos;ll use COD and clear your cart after checkout.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="deliveryAddress">Delivery address</Label>
+                          <Textarea
+                            id="deliveryAddress"
+                            placeholder="House no, street, city…"
+                            value={checkoutForm.deliveryAddress}
+                            onChange={(e) =>
+                              setCheckoutForm((prev) => ({ ...prev, deliveryAddress: e.target.value }))
+                            }
+                            className="min-h-28 resize-none"
+                          />
+                          <p className="text-xs text-muted-foreground">Minimum 5 characters.</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="mobile">Mobile (optional)</Label>
+                          <Input
+                            id="mobile"
+                            placeholder="07x xxx xxxx"
+                            value={checkoutForm.mobile}
+                            onChange={(e) =>
+                              setCheckoutForm((prev) => ({ ...prev, mobile: e.target.value }))
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <Button
+                          variant="outline"
+                          onClick={() => setCheckoutOpen(false)}
+                          disabled={createOrder.isPending}
+                        >
+                          Not now
+                        </Button>
+                        <Button
+                          disabled={!canPlaceOrder}
+                          onClick={() => {
+                            const deliveryAddress = checkoutForm.deliveryAddress.trim();
+                            const mobile = checkoutForm.mobile.trim();
+
+                            if (deliveryAddress.length < 5) {
+                              toast.error("Delivery address is too short.");
+                              return;
+                            }
+
+                            createOrder.mutate(
+                              {
+                                deliveryAddress,
+                                mobile: mobile.length ? mobile : undefined,
+                                paymentMethod: "COD",
+                              },
+                              {
+                                onSuccess: (data) => {
+                                  toast.success("Order created");
+                                  setCheckoutOpen(false);
+                                  setCheckoutForm({ deliveryAddress: "", mobile: "" });
+                                  router.push(`/orders/${data.orderId}`);
+                                  router.refresh();
+                                },
+                              }
+                            );
+                          }}
+                        >
+                          {createOrder.isPending ? "Placing…" : "Confirm order"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>

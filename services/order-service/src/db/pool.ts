@@ -1,11 +1,17 @@
 import sql from "mssql";
 
+function envOr(key: string, fallback: string) {
+  const raw = process.env[key];
+  const value = typeof raw === "string" ? raw.trim() : "";
+  return value.length ? value : fallback;
+}
+
 const config: sql.config = {
-  user: process.env.DB_USER!,
-  password: process.env.DB_PASSWORD!,
-  server: process.env.DB_HOST!,
+  user: envOr("DB_USER", "sa"),
+  password: envOr("DB_PASSWORD", "YourStrong!Passw0rd"),
+  server: envOr("DB_HOST", "localhost"),
   port: Number(process.env.DB_PORT ?? 1433),
-  database: process.env.DB_NAME!,
+  database: envOr("DB_NAME", "KadaMandiyaOrder"),
   options: {
     encrypt: false,
     trustServerCertificate: true
