@@ -1,11 +1,102 @@
+"use client";
+
 import Link from "next/link";
+import * as React from "react";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 
+import { useAuth } from "@/hooks/use-auth";
+import { cartTotalQty, useCartQuery, useClearCartMutation, useRemoveCartItemMutation, useUpdateCartQtyMutation } from "@/features/cart/queries";
+import { CartItemRow } from "@/features/cart/components/cart-item-row";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toastApiError } from "@/components/ui/feedback";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+function formatMoney(value: number) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "LKR",
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `LKR ${value.toFixed(2)}`;
+  }
+}
+
+function CartSkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Items</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="space-y-4">
+              <div className="flex gap-4">
+                <Skeleton className="h-16 w-16 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                  <div className="flex items-center justify-between pt-2">
+                    <Skeleton className="h-9 w-28" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              </div>
+              {idx < 2 ? <Separator /> : null}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function CartPage() {
+  const { token } = useAuth();
+  const cartQuery = useCartQuery();
+  const updateQty = useUpdateCartQtyMutation();
+  const removeItem = useRemoveCartItemMutation();
+  const clearCart = useClearCartMutation();
+
+  const cart = cartQuery.data;
+  const totalQty = React.useMemo(() => cartTotalQty(cart), [cart]);
+
+  const didToastRef = React.useRef(false);
+  React.useEffect(() => {
+    if (cartQuery.isError && !didToastRef.current) {
+      didToastRef.current = true;
+      toastApiError(cartQuery.error, "Failed to load cart");
+    }
+    if (!cartQuery.isError) didToastRef.current = false;
+  }, [cartQuery.error, cartQuery.isError]);
+
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
@@ -16,28 +107,133 @@ export default function CartPage() {
             </div>
             <div>
               <p className="text-base font-semibold">My cart</p>
-              <p className="text-sm text-muted-foreground">Coming soon</p>
+              <p className="text-sm text-muted-foreground">
+                {totalQty > 0 ? `${totalQty} item${totalQty === 1 ? "" : "s"}` : "Your shopping cart"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button asChild variant="ghost">
-              <Link href="/" className="inline-flex items-center gap-2">
+              <Link href="/products" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Home
+                Products
               </Link>
             </Button>
           </div>
         </header>
 
-        <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <CardHeader>
-            <CardTitle>Cart</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            This page is a placeholder for now.
-          </CardContent>
-        </Card>
+        {!token ? (
+          <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CardHeader>
+              <CardTitle>Sign in required</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <p>Please log in to view and manage your cart.</p>
+              <Button asChild className="active:scale-95">
+                <Link href="/auth">Go to login</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : cartQuery.isLoading ? (
+          <CartSkeleton />
+        ) : cartQuery.isError ? (
+          <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CardHeader>
+              <CardTitle>Could not load cart</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <p>We couldn&apos;t reach the cart service. Please try again.</p>
+              <Button variant="outline" onClick={() => cartQuery.refetch()} className="active:scale-95">
+                Try again
+              </Button>
+            </CardContent>
+          </Card>
+        ) : !cart || cart.items.length === 0 ? (
+          <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CardHeader>
+              <CardTitle>Your cart is empty</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <p>Browse products and add items to your cart.</p>
+              <Button asChild className="active:scale-95">
+                <Link href="/products">Explore products</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+            <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader>
+                <CardTitle>Items</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {cart.items.map((item, idx) => {
+                  const isUpdatingQty = updateQty.isPending && updateQty.variables?.itemId === item.itemId;
+                  const isRemoving = removeItem.isPending && removeItem.variables === item.itemId;
+
+                  return (
+                    <div key={item.itemId} className="space-y-5">
+                      <CartItemRow
+                        item={item}
+                        isUpdatingQty={isUpdatingQty}
+                        isRemoving={isRemoving}
+                        onDecrease={() => updateQty.mutate({ itemId: item.itemId, qty: Math.max(1, item.qty - 1) })}
+                        onIncrease={() => updateQty.mutate({ itemId: item.itemId, qty: item.qty + 1 })}
+                        onRemove={() => removeItem.mutate(item.itemId)}
+                      />
+                      {idx < cart.items.length - 1 ? <Separator /> : null}
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader>
+                <CardTitle>Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-semibold tabular-nums">{formatMoney(cart.subtotal)}</span>
+                </div>
+                <Separator />
+                <div className="space-y-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full active:scale-95"
+                        disabled={clearCart.isPending}
+                      >
+                        Clear cart
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear your cart?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This removes all items from your cart. You can always add them back later.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => clearCart.mutate()}>
+                          Clear cart
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <Button disabled className="w-full">
+                    Checkout soon
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

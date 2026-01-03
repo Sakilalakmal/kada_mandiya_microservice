@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { CartNavButton } from "@/components/cart-nav-button";
 import {
   Select,
   SelectContent,
@@ -177,8 +178,11 @@ export default function ProductsPage() {
             <p className="text-sm font-medium text-muted-foreground">Browse</p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">Products</h1>
           </div>
-          <div className="text-xs text-muted-foreground">
-            {isFetching ? "Refreshing..." : null}
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-muted-foreground">
+              {isFetching ? "Refreshing..." : null}
+            </div>
+            <CartNavButton />
           </div>
         </div>
 

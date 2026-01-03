@@ -1,6 +1,7 @@
 import { getToken } from "@/lib/auth";
 
 export type ApiError = Error & { status?: number; payload?: unknown };
+export type ApiFetchInit = Omit<RequestInit, "body"> & { body?: unknown; token?: string | null };
 
 // Prefer explicit gateway base URL so requests always hit the API gateway.
 // Fall back to NEXT_PUBLIC_API_GATEWAY_URL (set via next.config env) and then local dev port 4001.
@@ -15,12 +16,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function normalizeBody(body: RequestInit["body"]) {
+function normalizeBody(body: unknown) {
   if (!body) return { body };
-  const isPlainObject = typeof body === "object" && !(body instanceof FormData) && !(body instanceof Blob);
-  if (isPlainObject) {
-    return { body: JSON.stringify(body), contentType: "application/json" };
-  }
+  const tag = Object.prototype.toString.call(body);
+  if (tag === "[object Object]") return { body: JSON.stringify(body), contentType: "application/json" };
   return { body };
 }
 
@@ -43,7 +42,7 @@ export function isApiError(err: unknown): err is ApiError {
 
 export async function apiFetch<TResponse = unknown>(
   path: string,
-  init: (RequestInit & { token?: string | null }) | undefined = {}
+  init: ApiFetchInit | undefined = {}
 ): Promise<TResponse> {
   const { token, ...rest } = init ?? {};
   const authToken = token ?? getToken();
@@ -60,7 +59,7 @@ export async function apiFetch<TResponse = unknown>(
   const response = await fetch(`${API_BASE}${path}`, {
     ...rest,
     headers,
-    body,
+    body: body as BodyInit | null | undefined,
   });
 
   const contentTypeHeader = response.headers.get("content-type") ?? "";
