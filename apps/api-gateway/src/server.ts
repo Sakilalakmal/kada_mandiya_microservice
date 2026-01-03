@@ -10,6 +10,7 @@ import { meRoutes } from "./routes/me.routes";
 import { vendorsRoutes } from "./routes/vendors.routes";
 import { productsRoutes } from "./routes/products.routes";
 import { cartRoutes } from "./routes/cart.routes";
+import { ordersRoutes, vendorOrdersRoutes } from "./routes/orders.routes";
 
 const app = express();
 app.use(cors());
@@ -29,6 +30,8 @@ app.use("/users", usersRoutes(JWT_SECRET));  // Must be before /me to handle /us
 app.use("/vendors", vendorsRoutes(JWT_SECRET));
 app.use("/products", productsRoutes(JWT_SECRET));
 app.use("/api/cart", cartRoutes(JWT_SECRET));
+app.use("/api/orders", ordersRoutes(JWT_SECRET));
+app.use("/api/vendor/orders", vendorOrdersRoutes(JWT_SECRET));
 app.use("/me", meRoutes(JWT_SECRET));  // Convenience alias, comes last
 
 // Example protected route
