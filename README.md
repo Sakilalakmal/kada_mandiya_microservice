@@ -14,3 +14,12 @@ Event-driven microservices demo project (Node.js + Express + TypeScript + SQL Se
 - services/     -> Microservices
 - packages/     -> Shared internal npm packages
 - infra/        -> Docker compose (RabbitMQ + SQL Server)
+
+## RabbitMQ event testing (dev)
+- `docker compose -f infra/docker-compose.yml up -d rabbitmq sqlserver`
+- Start `apps/api-gateway`, `services/order-service`, `services/review-service`
+- Start the dev listener: `cd tools/event-listener && npm install && npm run dev`
+- Trigger events:
+  - Create order -> observe `order.created`
+  - Vendor status update -> observe `order.status_updated`
+  - Create/update/delete review -> observe `review.*`

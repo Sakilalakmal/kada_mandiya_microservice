@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { cancelPendingOrder, createOrderWithItems, getOrderByIdForUser, listOrdersByUserId } from "../repositories/order.repo";
+import { publishEvent } from "../messaging/publisher";
 
 function requireUserId(req: Request, res: Response): string | null {
   const userId = req.user?.userId;
@@ -92,6 +93,8 @@ export async function createOrder(req: Request, res: Response) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
+    const correlationId = req.header("x-correlation-id") ?? undefined;
+
     const parsed = CreateOrderSchema.safeParse(req.body ?? {});
     if (!parsed.success) {
       return res.status(400).json({
@@ -133,7 +136,7 @@ export async function createOrder(req: Request, res: Response) {
     const subtotalCents = orderItems.reduce((sum, item) => sum + item.lineCents, 0);
     const subtotal = fromCents(subtotalCents);
 
-    const { orderId } = await createOrderWithItems({
+    const { orderId, createdAt } = await createOrderWithItems({
       userId,
       deliveryAddress: parsed.data.deliveryAddress,
       mobile: parsed.data.mobile ?? null,
@@ -147,6 +150,21 @@ export async function createOrder(req: Request, res: Response) {
       return false;
     });
     if (!cleared) console.warn("cart-service cart not cleared after order commit");
+
+    await publishEvent(
+      "order.created",
+      {
+        orderId,
+        userId,
+        subtotal,
+        currency: "LKR",
+        status: "PENDING",
+        createdAt,
+      },
+      { correlationId }
+    ).catch((err) => {
+      console.error("publish order.created failed:", err);
+    });
 
     return res.status(201).json({
       ok: true,
@@ -205,6 +223,8 @@ export async function cancelOrder(req: Request, res: Response) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
+    const correlationId = req.header("x-correlation-id") ?? undefined;
+
     const idParsed = OrderIdSchema.safeParse(req.params.orderId);
     if (!idParsed.success) {
       return res.status(400).json({
@@ -213,16 +233,30 @@ export async function cancelOrder(req: Request, res: Response) {
     }
 
     const result = await cancelPendingOrder(userId, idParsed.data);
-    if (result === "not_found") {
+    if (result.state === "not_found") {
       return res.status(404).json({
         error: { code: "NOT_FOUND", message: "Order not found." },
       });
     }
-    if (result === "not_pending") {
+    if (result.state === "not_pending") {
       return res.status(400).json({
         error: { code: "INVALID_STATE", message: "Only PENDING orders can be cancelled." },
       });
     }
+
+    await publishEvent(
+      "order.cancelled",
+      {
+        orderId: idParsed.data,
+        userId,
+        previousStatus: result.previousStatus,
+        newStatus: "CANCELLED",
+        occurredAt: result.occurredAt,
+      },
+      { correlationId }
+    ).catch((err) => {
+      console.error("publish order.cancelled failed:", err);
+    });
 
     return res.json({ ok: true });
   } catch (err) {

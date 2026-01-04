@@ -36,12 +36,17 @@ export async function createOrderWithItems(input: CreateOrderInput) {
       .input("mobile", sql.VarChar(30), input.mobile)
       .input("subtotal", sql.Decimal(18, 2), input.subtotal).query(`
         INSERT INTO dbo.orders (user_id, status, payment_method, delivery_address, mobile, subtotal)
-        OUTPUT CONVERT(varchar(36), inserted.order_id) AS orderId
+        OUTPUT
+          CONVERT(varchar(36), inserted.order_id) AS orderId,
+          CONVERT(varchar(33), inserted.created_at, 127) AS createdAt
         VALUES (@userId, @status, @paymentMethod, @deliveryAddress, @mobile, @subtotal);
       `);
 
-    const orderId = String((orderInserted.recordset as any[])?.[0]?.orderId);
+    const insertedRow = (orderInserted.recordset as any[])?.[0] ?? {};
+    const orderId = String(insertedRow.orderId ?? "");
+    const createdAt = String(insertedRow.createdAt ?? "");
     if (!orderId) throw new Error("Failed to create order");
+    if (!createdAt) throw new Error("Failed to read order createdAt");
 
     for (const item of input.items) {
       await tx
@@ -62,7 +67,7 @@ export async function createOrderWithItems(input: CreateOrderInput) {
     }
 
     await tx.commit();
-    return { orderId };
+    return { orderId, createdAt };
   } catch (err) {
     await tx.rollback().catch(() => {});
     throw err;
@@ -191,7 +196,10 @@ export async function getOrderByIdForUser(userId: string, orderId: string): Prom
   return order;
 }
 
-export type CancelOrderResult = "cancelled" | "not_found" | "not_pending";
+export type CancelOrderResult =
+  | { state: "cancelled"; previousStatus: OrderStatus; newStatus: OrderStatus; occurredAt: string }
+  | { state: "not_found" }
+  | { state: "not_pending" };
 
 export async function cancelPendingOrder(userId: string, orderId: string): Promise<CancelOrderResult> {
   const pool = await getPool();
@@ -202,11 +210,23 @@ export async function cancelPendingOrder(userId: string, orderId: string): Promi
     .input("orderId", sql.UniqueIdentifier, orderId).query(`
       UPDATE dbo.orders
       SET status = 'CANCELLED', updated_at = SYSUTCDATETIME()
+      OUTPUT
+        deleted.status AS previousStatus,
+        inserted.status AS newStatus,
+        CONVERT(varchar(33), inserted.updated_at, 127) AS occurredAt
       WHERE user_id = @userId AND order_id = @orderId AND status = 'PENDING';
     `);
 
   const affected = updated.rowsAffected?.[0] ?? 0;
-  if (affected > 0) return "cancelled";
+  if (affected > 0) {
+    const row = (updated.recordset as any[])?.[0] ?? {};
+    return {
+      state: "cancelled",
+      previousStatus: row.previousStatus as OrderStatus,
+      newStatus: row.newStatus as OrderStatus,
+      occurredAt: String(row.occurredAt ?? new Date().toISOString()),
+    };
+  }
 
   const exists = await pool
     .request()
@@ -218,7 +238,7 @@ export async function cancelPendingOrder(userId: string, orderId: string): Promi
     `);
 
   const row = (exists.recordset as any[])?.[0];
-  if (!row) return "not_found";
-  return "not_pending";
+  if (!row) return { state: "not_found" };
+  return { state: "not_pending" };
 }
 

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { listOrdersForVendor, updateOrderStatusForVendor } from "../repositories/vendorOrder.repo";
+import { publishEvent } from "../messaging/publisher";
 
 function requireVendorId(req: Request, res: Response): string | null {
   const vendorId = req.vendor?.vendorId;
@@ -39,6 +40,8 @@ export async function updateVendorOrderStatus(req: Request, res: Response) {
     const vendorId = requireVendorId(req, res);
     if (!vendorId) return;
 
+    const correlationId = req.header("x-correlation-id") ?? undefined;
+
     const idParsed = OrderIdSchema.safeParse(req.params.orderId);
     if (!idParsed.success) {
       return res.status(400).json({
@@ -63,16 +66,30 @@ export async function updateVendorOrderStatus(req: Request, res: Response) {
       status: parsed.data.status,
     });
 
-    if (result === "not_found") {
+    if (result.state === "not_found") {
       return res.status(404).json({
         error: { code: "NOT_FOUND", message: "Order not found." },
       });
     }
-    if (result === "forbidden") {
+    if (result.state === "forbidden") {
       return res.status(403).json({
         error: { code: "FORBIDDEN", message: "You do not have items in this order." },
       });
     }
+
+    await publishEvent(
+      "order.status_updated",
+      {
+        orderId: idParsed.data,
+        vendorId,
+        previousStatus: result.previousStatus,
+        newStatus: result.newStatus,
+        occurredAt: result.occurredAt,
+      },
+      { correlationId }
+    ).catch((err) => {
+      console.error("publish order.status_updated failed:", err);
+    });
 
     return res.json({ ok: true });
   } catch (err) {
