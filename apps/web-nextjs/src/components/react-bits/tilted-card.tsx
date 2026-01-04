@@ -105,6 +105,8 @@ export function TiltedCard({
       style={{ perspective }}
       onPointerMove={(event) => {
         if (disabledRef.current) return
+        if (event.pointerType && event.pointerType !== "mouse" && event.pointerType !== "pen")
+          return
         latestRef.current = { x: event.clientX, y: event.clientY }
         scheduleApply()
       }}
