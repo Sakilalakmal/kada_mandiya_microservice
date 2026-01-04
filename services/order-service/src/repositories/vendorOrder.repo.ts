@@ -84,7 +84,11 @@ export async function updateOrderStatusForVendor(input: {
   vendorId: string;
   orderId: string;
   status: "PROCESSING" | "SHIPPED" | "DELIVERED";
-}): Promise<VendorUpdateStatusResult> {
+}): Promise<
+  | { state: "updated"; previousStatus: OrderStatus; newStatus: OrderStatus; occurredAt: string }
+  | { state: "not_found" }
+  | { state: "forbidden" }
+> {
   const pool = await getPool();
 
   const updated = await pool
@@ -94,6 +98,10 @@ export async function updateOrderStatusForVendor(input: {
     .input("status", sql.VarChar(30), input.status).query(`
       UPDATE o
       SET status = @status, updated_at = SYSUTCDATETIME()
+      OUTPUT
+        deleted.status AS previousStatus,
+        inserted.status AS newStatus,
+        CONVERT(varchar(33), inserted.updated_at, 127) AS occurredAt
       FROM dbo.orders o
       WHERE o.order_id = @orderId
         AND EXISTS (
@@ -103,7 +111,15 @@ export async function updateOrderStatusForVendor(input: {
     `);
 
   const affected = updated.rowsAffected?.[0] ?? 0;
-  if (affected > 0) return "updated";
+  if (affected > 0) {
+    const row = (updated.recordset as any[])?.[0] ?? {};
+    return {
+      state: "updated",
+      previousStatus: row.previousStatus as OrderStatus,
+      newStatus: row.newStatus as OrderStatus,
+      occurredAt: String(row.occurredAt ?? new Date().toISOString()),
+    };
+  }
 
   const exists = await pool
     .request()
@@ -114,7 +130,7 @@ export async function updateOrderStatusForVendor(input: {
     `);
 
   const found = (exists.recordset as any[])?.[0]?.orderId;
-  if (!found) return "not_found";
-  return "forbidden";
+  if (!found) return { state: "not_found" };
+  return { state: "forbidden" };
 }
 

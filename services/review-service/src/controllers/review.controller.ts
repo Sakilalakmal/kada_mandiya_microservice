@@ -8,6 +8,7 @@ import {
   softDeleteReviewByIdForUser,
   updateReviewByIdForUser,
 } from "../repositories/review.repo";
+import { publishEvent } from "../messaging/publisher";
 
 function requireUserId(req: Request, res: ExpressResponse): string | null {
   const userId = req.user?.userId;
@@ -79,6 +80,8 @@ export async function createNewReview(req: Request, res: ExpressResponse) {
   try {
     const userId = requireUserId(req, res);
     if (!userId) return;
+
+    const correlationId = req.header("x-correlation-id") ?? undefined;
 
     const parsed = CreateReviewSchema.safeParse(req.body ?? {});
     if (!parsed.success) {
@@ -155,6 +158,20 @@ export async function createNewReview(req: Request, res: ExpressResponse) {
         comment: parsed.data.comment,
       });
 
+      await publishEvent(
+        "review.created",
+        {
+          reviewId,
+          userId,
+          productId: parsed.data.productId,
+          orderId: parsed.data.orderId,
+          rating: parsed.data.rating,
+        },
+        { correlationId }
+      ).catch((err) => {
+        console.error("publish review.created failed:", err);
+      });
+
       return res.status(201).json({ ok: true, message: "Review created", reviewId });
     } catch (err: any) {
       if (err?.number === 2627 || err?.number === 2601) {
@@ -179,6 +196,8 @@ export async function patchReview(req: Request, res: ExpressResponse) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
+    const correlationId = req.header("x-correlation-id") ?? undefined;
+
     const idParsed = ReviewIdSchema.safeParse(req.params.reviewId);
     if (!idParsed.success) {
       return res.status(400).json({
@@ -200,18 +219,36 @@ export async function patchReview(req: Request, res: ExpressResponse) {
     }
 
     const state = await updateReviewByIdForUser(userId, idParsed.data, parsed.data);
-    if (state === "not_found") {
+    if (state.state === "not_found") {
       return res.status(404).json({
         ok: false,
         error: { code: "NOT_FOUND", message: "Review not found." },
       });
     }
-    if (state === "deleted") {
+    if (state.state === "deleted") {
       return res.status(400).json({
         ok: false,
         error: { code: "REVIEW_DELETED", message: "Cannot edit a deleted review." },
       });
     }
+
+    const updateEvent: {
+      reviewId: string;
+      userId: string;
+      productId: string;
+      rating?: number;
+      commentChanged?: boolean;
+    } = {
+      reviewId: idParsed.data,
+      userId,
+      productId: state.productId,
+      ...(parsed.data.rating !== undefined ? { rating: parsed.data.rating } : {}),
+      ...(parsed.data.comment !== undefined ? { commentChanged: true } : {}),
+    };
+
+    await publishEvent("review.updated", updateEvent, { correlationId }).catch((err) => {
+      console.error("publish review.updated failed:", err);
+    });
 
     return res.json({ ok: true });
   } catch (err) {
@@ -225,6 +262,8 @@ export async function deleteReview(req: Request, res: ExpressResponse) {
     const userId = requireUserId(req, res);
     if (!userId) return;
 
+    const correlationId = req.header("x-correlation-id") ?? undefined;
+
     const idParsed = ReviewIdSchema.safeParse(req.params.reviewId);
     if (!idParsed.success) {
       return res.status(400).json({
@@ -234,16 +273,29 @@ export async function deleteReview(req: Request, res: ExpressResponse) {
     }
 
     const result = await softDeleteReviewByIdForUser(userId, idParsed.data);
-    if (result === "not_found") {
+    if (result.state === "not_found") {
       return res.status(404).json({
         ok: false,
         error: { code: "NOT_FOUND", message: "Review not found." },
       });
     }
 
-    if (result === "already_deleted") {
+    if (result.state === "already_deleted") {
       return res.json({ ok: true, message: "Already deleted" });
     }
+
+    await publishEvent(
+      "review.deleted",
+      {
+        reviewId: idParsed.data,
+        userId,
+        productId: result.productId,
+        deletedAt: result.deletedAt,
+      },
+      { correlationId }
+    ).catch((err) => {
+      console.error("publish review.deleted failed:", err);
+    });
 
     return res.json({ ok: true });
   } catch (err) {

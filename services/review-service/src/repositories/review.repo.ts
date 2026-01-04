@@ -50,10 +50,12 @@ export async function createReview(input: CreateReviewInput): Promise<string> {
 
 export type ReviewOwnerState = "not_found" | "deleted" | "active";
 
-export async function getReviewOwnerState(
-  userId: string,
-  reviewId: string
-): Promise<ReviewOwnerState> {
+export type ReviewMeta =
+  | { state: "not_found" }
+  | { state: "deleted"; productId: string }
+  | { state: "active"; productId: string };
+
+export async function getReviewMetaForUser(userId: string, reviewId: string): Promise<ReviewMeta> {
   const pool = await getPool();
 
   const result = await pool
@@ -61,14 +63,25 @@ export async function getReviewOwnerState(
     .input("userId", sql.VarChar(100), userId)
     .input("reviewId", sql.UniqueIdentifier, reviewId)
     .query(`
-      SELECT TOP 1 is_deleted AS isDeleted
+      SELECT TOP 1
+        is_deleted AS isDeleted,
+        product_id AS productId
       FROM dbo.reviews
       WHERE user_id = @userId AND review_id = @reviewId;
     `);
 
   const row = (result.recordset as any[])?.[0];
-  if (!row) return "not_found";
-  return row.isDeleted ? "deleted" : "active";
+  if (!row) return { state: "not_found" };
+
+  const productId = String(row.productId ?? "");
+  if (!productId) return { state: "not_found" };
+
+  return row.isDeleted ? { state: "deleted", productId } : { state: "active", productId };
+}
+
+export async function getReviewOwnerState(userId: string, reviewId: string): Promise<ReviewOwnerState> {
+  const meta = await getReviewMetaForUser(userId, reviewId);
+  return meta.state;
 }
 
 export type UpdateReviewPatch = {
@@ -80,9 +93,9 @@ export async function updateReviewByIdForUser(
   userId: string,
   reviewId: string,
   patch: UpdateReviewPatch
-): Promise<ReviewOwnerState> {
-  const state = await getReviewOwnerState(userId, reviewId);
-  if (state !== "active") return state;
+): Promise<ReviewMeta> {
+  const meta = await getReviewMetaForUser(userId, reviewId);
+  if (meta.state !== "active") return meta;
 
   const pool = await getPool();
   const rating = patch.rating === undefined ? null : patch.rating;
@@ -104,10 +117,10 @@ export async function updateReviewByIdForUser(
     `);
 
   const affected = updated.rowsAffected?.[0] ?? 0;
-  if (affected > 0) return "active";
+  if (affected > 0) return meta;
 
   // Handle rare races where a review changes state between reads.
-  return getReviewOwnerState(userId, reviewId);
+  return getReviewMetaForUser(userId, reviewId);
 }
 
 export type SoftDeleteResult = "not_found" | "already_deleted" | "deleted";
@@ -115,13 +128,17 @@ export type SoftDeleteResult = "not_found" | "already_deleted" | "deleted";
 export async function softDeleteReviewByIdForUser(
   userId: string,
   reviewId: string
-): Promise<SoftDeleteResult> {
-  const state = await getReviewOwnerState(userId, reviewId);
-  if (state === "not_found") return "not_found";
-  if (state === "deleted") return "already_deleted";
+): Promise<
+  | { state: "not_found" }
+  | { state: "already_deleted" }
+  | { state: "deleted"; productId: string; deletedAt: string }
+> {
+  const meta = await getReviewMetaForUser(userId, reviewId);
+  if (meta.state === "not_found") return { state: "not_found" };
+  if (meta.state === "deleted") return { state: "already_deleted" };
 
   const pool = await getPool();
-  await pool
+  const updated = await pool
     .request()
     .input("userId", sql.VarChar(100), userId)
     .input("reviewId", sql.UniqueIdentifier, reviewId)
@@ -131,10 +148,23 @@ export async function softDeleteReviewByIdForUser(
         is_deleted = 1,
         deleted_at = SYSUTCDATETIME(),
         updated_at = SYSUTCDATETIME()
+      OUTPUT
+        inserted.product_id AS productId,
+        CONVERT(varchar(33), inserted.deleted_at, 127) AS deletedAt
       WHERE user_id = @userId AND review_id = @reviewId AND is_deleted = 0;
     `);
 
-  return "deleted";
+  const affected = updated.rowsAffected?.[0] ?? 0;
+  if (affected > 0) {
+    const row = (updated.recordset as any[])?.[0] ?? {};
+    return {
+      state: "deleted",
+      productId: String(row.productId ?? meta.productId),
+      deletedAt: String(row.deletedAt ?? new Date().toISOString()),
+    };
+  }
+
+  return { state: "already_deleted" };
 }
 
 export type ProductReview = {
