@@ -30,6 +30,9 @@ export default function Home() {
             <Link className="hover:text-foreground" href="/orders">
               Orders
             </Link>
+            <Link className="hover:text-foreground" href="/payments">
+              Payments
+            </Link>
             <a className="hover:text-foreground" href="#features">
               Categories
             </a>
