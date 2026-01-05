@@ -16,9 +16,92 @@ export type VendorOrderListItem = {
   orderId: string;
   status: OrderStatus;
   subtotal: number;
+  vendorSubtotal: number;
   createdAt: string;
   itemsForThisVendor: VendorOrderItem[];
 };
+
+export type VendorOrderDetailItem = {
+  productId: string;
+  title: string;
+  imageUrl: string | null;
+  unitPrice: number;
+  qty: number;
+  lineTotal: number;
+};
+
+export type VendorOrderDetail = {
+  orderId: string;
+  status: OrderStatus;
+  createdAt: string;
+  deliveryAddress?: string;
+  items: VendorOrderDetailItem[];
+  vendorSubtotal: number;
+};
+
+export async function getVendorOrderById(input: {
+  vendorId: string;
+  orderId: string;
+}): Promise<
+  | { state: "found"; order: VendorOrderDetail }
+  | { state: "not_found" }
+  | { state: "forbidden" }
+> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("vendorId", sql.VarChar(100), input.vendorId)
+    .input("orderId", sql.UniqueIdentifier, input.orderId).query(`
+      SELECT
+        CONVERT(varchar(36), o.order_id) AS orderId,
+        o.status AS status,
+        CONVERT(varchar(33), o.created_at, 127) AS createdAt,
+        SUM(i.line_total) OVER () AS vendorSubtotal,
+        i.product_id AS productId,
+        i.title AS title,
+        i.image_url AS imageUrl,
+        i.unit_price AS unitPrice,
+        i.qty AS qty,
+        i.line_total AS lineTotal
+      FROM dbo.orders o
+      INNER JOIN dbo.order_items i ON i.order_id = o.order_id
+      WHERE o.order_id = @orderId AND i.vendor_id = @vendorId
+      ORDER BY i.created_at ASC;
+    `);
+
+  const rows = result.recordset as any[];
+  if (rows.length === 0) {
+    const exists = await pool
+      .request()
+      .input("orderId", sql.UniqueIdentifier, input.orderId).query(`
+        SELECT TOP 1 CONVERT(varchar(36), order_id) AS orderId
+        FROM dbo.orders
+        WHERE order_id = @orderId;
+      `);
+
+    const found = (exists.recordset as any[])?.[0]?.orderId;
+    if (!found) return { state: "not_found" };
+    return { state: "forbidden" };
+  }
+
+  const first = rows[0] ?? {};
+  const order: VendorOrderDetail = {
+    orderId: String(first.orderId ?? ""),
+    status: first.status as OrderStatus,
+    createdAt: String(first.createdAt ?? ""),
+    items: rows.map((row) => ({
+      productId: String(row.productId ?? ""),
+      title: String(row.title ?? ""),
+      imageUrl: row.imageUrl === null || row.imageUrl === undefined ? null : String(row.imageUrl),
+      unitPrice: Number(row.unitPrice ?? 0),
+      qty: Number(row.qty ?? 0),
+      lineTotal: Number(row.lineTotal ?? 0),
+    })),
+    vendorSubtotal: Number(first.vendorSubtotal ?? 0),
+  };
+
+  return { state: "found", order };
+}
 
 export async function listOrdersForVendor(vendorId: string): Promise<VendorOrderListItem[]> {
   const pool = await getPool();
@@ -29,6 +112,7 @@ export async function listOrdersForVendor(vendorId: string): Promise<VendorOrder
         CONVERT(varchar(36), o.order_id) AS orderId,
         o.status AS status,
         o.subtotal AS subtotal,
+        SUM(i.line_total) OVER (PARTITION BY o.order_id) AS vendorSubtotal,
         CONVERT(varchar(33), o.created_at, 127) AS createdAt,
         CONVERT(varchar(36), i.item_id) AS itemId,
         i.product_id AS productId,
@@ -70,6 +154,7 @@ export async function listOrdersForVendor(vendorId: string): Promise<VendorOrder
       orderId,
       status: row.status as OrderStatus,
       subtotal: Number(row.subtotal),
+      vendorSubtotal: Number(row.vendorSubtotal ?? row.subtotal),
       createdAt: String(row.createdAt),
       itemsForThisVendor: [item],
     });
