@@ -20,9 +20,11 @@ const EventSchema = z
 
 const ROUTING_KEYS = [
   "order.created",
+  "order.ready_for_vendor",
   "order.status_updated",
   "order.cancelled",
   "payment.not_required",
+  "payment.pending",
   "payment.completed",
   "payment.failed",
 ] as const;

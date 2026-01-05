@@ -40,7 +40,7 @@ export function useCreateOrderMutation() {
 
   return useMutation({
     mutationFn: (payload: CreateOrderPayload) => createOrder(payload),
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ["cart"] });
       await queryClient.invalidateQueries({ queryKey: ordersKeys.my });
 
@@ -51,7 +51,7 @@ export function useCreateOrderMutation() {
           orderId: data.orderId,
           userId: "",
           status: data.status,
-          paymentMethod: "COD",
+          paymentMethod: variables.paymentMethod ?? "COD",
           deliveryAddress: "",
           mobile: null,
           subtotal: data.subtotal,
@@ -80,7 +80,7 @@ export function useCancelOrderMutation() {
       const nextStatus: OrderStatus = "CANCELLED";
 
       queryClient.setQueryData<OrderDetail>(ordersKeys.detail(orderId), (old) => {
-        if (!old) return old as any;
+        if (!old) return old;
         return {
           ...old,
           status: nextStatus,
@@ -89,7 +89,7 @@ export function useCancelOrderMutation() {
       });
 
       queryClient.setQueryData<OrderListItem[]>(ordersKeys.my, (old) => {
-        if (!old) return old as any;
+        if (!old) return old;
         return old.map((o) => (o.orderId === orderId ? { ...o, status: nextStatus } : o));
       });
 

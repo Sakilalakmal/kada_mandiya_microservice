@@ -18,6 +18,7 @@ import { CartNavButton } from "@/components/cart-nav-button";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
@@ -44,6 +45,11 @@ function formatMoney(value: number) {
   } catch {
     return `LKR ${value.toFixed(2)}`;
   }
+}
+
+function formatPaymentMethod(method: string) {
+  if (method === "ONLINE") return "VISA";
+  return method;
 }
 
 function DetailSkeleton() {
@@ -86,6 +92,10 @@ export default function OrderDetailPage() {
   const detailQuery = useOrderDetailQuery(orderId);
   const paymentQuery = usePaymentByOrderQuery(orderId);
   const cancelMutation = useCancelOrderMutation();
+
+  const payment = paymentQuery.data;
+  const isPaymentRequired =
+    payment?.method === "ONLINE" && (payment.status === "PENDING" || payment.status === "FAILED");
 
   const didToastRef = React.useRef(false);
   React.useEffect(() => {
@@ -175,7 +185,7 @@ export default function OrderDetailPage() {
             <div>
               <p className="text-base font-semibold">Order details</p>
               <p className="text-sm text-muted-foreground">
-                {detailQuery.isFetching ? "Refreshing…" : order ? `#${order.orderId.slice(0, 8)}…` : "Loading"}
+                {detailQuery.isFetching ? "Refreshing..." : order ? `#${order.orderId.slice(0, 8)}` : "Loading"}
               </p>
             </div>
           </div>
@@ -233,14 +243,14 @@ export default function OrderDetailPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">Payment method</div>
-                    <div className="text-sm font-semibold">{order.paymentMethod}</div>
+                    <div className="text-sm font-semibold">{formatPaymentMethod(order.paymentMethod)}</div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Phone className="h-3.5 w-3.5" />
                       Mobile
                     </div>
-                    <div className="text-sm font-semibold">{order.mobile ?? "—"}</div>
+                    <div className="text-sm font-semibold">{order.mobile ?? "N/A"}</div>
                   </div>
                 </div>
 
@@ -279,7 +289,7 @@ export default function OrderDetailPage() {
                           disabled={isCancelling}
                         >
                           <Ban className="h-4 w-4" />
-                          {isCancelling ? "Cancelling…" : "Cancel order"}
+                          {isCancelling ? "Cancelling..." : "Cancel order"}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -325,22 +335,36 @@ export default function OrderDetailPage() {
                 </CardContent>
               </Card>
             ) : (
-              <PaymentCard
-                payment={paymentQuery.data}
-                footer={
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {paymentQuery.data.status === "PENDING" ? (
-                        <>
-                          <Spinner className="size-3.5" />
-                          <span>Updating...</span>
-                        </>
-                      ) : null}
+              <div className="space-y-4">
+                {isPaymentRequired ? (
+                  <Alert variant="destructive" className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <AlertTitle>Payment required</AlertTitle>
+                    <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+                      <span>
+                        Complete your Visa payment to finish checkout. Vendors won&apos;t see this order until it&apos;s paid.
+                      </span>
+                      <PaymentActions payment={paymentQuery.data} />
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                <PaymentCard
+                  payment={paymentQuery.data}
+                  footer={
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {paymentQuery.data.status === "PENDING" ? (
+                          <>
+                            <Spinner className="size-3.5" />
+                            <span>Updating...</span>
+                          </>
+                        ) : null}
+                      </div>
+                      {!isPaymentRequired ? <PaymentActions payment={paymentQuery.data} /> : null}
                     </div>
-                    <PaymentActions payment={paymentQuery.data} />
-                  </div>
-                }
-              />
+                  }
+                />
+              </div>
             )}
           </div>
         )}
@@ -348,4 +372,3 @@ export default function OrderDetailPage() {
     </div>
   );
 }
-

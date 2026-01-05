@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { ArrowLeft, CreditCard, ShoppingCart, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
@@ -14,13 +14,15 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { toastApiError } from "@/components/ui/feedback";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -96,7 +98,11 @@ export default function CartPage() {
   const createOrder = useCreateOrderMutation();
 
   const [checkoutOpen, setCheckoutOpen] = React.useState(false);
-  const [checkoutForm, setCheckoutForm] = React.useState({ deliveryAddress: "", mobile: "" });
+  const [checkoutForm, setCheckoutForm] = React.useState({
+    deliveryAddress: "",
+    mobile: "",
+    paymentMethod: "COD" as "COD" | "ONLINE",
+  });
 
   const cart = cartQuery.data;
   const totalQty = React.useMemo(() => cartTotalQty(cart), [cart]);
@@ -242,24 +248,70 @@ export default function CartPage() {
                     </AlertDialogContent>
                   </AlertDialog>
 
-                  <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
-                    <DialogTrigger asChild>
+                  <Sheet open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+                    <SheetTrigger asChild>
                       <Button className="w-full active:scale-95">Place order</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-lg">
-                      <DialogHeader>
-                        <DialogTitle>Place your order</DialogTitle>
-                        <DialogDescription>
-                          Minimal details. We&apos;ll use COD and clear your cart after checkout.
-                        </DialogDescription>
-                      </DialogHeader>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="w-full sm:max-w-lg">
+                      <SheetHeader>
+                        <SheetTitle>Place your order</SheetTitle>
+                        <SheetDescription>Choose a payment method and enter delivery details.</SheetDescription>
+                      </SheetHeader>
 
-                      <div className="space-y-4">
+                      <div className="mt-6 space-y-6">
+                        <div className="space-y-3">
+                          <div className="text-sm font-medium">Payment method</div>
+                          <RadioGroup
+                            value={checkoutForm.paymentMethod}
+                            onValueChange={(v) =>
+                              setCheckoutForm((prev) => ({
+                                ...prev,
+                                paymentMethod: v === "ONLINE" ? "ONLINE" : "COD",
+                              }))
+                            }
+                            className="grid gap-3"
+                          >
+                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-background p-4 hover:bg-muted/20">
+                              <RadioGroupItem value="COD" className="mt-1" />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 text-sm font-semibold">
+                                  <Truck className="h-4 w-4" />
+                                  Cash on Delivery (COD)
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Pay when the order arrives. Vendors can start processing immediately.
+                                </p>
+                              </div>
+                            </label>
+
+                            <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-background p-4 hover:bg-muted/20">
+                              <RadioGroupItem value="ONLINE" className="mt-1" />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 text-sm font-semibold">
+                                  <CreditCard className="h-4 w-4" />
+                                  Visa card (Online)
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Vendors won&apos;t see this order until payment is completed.
+                                </p>
+                              </div>
+                            </label>
+                          </RadioGroup>
+
+                          {checkoutForm.paymentMethod === "ONLINE" ? (
+                            <Alert variant="destructive">
+                              <AlertDescription>
+                                Payment is required to complete checkout. You&apos;ll be redirected to pay after the
+                                order is created.
+                              </AlertDescription>
+                            </Alert>
+                          ) : null}
+                        </div>
                         <div className="space-y-2">
                           <Label htmlFor="deliveryAddress">Delivery address</Label>
                           <Textarea
                             id="deliveryAddress"
-                            placeholder="House no, street, city…"
+                            placeholder="House no, street, city..."
                             value={checkoutForm.deliveryAddress}
                             onChange={(e) =>
                               setCheckoutForm((prev) => ({ ...prev, deliveryAddress: e.target.value }))
@@ -282,7 +334,7 @@ export default function CartPage() {
                         </div>
                       </div>
 
-                      <DialogFooter className="gap-2 sm:gap-0">
+                      <SheetFooter className="mt-6 gap-2 sm:gap-0">
                         <Button
                           variant="outline"
                           onClick={() => setCheckoutOpen(false)}
@@ -301,29 +353,33 @@ export default function CartPage() {
                               return;
                             }
 
+                            const paymentMethod = checkoutForm.paymentMethod;
+
                             createOrder.mutate(
                               {
                                 deliveryAddress,
                                 mobile: mobile.length ? mobile : undefined,
-                                paymentMethod: "COD",
+                                paymentMethod,
                               },
                               {
                                 onSuccess: (data) => {
                                   toast.success("Order created");
                                   setCheckoutOpen(false);
-                                  setCheckoutForm({ deliveryAddress: "", mobile: "" });
-                                  router.push(`/orders/${data.orderId}`);
+                                  setCheckoutForm({ deliveryAddress: "", mobile: "", paymentMethod: "COD" });
+                                  router.push(
+                                    paymentMethod === "ONLINE" ? `/orders/${data.orderId}?pay=1` : `/orders/${data.orderId}`
+                                  );
                                   router.refresh();
                                 },
                               }
                             );
                           }}
                         >
-                          {createOrder.isPending ? "Placing…" : "Confirm order"}
+                          {createOrder.isPending ? "Placing..." : "Confirm order"}
                         </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                      </SheetFooter>
+                    </SheetContent>
+                  </Sheet>
                 </div>
               </CardContent>
             </Card>
@@ -333,4 +389,3 @@ export default function CartPage() {
     </div>
   );
 }
-

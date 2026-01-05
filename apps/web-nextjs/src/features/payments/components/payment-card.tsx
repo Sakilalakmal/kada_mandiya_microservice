@@ -93,7 +93,7 @@ export function PaymentCard({
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">Method</div>
-            <div className="text-sm font-semibold">{payment.method}</div>
+            <div className="text-sm font-semibold">{payment.method === "ONLINE" ? "VISA" : payment.method}</div>
           </div>
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">Currency</div>

@@ -53,7 +53,7 @@ export function PaymentActions({ payment }: { payment: Pick<PaymentDetail, "orde
             <AlertDialogDescription>
               {payment.method === "COD"
                 ? "This order is Cash on Delivery. This action is for dev/demo only and will mark the payment as paid."
-                : "This will complete the payment for this order (dev/demo)."}
+                : "This will complete the Visa payment for this order (dev/demo)."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

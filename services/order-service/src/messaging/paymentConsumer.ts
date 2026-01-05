@@ -1,38 +1,32 @@
 import type { ConsumeMessage } from "amqplib";
 import { z } from "zod";
-import { publishEvent, getRabbitChannel, getEventExchange } from "./bus";
-import type { DomainEvent } from "./types";
-import { createNotRequiredPayment, createPendingPayment } from "../repositories/payment.repo";
+import { getEventExchange, getRabbitChannel } from "./rabbit";
+import { publishEvent } from "./publisher";
+import { listVendorIdsByOrderId, updateOrderPaymentStatus, type PaymentStatus } from "../repositories/order.repo";
 
-type OrderCreatedData = {
-  orderId: string;
-  userId: string;
-  subtotal: number;
-  currency?: string;
-  paymentMethod?: string;
-};
+const ROUTING_KEYS = ["payment.not_required", "payment.pending", "payment.completed", "payment.failed"] as const;
 
-const OrderCreatedSchema = z
+const EventSchema = z
   .object({
     eventId: z.string(),
     eventType: z.string(),
     version: z.number(),
     occurredAt: z.string(),
     correlationId: z.string(),
-    data: z
-      .object({
-        orderId: z.string().min(1).max(100),
-        userId: z.string().min(1).max(100),
-        subtotal: z.number(),
-        currency: z.string().optional(),
-        paymentMethod: z.string().optional(),
-      })
-      .passthrough(),
+    data: z.any(),
+  })
+  .passthrough();
+
+const PaymentEventSchema = z
+  .object({
+    orderId: z.string().min(1),
+    status: z.string().min(1),
+    currency: z.string().optional(),
   })
   .passthrough();
 
 function getQueueName(): string {
-  return process.env.PAYMENT_QUEUE ?? "payment-service.q";
+  return process.env.ORDER_PAYMENT_QUEUE ?? "order-service.payments.q";
 }
 
 function getMaxPoisonRetries(): number {
@@ -98,7 +92,7 @@ async function handleConsumerError(
     await waitForConfirms(channel);
 
     console.error(
-      `[payment-service] message moved to DLQ after ${currentRetry} retries (queue=${queue} dlq=${dlq}):`,
+      `[order-service] message moved to DLQ after ${currentRetry} retries (queue=${queue} dlq=${dlq}):`,
       err
     );
     channel.ack(message);
@@ -107,10 +101,7 @@ async function handleConsumerError(
 
   const nextRetry = currentRetry + 1;
   const delayMs = backoffMs(nextRetry, 250, 5000);
-  console.warn(
-    `[payment-service] handler error; retrying (${nextRetry}/${maxRetries}) after ${delayMs}ms:`,
-    err
-  );
+  console.warn(`[order-service] handler error; retrying (${nextRetry}/${maxRetries}) after ${delayMs}ms:`, err);
 
   await sleep(delayMs);
 
@@ -125,77 +116,87 @@ async function handleConsumerError(
     await waitForConfirms(channel);
     channel.ack(message);
   } catch (republishErr) {
-    console.error("[payment-service] retry republish failed; requeueing original message:", republishErr);
+    console.error("[order-service] retry republish failed; requeueing original message:", republishErr);
     channel.nack(message, false, true);
   }
 }
 
-async function handleOrderCreated(message: ConsumeMessage) {
-  const content = message.content.toString("utf8");
+function isPaymentStatus(value: string): value is PaymentStatus {
+  return (
+    value === "NOT_REQUIRED" ||
+    value === "PENDING" ||
+    value === "COMPLETED" ||
+    value === "FAILED" ||
+    value === "CANCELLED"
+  );
+}
 
+async function handleMessage(message: ConsumeMessage) {
+  const content = message.content.toString("utf8");
   const parsedJson = (() => {
     try {
-      return JSON.parse(content) as DomainEvent<OrderCreatedData>;
+      return JSON.parse(content) as unknown;
     } catch {
       return null;
     }
   })();
 
-  const parsed = OrderCreatedSchema.safeParse(parsedJson);
+  const parsed = EventSchema.safeParse(parsedJson);
   if (!parsed.success) {
-    console.error("[payment-service] invalid order.created payload:", parsed.error.flatten());
+    console.error("[order-service] invalid event payload:", parsed.error.flatten());
     return { state: "ack" as const };
   }
 
-  const event = parsed.data;
-  const orderId = String(event.data.orderId);
-  const userId = String(event.data.userId);
-  const amount = Number(event.data.subtotal);
-  const currency = String(event.data.currency ?? "LKR");
-  const paymentMethod = String(event.data.paymentMethod ?? "COD");
+  const eventType = String(parsed.data.eventType);
+  if (!ROUTING_KEYS.includes(eventType as any)) return { state: "ack" as const };
 
-  if (!Number.isFinite(amount)) {
-    console.error("[payment-service] invalid subtotal for order.created:", event.data.subtotal);
+  const parsedPayment = PaymentEventSchema.safeParse(parsed.data.data);
+  if (!parsedPayment.success) {
+    console.error(`[order-service] invalid ${eventType} payload:`, parsedPayment.error.flatten());
     return { state: "ack" as const };
   }
 
-  const created =
-    paymentMethod === "ONLINE"
-      ? await createPendingPayment({
-          orderId,
-          userId,
-          amount,
-          currency,
-          provider: "VISA",
-          correlationId: event.correlationId ?? null,
-        })
-      : await createNotRequiredPayment({
-          orderId,
-          userId,
-          amount,
-          currency,
-          correlationId: event.correlationId ?? null,
-        });
-
-  if (created === "duplicate") {
-    console.log(`[payment-service] duplicate payment for orderId=${orderId} (already processed)`);
+  const orderId = String(parsedPayment.data.orderId);
+  const statusRaw = String(parsedPayment.data.status);
+  if (!isPaymentStatus(statusRaw)) {
+    console.warn(`[order-service] ignoring unknown payment status=${statusRaw} for orderId=${orderId}`);
     return { state: "ack" as const };
   }
 
-  const publishType = paymentMethod === "ONLINE" ? "payment.pending" : "payment.not_required";
-  const publishData =
-    paymentMethod === "ONLINE"
-      ? ({ orderId, userId, amount, currency, method: "ONLINE", status: "PENDING" as const } as const)
-      : ({ orderId, userId, amount, currency, method: "COD", status: "NOT_REQUIRED" as const } as const);
+  const updated = await updateOrderPaymentStatus(orderId, statusRaw);
+  if (updated.state === "not_found") return { state: "ack" as const };
 
-  await publishEvent(publishType, publishData, { correlationId: event.correlationId }).catch((err) => {
-    console.error(`[payment-service] publish ${publishType} failed:`, err);
-  });
+  if (
+    eventType === "payment.completed" &&
+    updated.previousStatus !== "COMPLETED" &&
+    updated.meta.paymentMethod === "ONLINE"
+  ) {
+    const vendorIds = await listVendorIdsByOrderId(orderId).catch((err) => {
+      console.error("[order-service] listVendorIdsByOrderId error:", err);
+      return [] as string[];
+    });
+
+    await publishEvent(
+      "order.ready_for_vendor",
+      {
+        orderId,
+        userId: updated.meta.userId,
+        vendorIds,
+        subtotal: updated.meta.subtotal,
+        currency: parsedPayment.data.currency ?? "LKR",
+        paymentMethod: updated.meta.paymentMethod,
+        paymentStatus: updated.meta.paymentStatus,
+      },
+      { correlationId: parsed.data.correlationId }
+    ).catch((err) => {
+      console.error("[order-service] publish order.ready_for_vendor failed:", err);
+    });
+  }
 
   return { state: "ack" as const };
 }
 
-export async function startConsumer(): Promise<void> {
+export async function startPaymentConsumer(): Promise<void> {
   const exchange = getEventExchange();
   const queue = getQueueName();
 
@@ -215,11 +216,13 @@ export async function startConsumer(): Promise<void> {
 
       await channel.assertExchange(exchange, "topic", { durable: true });
       await channel.assertQueue(queue, { durable: true });
-      await channel.bindQueue(queue, exchange, "order.created");
+      for (const key of ROUTING_KEYS) {
+        await channel.bindQueue(queue, exchange, key);
+      }
       await channel.assertQueue(`${queue}.dlq`, { durable: true });
       await channel.prefetch(10);
 
-      console.log(`[payment-service] waiting for order.created on ${queue}`);
+      console.log(`[order-service] waiting for payment events on ${queue}`);
 
       const consumeResult = await channel.consume(
         queue,
@@ -228,7 +231,7 @@ export async function startConsumer(): Promise<void> {
           if (shuttingDown) return channel.nack(msg, false, true);
 
           try {
-            const result = await handleOrderCreated(msg);
+            const result = await handleMessage(msg);
             if (result.state === "ack") channel.ack(msg);
           } catch (err) {
             if (shuttingDown) return channel.nack(msg, false, true);
@@ -238,7 +241,6 @@ export async function startConsumer(): Promise<void> {
         { noAck: false }
       );
 
-      // Wait until shutdown or until the channel closes, then loop and reconnect.
       await new Promise<void>((resolve) => {
         let interval: NodeJS.Timeout;
         const onClose = () => {
@@ -260,13 +262,14 @@ export async function startConsumer(): Promise<void> {
         return;
       }
 
-      console.warn("[payment-service] rabbit channel closed; reconnecting consumer...");
+      console.warn("[order-service] rabbit channel closed; reconnecting consumer...");
       connectAttempt = 0;
     } catch (err) {
       connectAttempt++;
       const delayMs = backoffMs(connectAttempt, 500, 30000);
-      console.warn(`[payment-service] RabbitMQ consumer connect failed; retrying in ${delayMs}ms:`, err);
+      console.warn(`[order-service] payment consumer connect failed; retrying in ${delayMs}ms:`, err);
       await sleep(delayMs);
     }
   }
 }
+

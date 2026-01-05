@@ -88,7 +88,7 @@ const CreateOrderSchema = z
   .object({
     deliveryAddress: z.string().min(5).max(300),
     mobile: z.string().max(30).optional(),
-    paymentMethod: z.enum(["COD"]).optional().default("COD"),
+    paymentMethod: z.enum(["COD", "ONLINE"]).optional().default("COD"),
   })
   .strict();
 
@@ -151,11 +151,15 @@ export async function createOrder(req: Request, res: Response) {
       )
     );
 
+    const paymentMethod = parsed.data.paymentMethod ?? "COD";
+    const paymentStatus = paymentMethod === "ONLINE" ? "PENDING" : "NOT_REQUIRED";
+
     const { orderId, createdAt } = await createOrderWithItems({
       userId,
       deliveryAddress: parsed.data.deliveryAddress,
       mobile: parsed.data.mobile ?? null,
-      paymentMethod: parsed.data.paymentMethod ?? "COD",
+      paymentMethod,
+      paymentStatus,
       subtotal,
       items: orderItems.map(({ lineCents, ...rest }) => rest),
     });
@@ -175,6 +179,8 @@ export async function createOrder(req: Request, res: Response) {
         subtotal,
         currency: "LKR",
         status: "PENDING",
+        paymentMethod,
+        paymentStatus,
         createdAt,
       },
       { correlationId }

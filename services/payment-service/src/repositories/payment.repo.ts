@@ -139,6 +139,40 @@ export async function createNotRequiredPayment(input: {
   }
 }
 
+export async function createPendingPayment(input: {
+  orderId: string;
+  userId: string;
+  amount: number;
+  currency: string;
+  provider?: string;
+  correlationId: string | null;
+}): Promise<"created" | "duplicate"> {
+  const pool = await getPool();
+  try {
+    await pool
+      .request()
+      .input("orderId", sql.VarChar(100), input.orderId)
+      .input("userId", sql.VarChar(100), input.userId)
+      .input("amount", sql.Decimal(18, 2), input.amount)
+      .input("currency", sql.VarChar(10), input.currency)
+      .input("method", sql.VarChar(30), "ONLINE")
+      .input("status", sql.VarChar(30), "PENDING")
+      .input("provider", sql.VarChar(30), input.provider ?? "VISA")
+      .input("providerRef", sql.VarChar(200), null)
+      .input("correlationId", sql.VarChar(100), input.correlationId).query(`
+        INSERT INTO dbo.payments
+          (order_id, user_id, amount, currency, method, status, provider, provider_ref, correlation_id)
+        VALUES
+          (@orderId, @userId, @amount, @currency, @method, @status, @provider, @providerRef, @correlationId);
+      `);
+
+    return "created";
+  } catch (err) {
+    if (isUniqueConstraintError(err)) return "duplicate";
+    throw err;
+  }
+}
+
 export async function updatePaymentStatus(orderId: string, status: PaymentStatus): Promise<Payment | null> {
   const pool = await getPool();
   const result = await pool

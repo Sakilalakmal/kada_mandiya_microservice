@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api";
 
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type OrderPaymentMethod = "COD" | "ONLINE";
 
 export type OrderListItem = {
   orderId: string;
@@ -25,7 +26,7 @@ export type OrderDetail = {
   orderId: string;
   userId: string;
   status: OrderStatus;
-  paymentMethod: string;
+  paymentMethod: OrderPaymentMethod;
   deliveryAddress: string;
   mobile: string | null;
   subtotal: number;
@@ -37,7 +38,7 @@ export type OrderDetail = {
 export type CreateOrderPayload = {
   deliveryAddress: string;
   mobile?: string;
-  paymentMethod?: "COD";
+  paymentMethod?: OrderPaymentMethod;
 };
 
 export type CreateOrderResponse = {

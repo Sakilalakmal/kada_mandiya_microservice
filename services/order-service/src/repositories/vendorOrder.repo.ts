@@ -66,6 +66,7 @@ export async function getVendorOrderById(input: {
       FROM dbo.orders o
       INNER JOIN dbo.order_items i ON i.order_id = o.order_id
       WHERE o.order_id = @orderId AND i.vendor_id = @vendorId
+        AND o.payment_status IN ('NOT_REQUIRED','COMPLETED')
       ORDER BY i.created_at ASC;
     `);
 
@@ -76,7 +77,7 @@ export async function getVendorOrderById(input: {
       .input("orderId", sql.UniqueIdentifier, input.orderId).query(`
         SELECT TOP 1 CONVERT(varchar(36), order_id) AS orderId
         FROM dbo.orders
-        WHERE order_id = @orderId;
+        WHERE order_id = @orderId AND payment_status IN ('NOT_REQUIRED','COMPLETED');
       `);
 
     const found = (exists.recordset as any[])?.[0]?.orderId;
@@ -125,6 +126,7 @@ export async function listOrdersForVendor(vendorId: string): Promise<VendorOrder
       FROM dbo.orders o
       INNER JOIN dbo.order_items i ON i.order_id = o.order_id
       WHERE i.vendor_id = @vendorId
+        AND o.payment_status IN ('NOT_REQUIRED','COMPLETED')
       ORDER BY o.created_at DESC, i.created_at ASC;
     `);
 
@@ -190,6 +192,7 @@ export async function updateOrderStatusForVendor(input: {
         CONVERT(varchar(33), inserted.updated_at, 127) AS occurredAt
       FROM dbo.orders o
       WHERE o.order_id = @orderId
+        AND o.payment_status IN ('NOT_REQUIRED','COMPLETED')
         AND EXISTS (
           SELECT 1 FROM dbo.order_items i
           WHERE i.order_id = o.order_id AND i.vendor_id = @vendorId
@@ -213,7 +216,7 @@ export async function updateOrderStatusForVendor(input: {
     .input("orderId", sql.UniqueIdentifier, input.orderId).query(`
       SELECT TOP 1 CONVERT(varchar(36), order_id) AS orderId
       FROM dbo.orders
-      WHERE order_id = @orderId;
+      WHERE order_id = @orderId AND payment_status IN ('NOT_REQUIRED','COMPLETED');
     `);
 
   const found = (exists.recordset as any[])?.[0]?.orderId;
