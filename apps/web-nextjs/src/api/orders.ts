@@ -76,3 +76,66 @@ export async function cancelOrder(orderId: string): Promise<{ ok: true }> {
   });
 }
 
+export type VendorOrderListItem = {
+  orderId: string;
+  status: OrderStatus;
+  subtotal: number;
+  vendorSubtotal: number;
+  createdAt: string;
+  itemsForThisVendor: VendorOrderListItemItem[];
+};
+
+export type VendorOrderListItemItem = {
+  itemId: string;
+  productId: string;
+  title: string;
+  imageUrl: string | null;
+  unitPrice: number;
+  qty: number;
+  lineTotal: number;
+  createdAt: string;
+};
+
+export type VendorOrderDetailItem = {
+  productId: string;
+  title: string;
+  imageUrl: string | null;
+  unitPrice: number;
+  qty: number;
+  lineTotal: number;
+};
+
+export type VendorOrderDetail = {
+  orderId: string;
+  status: OrderStatus;
+  createdAt: string;
+  deliveryAddress?: string;
+  items: VendorOrderDetailItem[];
+  vendorSubtotal: number;
+};
+
+export async function getVendorOrders(): Promise<VendorOrderListItem[]> {
+  const data = await apiFetch<{ ok: true; orders: VendorOrderListItem[] }>("/api/vendor/orders", {
+    method: "GET",
+  });
+  return data.orders ?? [];
+}
+
+export async function getVendorOrderById(orderId: string): Promise<VendorOrderDetail> {
+  const data = await apiFetch<{ ok: true; order: VendorOrderDetail }>(`/api/vendor/orders/${orderId}`, {
+    method: "GET",
+  });
+  if (!data?.order) throw new Error("Order missing from response");
+  return data.order;
+}
+
+export async function updateVendorOrderStatus(
+  orderId: string,
+  status: "PROCESSING" | "SHIPPED" | "DELIVERED"
+): Promise<{ ok: true }> {
+  return apiFetch<{ ok: true }>(`/api/vendor/orders/${orderId}/status`, {
+    method: "PATCH",
+    body: { status },
+  });
+}
+

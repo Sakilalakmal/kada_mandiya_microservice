@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { listOrdersForVendor, updateOrderStatusForVendor } from "../repositories/vendorOrder.repo";
+import { getVendorOrderById, listOrdersForVendor, updateOrderStatusForVendor } from "../repositories/vendorOrder.repo";
 import { publishEvent } from "../messaging/publisher";
 
 function requireVendorId(req: Request, res: Response): string | null {
@@ -8,7 +8,7 @@ function requireVendorId(req: Request, res: Response): string | null {
   if (!vendorId) {
     res.status(403).json({
       ok: false,
-      error: { code: "FORBIDDEN", message: "Missing vendor identity." },
+      error: { code: "FORBIDDEN", message: "Missing x-vendor-id (gateway must inject for vendor users)." },
     });
     return null;
   }
@@ -31,6 +31,40 @@ export async function getVendorOrders(req: Request, res: Response) {
     return res.json({ ok: true, orders });
   } catch (err) {
     console.error("getVendorOrders error:", err);
+    return res.status(500).json({ ok: false, message: "Server error" });
+  }
+}
+
+export async function getVendorOrder(req: Request, res: Response) {
+  try {
+    const vendorId = requireVendorId(req, res);
+    if (!vendorId) return;
+
+    const idParsed = OrderIdSchema.safeParse(req.params.orderId);
+    if (!idParsed.success) {
+      return res.status(400).json({
+        ok: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid orderId." },
+      });
+    }
+
+    const result = await getVendorOrderById({ vendorId, orderId: idParsed.data });
+    if (result.state === "not_found") {
+      return res.status(404).json({
+        ok: false,
+        error: { code: "NOT_FOUND", message: "Order not found." },
+      });
+    }
+    if (result.state === "forbidden") {
+      return res.status(403).json({
+        ok: false,
+        error: { code: "FORBIDDEN", message: "Not allowed to view this order." },
+      });
+    }
+
+    return res.json({ ok: true, order: result.order });
+  } catch (err) {
+    console.error("getVendorOrder error:", err);
     return res.status(500).json({ ok: false, message: "Server error" });
   }
 }

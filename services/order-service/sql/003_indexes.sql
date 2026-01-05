@@ -25,3 +25,10 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS (
+  SELECT 1 FROM sys.indexes WHERE name = N'IX_order_items_vendor_order' AND object_id = OBJECT_ID(N'dbo.order_items')
+)
+BEGIN
+  CREATE INDEX IX_order_items_vendor_order ON dbo.order_items(vendor_id, order_id);
+END
+GO
