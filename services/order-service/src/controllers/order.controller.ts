@@ -42,6 +42,17 @@ function buildCartUrl(pathname: string) {
   return new URL(relative, normalizedBase).toString();
 }
 
+function productBaseUrl() {
+  return process.env.PRODUCT_SERVICE_URL ?? "http://localhost:4004";
+}
+
+function buildProductUrl(pathname: string) {
+  const base = productBaseUrl();
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  const relative = pathname.replace(/^\/+/, "");
+  return new URL(relative, normalizedBase).toString();
+}
+
 type CartItem = {
   itemId: string;
   productId: string;
@@ -82,6 +93,67 @@ async function clearCart(userId: string) {
     headers: { "x-user-id": userId },
   });
   return r.ok;
+}
+
+type StockReserveResponse = {
+  ok: boolean;
+  items?: { productId: string; stockQty: number }[];
+  error?: { code?: string; message?: string; productId?: string };
+};
+
+async function reserveStock(items: { productId: string; qty: number }[]) {
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  const internalKey = process.env.INTERNAL_API_KEY;
+  if (internalKey) headers["x-internal-key"] = internalKey;
+
+  const r = await fetch(buildProductUrl("/internal/stock/reserve"), {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ items }),
+  });
+
+  const raw = await r.text().catch(() => "");
+  let payload: StockReserveResponse | null = null;
+  try {
+    payload = (raw ? JSON.parse(raw) : null) as StockReserveResponse | null;
+  } catch {
+    payload = null;
+  }
+  if (r.ok && payload?.ok) return payload;
+
+  if (r.status === 409) {
+    const message = payload?.error?.message ?? "Not enough stock.";
+    const productId = payload?.error?.productId;
+    const err = new Error(message);
+    (err as any).code = "OUT_OF_STOCK";
+    (err as any).productId = productId;
+    throw err;
+  }
+
+  throw new Error(`product-service reserve failed: ${r.status} ${raw}`);
+}
+
+async function releaseStock(items: { productId: string; qty: number }[]) {
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  const internalKey = process.env.INTERNAL_API_KEY;
+  if (internalKey) headers["x-internal-key"] = internalKey;
+
+  await fetch(buildProductUrl("/internal/stock/release"), {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ items }),
+  }).catch(() => {});
+}
+
+function aggregateStockItems(items: { productId: string; qty: number }[]) {
+  const map = new Map<string, number>();
+  for (const item of items) {
+    const pid = String(item.productId);
+    const qty = Math.max(0, Math.floor(Number(item.qty)));
+    if (!pid || qty <= 0) continue;
+    map.set(pid, (map.get(pid) ?? 0) + qty);
+  }
+  return Array.from(map.entries()).map(([productId, qty]) => ({ productId, qty }));
 }
 
 const CreateOrderSchema = z
@@ -154,15 +226,43 @@ export async function createOrder(req: Request, res: Response) {
     const paymentMethod = parsed.data.paymentMethod ?? "COD";
     const paymentStatus = paymentMethod === "ONLINE" ? "PENDING" : "NOT_REQUIRED";
 
-    const { orderId, createdAt } = await createOrderWithItems({
-      userId,
-      deliveryAddress: parsed.data.deliveryAddress,
-      mobile: parsed.data.mobile ?? null,
-      paymentMethod,
-      paymentStatus,
-      subtotal,
-      items: orderItems.map(({ lineCents, ...rest }) => rest),
-    });
+    const stockItems = aggregateStockItems(orderItems.map((item) => ({ productId: item.productId, qty: item.qty })));
+    try {
+      await reserveStock(stockItems);
+    } catch (err: any) {
+      if (err?.code === "OUT_OF_STOCK") {
+        return res.status(409).json({
+          ok: false,
+          error: {
+            code: "OUT_OF_STOCK",
+            message: err.message ?? "Not enough stock.",
+            productId: err.productId,
+          },
+        });
+      }
+      throw err;
+    }
+
+    let orderId: string | null = null;
+    let createdAt: string | null = null;
+
+    try {
+      const result = await createOrderWithItems({
+        userId,
+        deliveryAddress: parsed.data.deliveryAddress,
+        mobile: parsed.data.mobile ?? null,
+        paymentMethod,
+        paymentStatus,
+        subtotal,
+        items: orderItems.map(({ lineCents, ...rest }) => rest),
+      });
+
+      orderId = result.orderId;
+      createdAt = result.createdAt;
+    } catch (err) {
+      await releaseStock(stockItems);
+      throw err;
+    }
 
     const cleared = await clearCart(userId).catch((err) => {
       console.error("clearCart error:", err);
@@ -173,7 +273,7 @@ export async function createOrder(req: Request, res: Response) {
     await publishEvent(
       "order.created",
       {
-        orderId,
+        orderId: orderId!,
         userId,
         vendorIds,
         subtotal,
@@ -181,7 +281,7 @@ export async function createOrder(req: Request, res: Response) {
         status: "PENDING",
         paymentMethod,
         paymentStatus,
-        createdAt,
+        createdAt: createdAt!,
       },
       { correlationId }
     ).catch((err) => {
@@ -191,7 +291,7 @@ export async function createOrder(req: Request, res: Response) {
     return res.status(201).json({
       ok: true,
       message: "Order created",
-      orderId,
+      orderId: orderId!,
       status: "PENDING",
       subtotal,
     });

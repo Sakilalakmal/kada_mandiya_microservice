@@ -144,9 +144,6 @@ export default function ProductDetailPage() {
               <Button asChild variant="default">
                 <Link href="/products">Back to products</Link>
               </Button>
-              <Button variant="outline" onClick={() => router.refresh()}>
-                Refresh
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -251,13 +248,6 @@ export default function ProductDetailPage() {
                   )}
                   Add to cart
                 </MotionButton>
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() => router.refresh()}
-                >
-                  Refresh
-                </Button>
               </div>
 
               <div className="rounded-xl border bg-card/60 p-4 text-sm text-muted-foreground">

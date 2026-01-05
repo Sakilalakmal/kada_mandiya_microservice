@@ -9,6 +9,7 @@ export type CartItem = {
   unitPrice: number;
   qty: number;
   lineTotal: number;
+  stockQty?: number;
 };
 
 export type Cart = {

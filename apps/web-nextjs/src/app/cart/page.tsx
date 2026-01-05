@@ -106,6 +106,10 @@ export default function CartPage() {
 
   const cart = cartQuery.data;
   const totalQty = React.useMemo(() => cartTotalQty(cart), [cart]);
+  const hasOutOfStockItems = React.useMemo(() => {
+    if (!cart?.items?.length) return false;
+    return cart.items.some((item) => typeof item.stockQty === "number" && item.stockQty <= 0);
+  }, [cart]);
 
   const didToastRef = React.useRef(false);
   React.useEffect(() => {
@@ -116,7 +120,8 @@ export default function CartPage() {
     if (!cartQuery.isError) didToastRef.current = false;
   }, [cartQuery.error, cartQuery.isError]);
 
-  const canPlaceOrder = checkoutForm.deliveryAddress.trim().length >= 5 && !createOrder.isPending;
+  const canPlaceOrder =
+    checkoutForm.deliveryAddress.trim().length >= 5 && !createOrder.isPending && !hasOutOfStockItems;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -250,7 +255,9 @@ export default function CartPage() {
 
                   <Sheet open={checkoutOpen} onOpenChange={setCheckoutOpen}>
                     <SheetTrigger asChild>
-                      <Button className="w-full active:scale-95">Place order</Button>
+                      <Button className="w-full active:scale-95" disabled={hasOutOfStockItems}>
+                        Place order
+                      </Button>
                     </SheetTrigger>
                     <SheetContent side="right" className="w-full sm:max-w-lg">
                       <SheetHeader>
@@ -259,6 +266,13 @@ export default function CartPage() {
                       </SheetHeader>
 
                       <div className="mt-6 space-y-6">
+                        {hasOutOfStockItems ? (
+                          <Alert variant="destructive">
+                            <AlertDescription>
+                              Your cart has out-of-stock items. Remove them to continue checkout.
+                            </AlertDescription>
+                          </Alert>
+                        ) : null}
                         <div className="space-y-3">
                           <div className="text-sm font-medium">Payment method</div>
                           <RadioGroup
