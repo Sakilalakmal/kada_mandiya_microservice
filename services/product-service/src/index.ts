@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import productRoutes from "./routes/product.routes";
 import ProductVendorRouter from "./routes/product.vendor.routes";
+import internalRoutes from "./routes/internal.routes";
 
 const app = express();
 app.use(cors());
@@ -14,6 +15,7 @@ app.get("/health", (_req, res) => {
 
 // api-gateway proxies `/products/*` -> `${PRODUCT_SERVICE_URL}/*` (it strips `/products`),
 // so this service must serve routes at the root (e.g. `/`, `/mine`, `/:id`).
+app.use("/internal", internalRoutes);
 app.use("/", ProductVendorRouter);
 app.use("/", productRoutes);
 

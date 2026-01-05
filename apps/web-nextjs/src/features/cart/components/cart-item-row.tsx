@@ -37,6 +37,9 @@ export const CartItemRow = React.memo(function CartItemRow({
 }) {
   const busy = isUpdatingQty || isRemoving;
   const disableDecrease = busy || item.qty <= 1;
+  const stockQty = typeof item.stockQty === "number" ? Math.max(0, Math.floor(item.stockQty)) : null;
+  const disableIncrease = busy || (stockQty !== null ? item.qty >= stockQty : false);
+  const outOfStock = stockQty !== null ? stockQty <= 0 : false;
 
   return (
     <div className={cn("flex gap-4", busy && "opacity-80")}>
@@ -64,6 +67,9 @@ export const CartItemRow = React.memo(function CartItemRow({
             <p className="mt-1 text-xs text-muted-foreground">
               Unit: <span className="font-medium text-foreground/80">{formatMoney(item.unitPrice)}</span>
             </p>
+            {outOfStock ? (
+              <p className="mt-1 text-xs font-medium text-destructive">Out of stock</p>
+            ) : null}
           </div>
 
           <Button
@@ -97,7 +103,7 @@ export const CartItemRow = React.memo(function CartItemRow({
               variant="outline"
               size="icon"
               onClick={onIncrease}
-              disabled={busy}
+              disabled={disableIncrease}
               className="h-9 w-9 active:scale-95"
               aria-label="Increase quantity"
             >
