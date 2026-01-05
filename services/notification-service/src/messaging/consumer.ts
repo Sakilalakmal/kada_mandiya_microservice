@@ -14,7 +14,7 @@ const EventSchema = z
     version: z.number(),
     occurredAt: z.string(),
     correlationId: z.string(),
-    data: z.record(z.unknown()),
+    data: z.any(),
   })
   .passthrough();
 

@@ -85,7 +85,7 @@ export async function updateOrderStatusForVendor(input: {
   orderId: string;
   status: "PROCESSING" | "SHIPPED" | "DELIVERED";
 }): Promise<
-  | { state: "updated"; previousStatus: OrderStatus; newStatus: OrderStatus; occurredAt: string }
+  | { state: "updated"; previousStatus: OrderStatus; newStatus: OrderStatus; occurredAt: string; userId: string }
   | { state: "not_found" }
   | { state: "forbidden" }
 > {
@@ -101,6 +101,7 @@ export async function updateOrderStatusForVendor(input: {
       OUTPUT
         deleted.status AS previousStatus,
         inserted.status AS newStatus,
+        inserted.user_id AS userId,
         CONVERT(varchar(33), inserted.updated_at, 127) AS occurredAt
       FROM dbo.orders o
       WHERE o.order_id = @orderId
@@ -118,6 +119,7 @@ export async function updateOrderStatusForVendor(input: {
       previousStatus: row.previousStatus as OrderStatus,
       newStatus: row.newStatus as OrderStatus,
       occurredAt: String(row.occurredAt ?? new Date().toISOString()),
+      userId: String(row.userId ?? ""),
     };
   }
 

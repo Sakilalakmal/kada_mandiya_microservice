@@ -1,6 +1,12 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { cancelPendingOrder, createOrderWithItems, getOrderByIdForUser, listOrdersByUserId } from "../repositories/order.repo";
+import {
+  cancelPendingOrder,
+  createOrderWithItems,
+  getOrderByIdForUser,
+  listOrdersByUserId,
+  listVendorIdsByOrderId,
+} from "../repositories/order.repo";
 import { publishEvent } from "../messaging/publisher";
 
 function requireUserId(req: Request, res: Response): string | null {
@@ -136,6 +142,15 @@ export async function createOrder(req: Request, res: Response) {
     const subtotalCents = orderItems.reduce((sum, item) => sum + item.lineCents, 0);
     const subtotal = fromCents(subtotalCents);
 
+    const vendorIds = Array.from(
+      new Set(
+        orderItems
+          .map((item) => item.vendorId)
+          .filter((id): id is string => typeof id === "string" && id.trim().length > 0)
+          .map((id) => id.trim())
+      )
+    );
+
     const { orderId, createdAt } = await createOrderWithItems({
       userId,
       deliveryAddress: parsed.data.deliveryAddress,
@@ -156,6 +171,7 @@ export async function createOrder(req: Request, res: Response) {
       {
         orderId,
         userId,
+        vendorIds,
         subtotal,
         currency: "LKR",
         status: "PENDING",
@@ -244,11 +260,17 @@ export async function cancelOrder(req: Request, res: Response) {
       });
     }
 
+    const vendorIds = await listVendorIdsByOrderId(idParsed.data).catch((err) => {
+      console.error("listVendorIdsByOrderId error:", err);
+      return [] as string[];
+    });
+
     await publishEvent(
       "order.cancelled",
       {
         orderId: idParsed.data,
         userId,
+        vendorIds,
         previousStatus: result.previousStatus,
         newStatus: "CANCELLED",
         occurredAt: result.occurredAt,

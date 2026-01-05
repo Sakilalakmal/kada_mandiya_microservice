@@ -81,6 +81,7 @@ export async function updateVendorOrderStatus(req: Request, res: Response) {
       "order.status_updated",
       {
         orderId: idParsed.data,
+        userId: result.userId,
         vendorId,
         previousStatus: result.previousStatus,
         newStatus: result.newStatus,

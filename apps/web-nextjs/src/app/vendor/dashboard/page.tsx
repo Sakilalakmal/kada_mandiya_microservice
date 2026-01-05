@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, Package, ShieldAlert, Store } from "lucide-react";
 
 import { useAuth } from "@/hooks/use-auth";
+import { VendorNotificationBell } from "@/features/notifications/components/vendor-notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -26,16 +27,19 @@ export default function VendorDashboardPage() {
               <p className="text-lg font-semibold text-white">Dashboard</p>
             </div>
           </div>
-          <Button
-            asChild
-            variant="outline"
-            className="border-[#c4b5fd]/40 text-[#c4b5fd] hover:bg-[#c4b5fd]/10"
-          >
-            <Link href="/" className="inline-flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Home
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <VendorNotificationBell className="border border-[#c4b5fd]/40 text-[#c4b5fd] hover:bg-[#c4b5fd]/10" />
+            <Button
+              asChild
+              variant="outline"
+              className="border-[#c4b5fd]/40 text-[#c4b5fd] hover:bg-[#c4b5fd]/10"
+            >
+              <Link href="/" className="inline-flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Home
+              </Link>
+            </Button>
+          </div>
         </header>
 
         {isVendor ? (
