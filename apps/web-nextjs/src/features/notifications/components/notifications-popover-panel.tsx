@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,13 +82,14 @@ export function NotificationsPopoverPanel({ scope, onClose, className }: Notific
   const router = useRouter();
   const [tab, setTab] = React.useState<"all" | "unread">("all");
   const [page, setPage] = React.useState(1);
-  const pageSize = 10;
+  const pageSize = 8;
 
   const unreadOnly = tab === "unread";
 
-  React.useEffect(() => {
+  const selectTab = React.useCallback((next: "all" | "unread") => {
+    setTab(next);
     setPage(1);
-  }, [tab]);
+  }, []);
 
   const listQuery =
     scope === "user"
@@ -112,7 +112,7 @@ export function NotificationsPopoverPanel({ scope, onClose, className }: Notific
   const canNext = page * pageSize < total;
 
   return (
-    <div className={cn("w-[380px] max-w-[92vw]", className)}>
+    <div className={cn("w-[520px] max-w-[96vw] sm:w-[560px]", className)}>
       <div className="flex items-start justify-between gap-3 px-3 pb-3 pt-2">
         <div className="min-w-0">
           <p className="text-sm font-semibold">Notifications</p>
@@ -153,16 +153,38 @@ export function NotificationsPopoverPanel({ scope, onClose, className }: Notific
         </AlertDialog>
       </div>
 
-      <div className="px-3 pb-2">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "all" | "unread")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="unread">Unread</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex justify-center px-3 pb-2">
+        <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-8 px-6 text-sm font-medium",
+              tab === "all" ? "bg-background text-foreground shadow" : "hover:bg-background/60"
+            )}
+            onClick={() => selectTab("all")}
+          >
+            All
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={unreadCount === 0 || listQuery.isLoading}
+            className={cn(
+              "h-8 px-6 text-sm font-medium",
+              tab === "unread" ? "bg-background text-foreground shadow" : "hover:bg-background/60"
+            )}
+            onClick={() => selectTab("unread")}
+            aria-label="Show all unread notifications"
+          >
+            All unread
+          </Button>
+        </div>
       </div>
 
-      <ScrollArea className="h-[420px]">
+      <ScrollArea className="h-[360px]">
         {listQuery.isLoading ? (
           <SkeletonRows />
         ) : listQuery.isError ? (
@@ -213,6 +235,7 @@ export function NotificationsPopoverPanel({ scope, onClose, className }: Notific
         </Button>
         <p className="text-xs text-muted-foreground">
           Page {page}
+          {total > 0 ? ` · ${Math.min(total, page * pageSize)}/${total}` : ""}
         </p>
         <Button
           type="button"

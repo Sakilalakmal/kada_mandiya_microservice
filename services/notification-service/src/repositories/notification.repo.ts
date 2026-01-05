@@ -54,7 +54,7 @@ export async function listNotifications(input: {
         message,
         link,
         is_read AS isRead,
-        CONVERT(varchar(33), created_at, 127) AS createdAt
+        CONVERT(varchar(33), created_at, 127) + 'Z' AS createdAt
       FROM dbo.notifications
       WHERE
         recipient_type = @recipientType

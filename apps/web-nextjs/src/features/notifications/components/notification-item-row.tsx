@@ -8,9 +8,17 @@ import type { NotificationListItem } from "@/api/notifications";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
+function ensureIsoUtc(value: string): string {
+  const s = String(value ?? "").trim();
+  if (!s) return s;
+  // If the timestamp lacks a timezone (e.g. SQL `CONVERT(..., 127)`), treat it as UTC.
+  if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) return s;
+  return `${s}Z`;
+}
+
 function formatRelativeTime(value: string) {
   try {
-    const date = parseISO(value);
+    const date = parseISO(ensureIsoUtc(value));
     return formatDistanceToNowStrict(date, { addSuffix: true });
   } catch {
     return value;
