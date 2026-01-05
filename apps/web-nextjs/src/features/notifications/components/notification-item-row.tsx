@@ -39,6 +39,7 @@ export const NotificationItemRow = React.memo(function NotificationItemRow({
   className,
 }: NotificationItemRowProps) {
   const isUnread = !notification.isRead;
+  const isDestructive = notification.type === "PAYMENT_FAILED" || notification.type === "PAYMENT_PENDING";
   const timeLabel = React.useMemo(() => formatRelativeTime(notification.createdAt), [notification.createdAt]);
 
   const handleMarkRead = React.useCallback(
@@ -80,13 +81,18 @@ export const NotificationItemRow = React.memo(function NotificationItemRow({
         aria-hidden
         className={cn(
           "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-          isUnread ? "bg-foreground" : "bg-muted-foreground/30"
+          isUnread ? (isDestructive ? "bg-destructive" : "bg-foreground") : "bg-muted-foreground/30"
         )}
       />
 
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-start justify-between gap-3">
-          <p className={cn("truncate text-sm font-semibold", isUnread ? "text-foreground" : "text-foreground/90")}>
+          <p
+            className={cn(
+              "truncate text-sm font-semibold",
+              isUnread ? (isDestructive ? "text-destructive" : "text-foreground") : "text-foreground/90"
+            )}
+          >
             {notification.title}
           </p>
           <p className="shrink-0 text-[11px] text-muted-foreground">{timeLabel}</p>

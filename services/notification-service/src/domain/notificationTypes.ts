@@ -3,17 +3,21 @@ import type { DomainEvent } from "../messaging/types";
 export type RecipientType = "USER" | "VENDOR";
 
 export const ORDER_CREATED = "ORDER_CREATED" as const;
+export const ORDER_READY_FOR_VENDOR = "ORDER_READY_FOR_VENDOR" as const;
 export const ORDER_STATUS_UPDATED = "ORDER_STATUS_UPDATED" as const;
 export const ORDER_CANCELLED = "ORDER_CANCELLED" as const;
 export const PAYMENT_NOT_REQUIRED = "PAYMENT_NOT_REQUIRED" as const;
+export const PAYMENT_PENDING = "PAYMENT_PENDING" as const;
 export const PAYMENT_COMPLETED = "PAYMENT_COMPLETED" as const;
 export const PAYMENT_FAILED = "PAYMENT_FAILED" as const;
 
 export type NotificationType =
   | typeof ORDER_CREATED
+  | typeof ORDER_READY_FOR_VENDOR
   | typeof ORDER_STATUS_UPDATED
   | typeof ORDER_CANCELLED
   | typeof PAYMENT_NOT_REQUIRED
+  | typeof PAYMENT_PENDING
   | typeof PAYMENT_COMPLETED
   | typeof PAYMENT_FAILED;
 
@@ -35,6 +39,7 @@ export function mapEventToNotificationTemplate(
 ): { type: NotificationType; title: string; message: string; link: string | null } | null {
   const orderId = String(data.orderId ?? "");
   const orderIdShort = shortId(orderId);
+  const paymentMethod = String(data.paymentMethod ?? "");
 
   if (eventType === "order.created") {
     if (recipientType === "USER") {
@@ -47,11 +52,22 @@ export function mapEventToNotificationTemplate(
       };
     }
 
+    if (paymentMethod === "ONLINE") return null;
     return {
       type: ORDER_CREATED,
       title: "New order received",
       message: `A new order ${orderIdShort} includes your items.`,
       link: "/vendor/orders",
+    };
+  }
+
+  if (eventType === "order.ready_for_vendor") {
+    if (recipientType !== "VENDOR") return null;
+    return {
+      type: ORDER_READY_FOR_VENDOR,
+      title: "New paid order",
+      message: `Order ${orderIdShort} is paid and ready to fulfill.`,
+      link: orderId ? `/vendor/orders/${orderId}` : "/vendor/orders",
     };
   }
 
@@ -97,6 +113,17 @@ export function mapEventToNotificationTemplate(
       title: "Payment",
       message: `Order ${orderIdShort} is Cash on Delivery. No online payment required.`,
       link: orderId ? `/orders/${orderId}` : "/orders",
+    };
+  }
+
+  if (eventType === "payment.pending") {
+    if (recipientType !== "USER") return null;
+    const amount = formatAmount(data.amount ?? data.subtotal);
+    return {
+      type: PAYMENT_PENDING,
+      title: "Payment required",
+      message: `Please complete payment for order ${orderIdShort}. Amount: LKR ${amount}.`,
+      link: orderId ? `/orders/${orderId}?pay=1` : "/orders",
     };
   }
 

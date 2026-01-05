@@ -1,6 +1,7 @@
 import { getPool, sql } from "../db/pool";
 
 export type OrderStatus = "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+export type PaymentStatus = "NOT_REQUIRED" | "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED";
 
 export type CreateOrderItemInput = {
   productId: string;
@@ -17,6 +18,7 @@ export type CreateOrderInput = {
   deliveryAddress: string;
   mobile: string | null;
   paymentMethod: string;
+  paymentStatus: PaymentStatus;
   subtotal: number;
   items: CreateOrderItemInput[];
 };
@@ -32,14 +34,15 @@ export async function createOrderWithItems(input: CreateOrderInput) {
       .input("userId", sql.VarChar(100), input.userId)
       .input("status", sql.VarChar(30), "PENDING")
       .input("paymentMethod", sql.VarChar(30), input.paymentMethod)
+      .input("paymentStatus", sql.VarChar(30), input.paymentStatus)
       .input("deliveryAddress", sql.NVarChar(300), input.deliveryAddress)
       .input("mobile", sql.VarChar(30), input.mobile)
       .input("subtotal", sql.Decimal(18, 2), input.subtotal).query(`
-        INSERT INTO dbo.orders (user_id, status, payment_method, delivery_address, mobile, subtotal)
+        INSERT INTO dbo.orders (user_id, status, payment_method, payment_status, delivery_address, mobile, subtotal)
         OUTPUT
           CONVERT(varchar(36), inserted.order_id) AS orderId,
           CONVERT(varchar(33), inserted.created_at, 127) AS createdAt
-        VALUES (@userId, @status, @paymentMethod, @deliveryAddress, @mobile, @subtotal);
+        VALUES (@userId, @status, @paymentMethod, @paymentStatus, @deliveryAddress, @mobile, @subtotal);
       `);
 
     const insertedRow = (orderInserted.recordset as any[])?.[0] ?? {};
@@ -255,5 +258,81 @@ export async function listVendorIdsByOrderId(orderId: string): Promise<string[]>
   return (result.recordset as any[])
     .map((row) => String(row.vendorId ?? ""))
     .filter((v) => v.trim().length > 0);
+}
+
+export type OrderPaymentMeta = {
+  orderId: string;
+  userId: string;
+  paymentMethod: string;
+  paymentStatus: PaymentStatus;
+  subtotal: number;
+};
+
+export async function getOrderPaymentMeta(orderId: string): Promise<OrderPaymentMeta | null> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("orderId", sql.UniqueIdentifier, orderId).query(`
+      SELECT TOP 1
+        CONVERT(varchar(36), order_id) AS orderId,
+        user_id AS userId,
+        payment_method AS paymentMethod,
+        payment_status AS paymentStatus,
+        subtotal AS subtotal
+      FROM dbo.orders
+      WHERE order_id = @orderId;
+    `);
+
+  const row = (result.recordset as any[])?.[0];
+  if (!row) return null;
+
+  return {
+    orderId: String(row.orderId),
+    userId: String(row.userId),
+    paymentMethod: String(row.paymentMethod),
+    paymentStatus: row.paymentStatus as PaymentStatus,
+    subtotal: Number(row.subtotal),
+  };
+}
+
+export async function updateOrderPaymentStatus(orderId: string, status: PaymentStatus): Promise<
+  | { state: "updated"; previousStatus: PaymentStatus; newStatus: PaymentStatus; meta: OrderPaymentMeta }
+  | { state: "not_found" }
+> {
+  const pool = await getPool();
+
+  const result = await pool
+    .request()
+    .input("orderId", sql.UniqueIdentifier, orderId)
+    .input("status", sql.VarChar(30), status).query(`
+      UPDATE dbo.orders
+      SET payment_status = @status, updated_at = SYSUTCDATETIME()
+      OUTPUT
+        deleted.payment_status AS previousStatus,
+        inserted.payment_status AS newStatus,
+        CONVERT(varchar(36), inserted.order_id) AS orderId,
+        inserted.user_id AS userId,
+        inserted.payment_method AS paymentMethod,
+        inserted.subtotal AS subtotal
+      WHERE order_id = @orderId;
+    `);
+
+  const row = (result.recordset as any[])?.[0];
+  if (!row) return { state: "not_found" };
+
+  const meta: OrderPaymentMeta = {
+    orderId: String(row.orderId),
+    userId: String(row.userId),
+    paymentMethod: String(row.paymentMethod),
+    paymentStatus: row.newStatus as PaymentStatus,
+    subtotal: Number(row.subtotal),
+  };
+
+  return {
+    state: "updated",
+    previousStatus: row.previousStatus as PaymentStatus,
+    newStatus: row.newStatus as PaymentStatus,
+    meta,
+  };
 }
 

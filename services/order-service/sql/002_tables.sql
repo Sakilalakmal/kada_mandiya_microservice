@@ -8,14 +8,42 @@ BEGIN
     user_id VARCHAR(100) NOT NULL,
     status VARCHAR(30) NOT NULL,
     payment_method VARCHAR(30) NOT NULL CONSTRAINT DF_orders_payment_method DEFAULT 'COD',
+    payment_status VARCHAR(30) NOT NULL CONSTRAINT DF_orders_payment_status DEFAULT 'NOT_REQUIRED',
     delivery_address NVARCHAR(300) NOT NULL,
     mobile VARCHAR(30) NULL,
     subtotal DECIMAL(18,2) NOT NULL,
     created_at DATETIME2 NOT NULL CONSTRAINT DF_orders_created_at DEFAULT SYSUTCDATETIME(),
     updated_at DATETIME2 NOT NULL CONSTRAINT DF_orders_updated_at DEFAULT SYSUTCDATETIME(),
     CONSTRAINT CK_orders_status CHECK (status IN ('PENDING','PROCESSING','SHIPPED','DELIVERED','CANCELLED')),
+    CONSTRAINT CK_orders_payment_method CHECK (payment_method IN ('COD','ONLINE')),
+    CONSTRAINT CK_orders_payment_status CHECK (payment_status IN ('NOT_REQUIRED','PENDING','COMPLETED','FAILED','CANCELLED')),
     CONSTRAINT CK_orders_subtotal CHECK (subtotal >= 0)
   );
+END
+GO
+
+IF COL_LENGTH('dbo.orders', 'payment_status') IS NULL
+BEGIN
+  ALTER TABLE dbo.orders
+    ADD payment_status VARCHAR(30) NOT NULL CONSTRAINT DF_orders_payment_status DEFAULT 'NOT_REQUIRED';
+END
+GO
+
+IF NOT EXISTS (
+  SELECT 1 FROM sys.check_constraints WHERE name = 'CK_orders_payment_method' AND parent_object_id = OBJECT_ID('dbo.orders')
+)
+BEGIN
+  ALTER TABLE dbo.orders
+    ADD CONSTRAINT CK_orders_payment_method CHECK (payment_method IN ('COD','ONLINE'));
+END
+GO
+
+IF NOT EXISTS (
+  SELECT 1 FROM sys.check_constraints WHERE name = 'CK_orders_payment_status' AND parent_object_id = OBJECT_ID('dbo.orders')
+)
+BEGIN
+  ALTER TABLE dbo.orders
+    ADD CONSTRAINT CK_orders_payment_status CHECK (payment_status IN ('NOT_REQUIRED','PENDING','COMPLETED','FAILED','CANCELLED'));
 END
 GO
 
