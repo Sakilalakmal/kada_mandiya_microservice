@@ -9,12 +9,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { useCancelOrderMutation, useOrderDetailQuery } from "@/features/orders/queries";
 import { StatusBadge } from "@/features/orders/components/status-badge";
 import { OrderItemsList } from "@/features/orders/components/order-items-list";
+import { usePaymentByOrderQuery } from "@/features/payments/queries";
+import { PaymentActions } from "@/features/payments/components/payment-actions";
+import { PaymentCard } from "@/features/payments/components/payment-card";
+import { PaymentSkeleton } from "@/features/payments/components/payment-skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 import { toastApiError } from "@/components/ui/feedback";
 import {
   AlertDialog,
@@ -78,6 +83,7 @@ export default function OrderDetailPage() {
   }, [params]);
 
   const detailQuery = useOrderDetailQuery(orderId);
+  const paymentQuery = usePaymentByOrderQuery(orderId);
   const cancelMutation = useCancelOrderMutation();
 
   const didToastRef = React.useRef(false);
@@ -88,6 +94,15 @@ export default function OrderDetailPage() {
     }
     if (!detailQuery.isError) didToastRef.current = false;
   }, [detailQuery.error, detailQuery.isError]);
+
+  const didPaymentToastRef = React.useRef(false);
+  React.useEffect(() => {
+    if (paymentQuery.isError && !didPaymentToastRef.current) {
+      didPaymentToastRef.current = true;
+      toastApiError(paymentQuery.error, "Failed to load payment");
+    }
+    if (!paymentQuery.isError) didPaymentToastRef.current = false;
+  }, [paymentQuery.error, paymentQuery.isError]);
 
   if (!token) {
     return (
@@ -288,6 +303,43 @@ export default function OrderDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {paymentQuery.isLoading ? (
+              <PaymentSkeleton />
+            ) : paymentQuery.isError || !paymentQuery.data ? (
+              <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <CardHeader>
+                  <CardTitle className="text-lg">Payment</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                  <p>We couldn&apos;t load payment details right now.</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => paymentQuery.refetch()}
+                    className="active:scale-95"
+                  >
+                    Refresh
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <PaymentCard
+                payment={paymentQuery.data}
+                footer={
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {paymentQuery.data.status === "PENDING" ? (
+                        <>
+                          <Spinner className="size-3.5" />
+                          <span>Updating...</span>
+                        </>
+                      ) : null}
+                    </div>
+                    <PaymentActions orderId={orderId} />
+                  </div>
+                }
+              />
+            )}
           </div>
         )}
       </div>
