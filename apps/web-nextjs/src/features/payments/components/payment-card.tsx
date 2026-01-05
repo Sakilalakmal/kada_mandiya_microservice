@@ -7,7 +7,6 @@ import { ArrowUpRight } from "lucide-react";
 
 import type { PaymentDetail, PaymentListItem } from "@/api/payments";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { PaymentStatusBadge } from "./payment-status-badge";
 
@@ -106,12 +105,7 @@ export function PaymentCard({
           </div>
         </div>
 
-        {footer ? (
-          <>
-            <Separator className="my-4" />
-            {footer}
-          </>
-        ) : null}
+        {footer ? <div className="mt-5 -mx-5 border-t px-5 pt-4">{footer}</div> : null}
       </CardContent>
     </Card>
   );

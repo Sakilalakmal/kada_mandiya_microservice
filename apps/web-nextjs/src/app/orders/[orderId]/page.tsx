@@ -337,7 +337,7 @@ export default function OrderDetailPage() {
                         </>
                       ) : null}
                     </div>
-                    <PaymentActions orderId={orderId} />
+                    <PaymentActions payment={paymentQuery.data} />
                   </div>
                 }
               />
