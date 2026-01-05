@@ -14,6 +14,7 @@ import type { ProductListItem } from "@/lib/products";
 import { fetchMyProducts, deactivateProduct, reactivateProduct, productKeys } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { VendorNotificationBell } from "@/features/notifications/components/vendor-notification-bell";
 import { vendorAccessToast, toastApiError } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -205,6 +206,7 @@ export default function VendorProductsPage() {
           <h1 className="text-3xl font-semibold text-foreground">My products</h1>
         </div>
         <div className="flex items-center gap-2">
+          <VendorNotificationBell />
           <Button
             asChild
             className="gap-2 active:scale-95"

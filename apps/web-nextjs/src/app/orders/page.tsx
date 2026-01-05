@@ -7,6 +7,7 @@ import { ArrowLeft, Package } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrdersQuery } from "@/features/orders/queries";
 import { OrderCard } from "@/features/orders/components/order-card";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ export default function OrdersPage() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CartNavButton />
+            <NotificationBell />
             <Button asChild variant="ghost">
               <Link href="/products" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />

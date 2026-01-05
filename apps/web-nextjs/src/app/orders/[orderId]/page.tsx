@@ -15,6 +15,7 @@ import { PaymentCard } from "@/features/payments/components/payment-card";
 import { PaymentSkeleton } from "@/features/payments/components/payment-skeleton";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -181,6 +182,7 @@ export default function OrderDetailPage() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CartNavButton />
+            <NotificationBell />
             <Button asChild variant="ghost">
               <Link href="/orders" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />

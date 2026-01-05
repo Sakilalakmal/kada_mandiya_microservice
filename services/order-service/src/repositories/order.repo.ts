@@ -242,3 +242,18 @@ export async function cancelPendingOrder(userId: string, orderId: string): Promi
   return { state: "not_pending" };
 }
 
+export async function listVendorIdsByOrderId(orderId: string): Promise<string[]> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("orderId", sql.UniqueIdentifier, orderId).query(`
+      SELECT DISTINCT vendor_id AS vendorId
+      FROM dbo.order_items
+      WHERE order_id = @orderId AND vendor_id IS NOT NULL;
+    `);
+
+  return (result.recordset as any[])
+    .map((row) => String(row.vendorId ?? ""))
+    .filter((v) => v.trim().length > 0);
+}
+

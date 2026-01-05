@@ -10,6 +10,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { cn } from "@/lib/utils";
 import { fetchProducts, productKeys, type ProductListItem } from "@/lib/products";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -183,6 +184,7 @@ export default function ProductsPage() {
               {isFetching ? "Refreshing..." : null}
             </div>
             <CartNavButton />
+            <NotificationBell />
           </div>
         </div>
 

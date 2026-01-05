@@ -7,6 +7,7 @@ import { ArrowLeft, CreditCard } from "lucide-react";
 import { useMyPaymentsQuery } from "@/features/payments/queries";
 import { PaymentCard } from "@/features/payments/components/payment-card";
 import { PaymentSkeleton } from "@/features/payments/components/payment-skeleton";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
@@ -58,6 +59,7 @@ export default function PaymentsPage() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CartNavButton />
+            <NotificationBell />
             <Button asChild variant="ghost">
               <Link href="/orders" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />

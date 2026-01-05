@@ -5,6 +5,7 @@ import { ArrowRight, ChevronRight } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserNav } from "@/components/user-nav"
 import { CartNavButton } from "@/components/cart-nav-button"
+import { NotificationBell } from "@/features/notifications/components/notification-bell"
 import { LandingBackground } from "@/components/landing/landing-background"
 import { MarketplaceIntroStackSection } from "@/components/landing/marketplace-intro-stack-section"
 import { FeaturesSection } from "@/components/landing/features-section"
@@ -47,6 +48,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CartNavButton className="border-border/50 bg-background/40 text-foreground hover:bg-background/55 hover:text-foreground" />
+            <NotificationBell className="border-border/50 bg-background/40 text-foreground hover:bg-background/55 hover:text-foreground" />
             <Button
               asChild
               size="sm"

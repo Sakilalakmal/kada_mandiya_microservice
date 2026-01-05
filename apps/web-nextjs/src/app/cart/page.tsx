@@ -11,6 +11,7 @@ import { cartTotalQty, useCartQuery, useClearCartMutation, useRemoveCartItemMuta
 import { CartItemRow } from "@/features/cart/components/cart-item-row";
 import { useCreateOrderMutation } from "@/features/orders/queries";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -128,6 +129,7 @@ export default function CartPage() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <NotificationBell />
             <Button asChild variant="ghost">
               <Link href="/products" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
