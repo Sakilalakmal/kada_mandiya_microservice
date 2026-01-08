@@ -12,10 +12,18 @@ import { toast } from "sonner";
 import { UploadButton } from "@/lib/uploadthing";
 import { apiFetch, type ApiError } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  useVendorDashboardOrdersQuery,
+  useVendorDashboardProductsQuery,
+  useVendorDashboardProfileQuery,
+} from "@/lib/queries/vendorDashboard";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
 const trimmedOptional = <T extends z.ZodString>(schema: T) =>
@@ -53,6 +61,9 @@ type BecomeVendorFormValues = z.infer<typeof becomeVendorSchema>;
 export default function BecomeVendorPage() {
   const router = useRouter();
   const { refreshAuth, setAuthToken, isVendor } = useAuth();
+  const profileQuery = useVendorDashboardProfileQuery();
+  const ordersQuery = useVendorDashboardOrdersQuery();
+  const productsQuery = useVendorDashboardProductsQuery();
 
   const form = useForm<BecomeVendorFormValues>({
     resolver: zodResolver(becomeVendorSchema),
@@ -113,6 +124,10 @@ export default function BecomeVendorPage() {
   const isSubmitting = becomeMutation.isPending || refreshMutation.isPending;
 
   if (isVendor) {
+    const vendorName = profileQuery.data?.storeName ?? "Your store";
+    const totalOrders = ordersQuery.data?.totalOrders ?? 0;
+    const totalProducts = productsQuery.data?.totalProducts ?? 0;
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#050507] via-[#0b0b12] to-[#120f24] text-slate-50">
         <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10 sm:px-10">
@@ -125,7 +140,7 @@ export default function BecomeVendorPage() {
                 <p className="text-sm uppercase tracking-[0.24em] text-[#c4b5fd]">
                   Kada Mandiya
                 </p>
-                <p className="text-lg font-semibold text-white">You are already a vendor</p>
+                <p className="text-lg font-semibold text-white">Vendor profile active</p>
               </div>
             </div>
             <Button asChild variant="outline" className="border-[#c4b5fd]/40 text-[#c4b5fd]">
@@ -135,21 +150,61 @@ export default function BecomeVendorPage() {
 
           <Card className="border-[#c4b5fd]/30 bg-[#0f0c1a]/80 text-slate-100 shadow-lg backdrop-blur">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Store className="h-5 w-5 text-[#c4b5fd]" />
-                Vendor profile active
-              </CardTitle>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Store className="h-5 w-5 text-[#c4b5fd]" />
+                  {vendorName}
+                </CardTitle>
+                <Badge className="border-transparent bg-[#c4b5fd] text-slate-900">ACTIVE</Badge>
+              </div>
               <CardDescription className="text-slate-300">
-                Continue to your vendor dashboard to add products and manage your store.
+                Manage your store details and jump back into the vendor dashboard.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button asChild className="bg-[#c4b5fd] text-slate-900 hover:bg-[#b7a4ff]">
-                <Link href="/vendor/dashboard">Open dashboard</Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 text-white">
-                <Link href="/">Back to home</Link>
-              </Button>
+            <CardContent className="space-y-5">
+              {profileQuery.isLoading || ordersQuery.isLoading || productsQuery.isLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              ) : profileQuery.isError || ordersQuery.isError || productsQuery.isError ? (
+                <div className="space-y-3 text-sm text-slate-300">
+                  <p>We could not load your vendor summary. Please try again.</p>
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white"
+                    onClick={() => {
+                      profileQuery.refetch();
+                      ordersQuery.refetch();
+                      productsQuery.refetch();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Total products</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{totalProducts}</p>
+                    </div>
+                    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Total orders</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{totalOrders}</p>
+                    </div>
+                  </div>
+                  <Separator className="border-white/10" />
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild className="bg-[#c4b5fd] text-slate-900 hover:bg-[#b7a4ff]">
+                      <Link href="/vendor/dashboard">Open dashboard</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="border-white/20 text-white">
+                      <Link href="/">Back to home</Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -7,6 +7,7 @@ import { UserNav } from "@/components/user-nav"
 import { CartNavButton } from "@/components/cart-nav-button"
 import { NotificationBell } from "@/features/notifications/components/notification-bell"
 import { LandingBackground } from "@/components/landing/landing-background"
+import { LandingNav } from "@/components/landing/landing-nav"
 import { MarketplaceIntroStackSection } from "@/components/landing/marketplace-intro-stack-section"
 import { FeaturesSection } from "@/components/landing/features-section"
 import { Badge } from "@/components/ui/badge"
@@ -24,26 +25,7 @@ export default function Home() {
             </div>
           </div>
 
-          <nav className="hidden items-center gap-6 text-sm font-medium text-foreground/80 md:flex">
-            <a className="hover:text-foreground" href="#features">
-              Products
-            </a>
-            <Link className="hover:text-foreground" href="/orders">
-              Orders
-            </Link>
-            <Link className="hover:text-foreground" href="/payments">
-              Payments
-            </Link>
-            <a className="hover:text-foreground" href="#features">
-              Categories
-            </a>
-            <a className="hover:text-foreground" href="#features">
-              Offers
-            </a>
-            <a className="hover:text-foreground" href="#features">
-              Support
-            </a>
-          </nav>
+          <LandingNav />
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
