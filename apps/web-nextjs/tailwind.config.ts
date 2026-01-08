@@ -88,7 +88,7 @@ const config: Config = {
   					height: '0'
   				}
   			},
-  			'aurora': {
+  			aurora: {
   				from: {
   					backgroundPosition: '0% 50%'
   				},
@@ -96,7 +96,7 @@ const config: Config = {
   					backgroundPosition: '100% 50%'
   				}
   			},
-  			'float': {
+  			float: {
   				'0%, 100%': {
   					transform: 'translateY(0px)'
   				},
@@ -108,8 +108,8 @@ const config: Config = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-  			'aurora': 'aurora 10s ease-in-out infinite alternate',
-  			'float': 'float 6s ease-in-out infinite'
+  			aurora: 'aurora 10s ease-in-out infinite alternate',
+  			float: 'float 6s ease-in-out infinite'
   		}
   	}
   },

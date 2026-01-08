@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Ban, Package, Plus, RotateCcw, ShieldAlert } from "lucide-react";
+import { Ban, Package, Plus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ApiError } from "@/lib/api";
@@ -14,11 +14,10 @@ import type { ProductListItem } from "@/lib/products";
 import { fetchMyProducts, deactivateProduct, reactivateProduct, productKeys } from "@/lib/products";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { VendorNotificationBell } from "@/features/notifications/components/vendor-notification-bell";
 import { vendorAccessToast, toastApiError } from "@/components/ui/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -54,25 +53,32 @@ export default function VendorProductsPage() {
     isLoading,
     isFetching,
     isError,
+    error,
   } = useQuery({
     queryKey: vendorProductsKey,
     queryFn: fetchMyProducts,
     enabled: isVendor,
     retry: false,
     staleTime: 15_000,
-    onError: (err: ApiError) => {
-      if (err?.status === 401) {
-        setAuthToken(null);
-        router.push("/login");
-        return;
-      }
-      if (err?.status === 403) {
-        vendorAccessToast(() => router.push("/become-vendor"));
-        return;
-      }
-      toastApiError(err, "Could not load your products");
-    },
   });
+
+  const handledErrorRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!isError || handledErrorRef.current) return;
+    const err = error as ApiError | null | undefined;
+    handledErrorRef.current = true;
+
+    if (err?.status === 401) {
+      setAuthToken(null);
+      router.push("/login");
+      return;
+    }
+    if (err?.status === 403) {
+      vendorAccessToast(() => router.push("/become-vendor"));
+      return;
+    }
+    toastApiError(err, "Could not load your products");
+  }, [error, isError, router, setAuthToken]);
 
   const [pendingActionById, setPendingActionById] = React.useState<Record<string, "deactivate" | "reactivate">>({});
 
@@ -170,43 +176,16 @@ export default function VendorProductsPage() {
     },
   });
 
-  if (!isVendor) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10 sm:px-10">
-        <Card className="border bg-card shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <ShieldAlert className="h-5 w-5" />
-              Vendor access required
-            </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              You need a vendor account to manage products.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <Button asChild className="active:scale-95">
-              <Link href="/become-vendor">Become a vendor</Link>
-            </Button>
-            <Button asChild variant="outline" className="active:scale-95">
-              <Link href="/auth?mode=login">Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
-
   const products = data ?? [];
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10">
+    <div className="flex min-w-0 flex-1 flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">Vendor</p>
-          <h1 className="text-3xl font-semibold text-foreground">My products</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+          <p className="text-sm text-muted-foreground">Manage listings, pricing, and stock.</p>
         </div>
         <div className="flex items-center gap-2">
-          <VendorNotificationBell />
           <Button
             asChild
             className="gap-2 active:scale-95"
@@ -216,13 +195,6 @@ export default function VendorProductsPage() {
               <Plus className="h-4 w-4" />
               Add product
             </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="active:scale-95"
-          >
-            <Link href="/vendor/dashboard">Dashboard</Link>
           </Button>
         </div>
       </div>
@@ -251,33 +223,34 @@ export default function VendorProductsPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+        <div className="min-w-0 rounded-xl border bg-card shadow-sm">
           <div className="flex items-center justify-between border-b px-4 py-3 text-sm text-muted-foreground">
             <span>{products.length} products</span>
             {isFetching ? <span>Refreshing...</span> : null}
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => {
-                const pendingAction = pendingActionById[product.id] ?? null;
-                const isUpdating = Boolean(pendingAction);
-                return (
-                  <MotionTableRow
-                    key={product.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="transition hover:bg-muted/50"
-                  >
+          <div className="w-full overflow-x-auto">
+            <Table className="min-w-[720px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => {
+                  const pendingAction = pendingActionById[product.id] ?? null;
+                  const isUpdating = Boolean(pendingAction);
+                  return (
+                    <MotionTableRow
+                      key={product.id}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="transition hover:bg-muted/50"
+                    >
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 overflow-hidden rounded-lg border bg-muted">
@@ -361,11 +334,12 @@ export default function VendorProductsPage() {
                         </Button>
                       </div>
                     </TableCell>
-                  </MotionTableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                    </MotionTableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
 
@@ -380,6 +354,6 @@ export default function VendorProductsPage() {
           </CardContent>
         </Card>
       ) : null}
-    </main>
+    </div>
   );
 }
