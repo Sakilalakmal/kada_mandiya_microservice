@@ -36,9 +36,6 @@
 ## 📖 Overview
 
 **Kada Mandiya** (කඩ මැදියේ - "In the Midst of Shops" in Sinhala) is a comprehensive, production-ready e-commerce platform built using modern microservices architecture. This project demonstrates enterprise-grade patterns including event-driven communication, domain separation, and distributed system best practices.
-
-> 💡 **Why Kada Mandiya?** This project serves as both a learning resource for developers exploring microservices and a robust foundation for building scalable e-commerce solutions.
-
 ---
 
 ## ✨ Features
