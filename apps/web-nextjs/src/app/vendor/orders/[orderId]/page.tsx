@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import * as React from "react";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import type { ApiError } from "@/lib/api";
-import { useAuth } from "@/hooks/use-auth";
 import { StatusBadge } from "@/features/orders/components/status-badge";
 import { useUpdateVendorOrderStatusMutation, useVendorOrderDetailQuery } from "@/features/orders/vendorQueries";
-import { VendorNotificationBell } from "@/features/notifications/components/vendor-notification-bell";
 import { VendorOrderDetailSkeleton } from "@/features/orders/vendor/components/vendor-order-detail-skeleton";
 import { VendorOrderItemsTable } from "@/features/orders/vendor/components/vendor-order-items-table";
 import { VendorOrderSummaryCard } from "@/features/orders/vendor/components/vendor-order-summary-card";
@@ -32,8 +30,6 @@ import {
 const STATUS_OPTIONS = ["PROCESSING", "SHIPPED", "DELIVERED"] as const;
 
 export default function VendorOrderDetailPage() {
-  const { isVendor } = useAuth();
-
   const params = useParams<{ orderId?: string }>();
   const orderId = React.useMemo(() => {
     const raw = params?.orderId;
@@ -45,7 +41,7 @@ export default function VendorOrderDetailPage() {
   const updateStatusMutation = useUpdateVendorOrderStatusMutation();
 
   const order = detailQuery.data;
-  const shortId = React.useMemo(() => (order?.orderId ? order.orderId.slice(0, 8) : ""), [order?.orderId]);
+  const shortId = order?.orderId ? order.orderId.slice(0, 8) : "";
 
   const canUpdateStatus = order ? order.status !== "CANCELLED" && order.status !== "DELIVERED" : false;
   const statusChoices = React.useMemo(() => {
@@ -66,34 +62,8 @@ export default function VendorOrderDetailPage() {
   const err = detailQuery.error as ApiError | null;
   const errStatus = err?.status ?? null;
 
-  if (!isVendor) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10 sm:px-10">
-        <Card className="border bg-card shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <ShieldAlert className="h-5 w-5" />
-              Vendor access required
-            </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              You need a vendor account to view order details.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <Button asChild className="active:scale-95">
-              <Link href="/become-vendor">Become a vendor</Link>
-            </Button>
-            <Button asChild variant="outline" className="active:scale-95">
-              <Link href="/auth?mode=login">Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10">
+    <div className="flex min-w-0 flex-1 flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Button asChild variant="outline" className="active:scale-95">
@@ -109,7 +79,6 @@ export default function VendorOrderDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <VendorNotificationBell />
           {order ? <StatusBadge status={order.status} /> : null}
         </div>
       </header>
@@ -152,7 +121,7 @@ export default function VendorOrderDetailPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[1fr_320px]">
           <Card className="border bg-card shadow-sm">
             <CardHeader>
               <CardTitle>Items</CardTitle>
@@ -242,6 +211,6 @@ export default function VendorOrderDetailPage() {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

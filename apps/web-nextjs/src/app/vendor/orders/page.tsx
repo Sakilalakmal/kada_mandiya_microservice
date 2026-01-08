@@ -3,12 +3,10 @@
 import Link from "next/link";
 import * as React from "react";
 import { format, parseISO } from "date-fns";
-import { Package, ShieldAlert } from "lucide-react";
+import { Package } from "lucide-react";
 
-import { useAuth } from "@/hooks/use-auth";
 import { useVendorOrdersQuery } from "@/features/orders/vendorQueries";
 import { StatusBadge } from "@/features/orders/components/status-badge";
-import { VendorNotificationBell } from "@/features/notifications/components/vendor-notification-bell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,12 +45,12 @@ function OrdersSkeleton() {
 }
 
 export default function VendorOrdersPage() {
-  const { isVendor } = useAuth();
   const ordersQuery = useVendorOrdersQuery();
 
-  const orders = ordersQuery.data ?? [];
+  const orders = ordersQuery.data;
   const rows = React.useMemo(() => {
-    return orders.map((o) => {
+    const list = orders ?? [];
+    return list.map((o) => {
       const rawVendorSubtotal = Number(o.vendorSubtotal);
       const vendorSubtotal = Number.isFinite(rawVendorSubtotal)
         ? rawVendorSubtotal
@@ -61,44 +59,12 @@ export default function VendorOrdersPage() {
     });
   }, [orders]);
 
-  if (!isVendor) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10 sm:px-10">
-        <Card className="border bg-card shadow-sm">
-          <CardHeader className="space-y-2">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <ShieldAlert className="h-5 w-5" />
-              Vendor access required
-            </CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              You need a vendor account to view orders.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <Button asChild className="active:scale-95">
-              <Link href="/become-vendor">Become a vendor</Link>
-            </Button>
-            <Button asChild variant="outline" className="active:scale-95">
-              <Link href="/auth?mode=login">Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
-
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-10 sm:px-10">
+    <div className="flex min-w-0 flex-1 flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">Vendor</p>
-          <h1 className="text-3xl font-semibold text-foreground">Orders</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <VendorNotificationBell />
-          <Button asChild variant="outline" className="active:scale-95">
-            <Link href="/vendor/dashboard">Dashboard</Link>
-          </Button>
+          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
+          <p className="text-sm text-muted-foreground">Track and update incoming orders.</p>
         </div>
       </div>
 
@@ -116,7 +82,7 @@ export default function VendorOrdersPage() {
             </Button>
           </CardContent>
         </Card>
-      ) : orders.length === 0 ? (
+      ) : (orders ?? []).length === 0 ? (
         <Card className="border bg-card shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -129,39 +95,41 @@ export default function VendorOrdersPage() {
       ) : (
         <Card className="border bg-card shadow-sm">
           <CardContent className="px-0 py-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Items</TableHead>
-                  <TableHead className="text-right">Vendor subtotal</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((o) => (
-                  <TableRow key={o.orderId}>
-                    <TableCell className="font-mono text-xs">#{o.orderId.slice(0, 8)}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={o.status} />
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{o.itemsForThisVendor.length}</TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums">{formatMoney(o.vendorSubtotal)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" className="active:scale-95">
-                        <Link href={`/vendor/orders/${o.orderId}`}>View</Link>
-                      </Button>
-                    </TableCell>
+            <div className="w-full overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Items</TableHead>
+                    <TableHead className="text-right">Vendor subtotal</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((o) => (
+                    <TableRow key={o.orderId}>
+                      <TableCell className="whitespace-nowrap font-mono text-xs">#{o.orderId.slice(0, 8)}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={o.status} />
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{formatDateTime(o.createdAt)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{o.itemsForThisVendor.length}</TableCell>
+                      <TableCell className="whitespace-nowrap text-right font-semibold tabular-nums">{formatMoney(o.vendorSubtotal)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-right">
+                        <Button asChild size="sm" className="active:scale-95">
+                          <Link href={`/vendor/orders/${o.orderId}`}>View</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
-    </main>
+    </div>
   );
 }

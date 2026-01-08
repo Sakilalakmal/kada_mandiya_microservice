@@ -30,6 +30,7 @@ export type VendorOrdersSummary = {
 
 export type VendorProductsSummary = {
   totalProducts: number;
+  lowStockCount: number;
   lowStockProducts: ProductListItem[];
 };
 
@@ -56,13 +57,14 @@ function selectOrdersSummary(orders: VendorOrderListItem[]): VendorOrdersSummary
 }
 
 function selectProductsSummary(products: ProductListItem[]): VendorProductsSummary {
-  const lowStockProducts = products
-    .filter((product) => product.stockQty <= 5)
+  const allLowStock = products.filter((product) => product.stockQty <= 3);
+  const lowStockProducts = allLowStock
     .sort((a, b) => a.stockQty - b.stockQty)
     .slice(0, 8);
 
   return {
     totalProducts: products.length,
+    lowStockCount: allLowStock.length,
     lowStockProducts,
   };
 }
@@ -84,7 +86,7 @@ export function useVendorDashboardProfileQuery() {
 export function useVendorDashboardOrdersQuery() {
   const { token, isVendor } = useAuth();
 
-  return useQuery({
+  return useQuery<VendorOrdersSummary>({
     queryKey: vendorDashboardKeys.orders(token),
     queryFn: () => getVendorOrders(),
     enabled: Boolean(token) && Boolean(isVendor),
@@ -99,7 +101,7 @@ export function useVendorDashboardOrdersQuery() {
 export function useVendorDashboardProductsQuery() {
   const { token, isVendor } = useAuth();
 
-  return useQuery({
+  return useQuery<VendorProductsSummary>({
     queryKey: vendorDashboardKeys.products(token),
     queryFn: getVendorProducts,
     enabled: Boolean(token) && Boolean(isVendor),

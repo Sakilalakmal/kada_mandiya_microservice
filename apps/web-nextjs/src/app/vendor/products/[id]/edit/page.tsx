@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { ProductForm, type ProductFormValues } from "@/components/products/product-form";
 import { vendorAccessToast, toastApiError } from "@/components/ui/feedback";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function EditProductPage() {
@@ -31,25 +31,32 @@ export default function EditProductPage() {
     data,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: productKeys.detail(productId),
     queryFn: () => fetchProductDetail(productId),
     enabled: Boolean(productId) && isVendor,
     retry: false,
     staleTime: 15_000,
-    onError: (err: ApiError) => {
-      if (err?.status === 401) {
-        setAuthToken(null);
-        router.push("/login");
-        return;
-      }
-      if (err?.status === 403) {
-        vendorAccessToast(() => router.push("/become-vendor"));
-        return;
-      }
-      toastApiError(err, "Could not load product");
-    },
   });
+
+  const handledErrorRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!isError || handledErrorRef.current) return;
+    const err = error as ApiError | null | undefined;
+    handledErrorRef.current = true;
+
+    if (err?.status === 401) {
+      setAuthToken(null);
+      router.push("/login");
+      return;
+    }
+    if (err?.status === 403) {
+      vendorAccessToast(() => router.push("/become-vendor"));
+      return;
+    }
+    toastApiError(err, "Could not load product");
+  }, [error, isError, router, setAuthToken]);
 
   const updateMutation = useMutation({
     mutationFn: async (values: ProductFormValues) => {
@@ -108,32 +115,9 @@ export default function EditProductPage() {
     },
   });
 
-  if (!isVendor) {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-10 sm:px-10">
-        <Card className="border bg-card shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Vendor access required</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              You need a vendor account to edit products.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <Button asChild className="active:scale-95">
-              <Link href="/become-vendor">Become a vendor</Link>
-            </Button>
-            <Button asChild variant="outline" className="active:scale-95">
-              <Link href="/auth?mode=login">Login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
-
   if (!productId) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-8 px-6 py-10 sm:px-10">
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
         <Card className="border bg-card">
           <CardContent className="space-y-3 px-6 py-8">
             <p className="text-lg font-semibold text-foreground">Missing product</p>
@@ -142,7 +126,7 @@ export default function EditProductPage() {
             </Button>
           </CardContent>
         </Card>
-      </main>
+      </div>
     );
   }
 
@@ -160,18 +144,15 @@ export default function EditProductPage() {
     : undefined;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-4xl flex-col gap-6 px-6 py-10 sm:px-10">
+    <div className="flex min-w-0 flex-1 flex-col gap-6">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
         className="space-y-2"
       >
-        <p className="text-sm text-muted-foreground">Vendor</p>
-        <h1 className="text-3xl font-semibold text-foreground">Edit product</h1>
-        <p className="text-sm text-muted-foreground">
-          Update details, pricing, and availability.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Edit product</h1>
+        <p className="text-sm text-muted-foreground">Update details, pricing, and availability.</p>
       </motion.div>
 
       {isLoading ? (
@@ -197,13 +178,17 @@ export default function EditProductPage() {
       ) : (
         <ProductForm
           defaultValues={defaultValues}
-          onSubmit={(values) => updateMutation.mutateAsync(values)}
+          onSubmit={async (values) => {
+            await updateMutation.mutateAsync(values);
+          }}
           submitLabel={updateMutation.isPending ? "Saving..." : "Save changes"}
           isSubmitting={updateMutation.isPending || deactivateMutation.isPending}
-          onDeactivate={() => deactivateMutation.mutateAsync()}
+          onDeactivate={async () => {
+            await deactivateMutation.mutateAsync();
+          }}
           showStatusToggle
         />
       )}
-    </main>
+    </div>
   );
 }
