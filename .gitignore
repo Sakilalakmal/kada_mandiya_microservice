@@ -22,3 +22,8 @@ out/
 # Logs
 logs/
 *.log
+
+# Expo / React Native (mobile)
+.expo/
+web-build/
+*.tsbuildinfo

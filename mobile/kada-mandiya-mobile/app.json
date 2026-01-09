@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "kada-mandiya-mobile",
+    "slug": "kada-mandiya-mobile",
+    "scheme": "kadamandiya",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router"]
+  }
+}
+
