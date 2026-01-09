@@ -16,6 +16,9 @@ export function paymentsRoutes(JWT_SECRET: string) {
   router.get("/health", publicProxy);
   router.get("/health/db", publicProxy);
 
+  // Stripe webhooks are server-to-server and must bypass auth.
+  router.post("/webhook", publicProxy);
+
   router.use("/", isAuthenticated({ secret: JWT_SECRET }), authedProxy);
 
   return router;

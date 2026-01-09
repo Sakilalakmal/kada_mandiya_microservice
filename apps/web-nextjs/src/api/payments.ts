@@ -12,6 +12,8 @@ export type PaymentDetail = {
   status: PaymentStatus;
   provider: string;
   providerRef: string | null;
+  stripeSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -40,6 +42,14 @@ export async function getMyPayments(): Promise<PaymentListItem[]> {
     method: "GET",
   });
   return data.payments ?? [];
+}
+
+export async function createCheckoutSession(orderId: string): Promise<{ url: string }> {
+  const data = await apiFetch<{ ok: true; url: string }>(`/api/payments/${orderId}/checkout-session`, {
+    method: "POST",
+  });
+  if (!data?.url) throw new Error("Stripe Checkout URL missing from response");
+  return { url: data.url };
 }
 
 export type SimulatePaymentResult = { ok: true } | { ok: false; notSupported: true };

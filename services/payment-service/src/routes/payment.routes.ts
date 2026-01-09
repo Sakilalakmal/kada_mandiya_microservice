@@ -4,9 +4,12 @@ import { auth } from "../middlewares/auth.middleware";
 import {
   getMyPayments,
   getPaymentByOrderId,
+  createCheckoutSession,
+  stripeWebhook,
   simulateFail,
   simulateSuccess,
 } from "../controllers/payment.controller";
+import express from "express";
 
 const router = Router();
 
@@ -29,13 +32,27 @@ router.get("/health/db", async (_req, res) => {
 // so this service must serve routes at the root (e.g. `/my`).
 router.get("/my", auth, getMyPayments);
 router.get("/:orderId", auth, getPaymentByOrderId);
+router.post("/:orderId/checkout-session", auth, createCheckoutSession);
 router.post("/:orderId/simulate-success", auth, simulateSuccess);
 router.post("/:orderId/simulate-fail", auth, simulateFail);
 
+// Stripe webhooks must use RAW body (no JSON parsing before signature verification).
+router.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+router.post("/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+router.post("/api/payments/webhook", express.raw({ type: "application/json" }), stripeWebhook);
+
 router.get("/payments/my", auth, getMyPayments);
 router.get("/payments/:orderId", auth, getPaymentByOrderId);
+router.post("/payments/:orderId/checkout-session", auth, createCheckoutSession);
 
 router.post("/payments/:orderId/simulate-success", auth, simulateSuccess);
 router.post("/payments/:orderId/simulate-fail", auth, simulateFail);
+
+// Backwards-compatible aliases when calling the service directly (no API Gateway stripPrefix).
+router.get("/api/payments/my", auth, getMyPayments);
+router.get("/api/payments/:orderId", auth, getPaymentByOrderId);
+router.post("/api/payments/:orderId/checkout-session", auth, createCheckoutSession);
+router.post("/api/payments/:orderId/simulate-success", auth, simulateSuccess);
+router.post("/api/payments/:orderId/simulate-fail", auth, simulateFail);
 
 export default router;

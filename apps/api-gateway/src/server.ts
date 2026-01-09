@@ -20,8 +20,22 @@ import { notificationsRoutes, vendorNotificationsRoutes } from "./routes/notific
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Stripe webhooks require the raw request body (signature verification happens in payment-service).
+// Ensure we don't JSON-parse the webhook request before proxying it.
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
+
+const jsonParser = express.json();
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/api/payments/webhook")) return next();
+  return jsonParser(req, res, next);
+});
+
+const urlencodedParser = express.urlencoded({ extended: true });
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/api/payments/webhook")) return next();
+  return urlencodedParser(req, res, next);
+});
 app.use(correlationId);
 app.use(gatewayDiagnostics);
 app.use(normalizePath);

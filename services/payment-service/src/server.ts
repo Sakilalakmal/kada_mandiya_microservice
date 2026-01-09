@@ -7,7 +7,15 @@ import { closeEventBus } from "./messaging/bus";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+// Stripe webhooks require the raw request body for signature verification.
+// Skip JSON parsing on the webhook route to preserve req.body as a Buffer.
+const jsonParser = express.json();
+app.use((req, res, next) => {
+  const url = req.originalUrl ?? "";
+  if (url === "/webhook" || url.endsWith("/webhook")) return next();
+  return jsonParser(req, res, next);
+});
 
 app.use("/", paymentRoutes);
 

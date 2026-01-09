@@ -15,28 +15,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useSimulateSuccessMutation } from "@/features/payments/queries";
-
-function enablePaymentSim(): boolean {
-  if (process.env.NODE_ENV !== "production") return true;
-  const flag =
-    process.env.NEXT_PUBLIC_ENABLE_PAYMENT_SIM ?? process.env.NEXT_PUBLIC_VITE_ENABLE_PAYMENT_SIM;
-  return String(flag ?? "").toLowerCase() === "true";
-}
+import { useCheckoutSessionMutation } from "@/features/payments/queries";
 
 function canPayNow(status: PaymentStatus): boolean {
-  return status !== "COMPLETED" && status !== "CANCELLED";
+  return status === "PENDING" || status === "FAILED";
 }
 
 export function PaymentActions({ payment }: { payment: Pick<PaymentDetail, "orderId" | "method" | "status"> }) {
-  const enabled = enablePaymentSim();
-  const successMutation = useSimulateSuccessMutation(payment.orderId);
+  const checkoutMutation = useCheckoutSessionMutation(payment.orderId);
+  const isLoading = checkoutMutation.isPending;
 
-  const isLoading = successMutation.isPending;
+  const onCheckout = React.useCallback(() => {
+    checkoutMutation.mutate(undefined, {
+      onSuccess: ({ url }) => {
+        window.location.href = url;
+      },
+    });
+  }, [checkoutMutation]);
 
-  const onSuccess = React.useCallback(() => successMutation.mutate(), [successMutation]);
-
-  if (!enabled) return null;
+  if (payment.method !== "ONLINE") return null;
   if (!canPayNow(payment.status)) return null;
 
   return (
@@ -44,21 +41,19 @@ export function PaymentActions({ payment }: { payment: Pick<PaymentDetail, "orde
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button size="sm" disabled={isLoading} className="active:scale-95">
-            {isLoading ? "Processing..." : "Pay now"}
+            {isLoading ? "Redirecting..." : payment.status === "FAILED" ? "Try again" : "Pay now"}
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Pay now?</AlertDialogTitle>
             <AlertDialogDescription>
-              {payment.method === "COD"
-                ? "This order is Cash on Delivery. This action is for dev/demo only and will mark the payment as paid."
-                : "This will complete the Visa payment for this order (dev/demo)."}
+              You&apos;ll be redirected to Stripe Checkout to complete your payment securely.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onSuccess} disabled={isLoading}>
+            <AlertDialogAction onClick={onCheckout} disabled={isLoading}>
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

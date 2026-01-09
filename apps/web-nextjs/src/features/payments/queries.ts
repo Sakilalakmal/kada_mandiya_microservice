@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import type { PaymentDetail, PaymentListItem, SimulatePaymentResult } from "@/api/payments";
 import {
+  createCheckoutSession,
   getMyPayments,
   getPaymentByOrderId,
   simulatePaymentFail,
@@ -42,6 +43,13 @@ export function useMyPaymentsQuery() {
     staleTime: 30_000,
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useCheckoutSessionMutation(orderId: string) {
+  return useMutation({
+    mutationFn: () => createCheckoutSession(orderId),
+    onError: (err) => toastApiError(err, "Failed to start checkout"),
   });
 }
 
