@@ -4,7 +4,7 @@ import type React from "react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, LogIn, ShieldCheck, UserPlus } from "lucide-react";
+import { ArrowLeft, Loader2, LogIn, ShieldCheck, Store, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -115,16 +115,18 @@ function AuthShell() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-10 px-6 py-10 sm:px-10">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-background">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-card">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-base font-semibold">Kada Mandiya</p>
-              <p className="text-sm text-muted-foreground">Account portal</p>
+              <p className="text-base font-semibold">Kada Mandiya (කඩ මණ්ඩිය)</p>
+              <p className="text-sm text-muted-foreground">
+                Secure local marketplace
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -139,27 +141,45 @@ function AuthShell() {
         </header>
 
         <main className="grid flex-1 items-center gap-10 lg:grid-cols-2">
-          <section className="space-y-4">
-            <h1 className="text-4xl font-semibold tracking-tight">
-              {mode === "register" ? "Create your account" : "Welcome back"}
-            </h1>
-            <p className="text-muted-foreground">
-              Clean, fast sign-in for Kada Mandiya. Your token stays in the
-              browser for testing.
-            </p>
-            <div className="rounded-2xl border bg-background p-6 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground">
-                What you can do next
+          <section className="animate-in space-y-6 fade-in slide-in-from-bottom-3 duration-300">
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">
+                Account
               </p>
-              <ul className="mt-3 list-disc space-y-1 pl-5">
-                <li>Register with name, email, password</li>
-                <li>Login and call protected routes via the API Gateway</li>
-                <li>Fetch your profile from user-service (next step)</li>
-              </ul>
+              <h1 className="text-4xl font-semibold tracking-tight">
+                {mode === "register" ? "Create your account" : "Sign in"}
+              </h1>
+              <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+                Kada Mandiya (කඩ මණ්ඩිය) is a secure local marketplace built
+                for trust and simplicity—helping customers discover vendors, and
+                helping vendors manage orders with confidence.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border bg-card p-4">
+                <p className="text-sm font-medium">Vendors first</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Create a store, publish products, and manage orders in one
+                  place.
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <p className="text-sm font-medium">Secure by default</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Sessions and actions are protected so your account stays safe.
+                </p>
+              </div>
+              <div className="rounded-xl border bg-card p-4">
+                <p className="text-sm font-medium">Designed for clarity</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Minimal UI and consistent structure keep work focused.
+                </p>
+              </div>
             </div>
           </section>
 
-          <Card className="shadow-sm">
+          <Card className="animate-in border bg-card shadow-sm fade-in slide-in-from-bottom-3 duration-300">
             <CardHeader>
               <CardTitle className="text-2xl">
                 {mode === "register" ? "Register" : "Login"}
@@ -170,12 +190,18 @@ function AuthShell() {
                   : "Enter your email and password to continue."}
               </CardDescription>
               <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
-                <TabsList className="w-full">
-                  <TabsTrigger value="login" className="flex-1 gap-2">
+                <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
+                  <TabsTrigger
+                    value="login"
+                    className="w-full justify-start gap-2 sm:justify-center"
+                  >
                     <LogIn className="h-4 w-4" />
                     Login
                   </TabsTrigger>
-                  <TabsTrigger value="register" className="flex-1 gap-2">
+                  <TabsTrigger
+                    value="register"
+                    className="w-full justify-start gap-2 sm:justify-center"
+                  >
                     <UserPlus className="h-4 w-4" />
                     Register
                   </TabsTrigger>
@@ -218,7 +244,7 @@ function AuthShell() {
                     name="password"
                     type="password"
                     minLength={8}
-                    placeholder="••••••••"
+                    placeholder="At least 8 characters"
                     required
                     value={form.password}
                     onChange={handleChange("password")}
@@ -228,6 +254,18 @@ function AuthShell() {
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {mode === "register" ? "Create account" : "Login"}
                 </Button>
+                <div className="flex items-center justify-between gap-3 pt-2 text-xs text-muted-foreground">
+                  <p className="inline-flex items-center gap-2">
+                    <Store className="h-3.5 w-3.5" />
+                    Vendor access unlocks the dashboard.
+                  </p>
+                  <Link
+                    href="/"
+                    className="underline underline-offset-4 hover:text-foreground"
+                  >
+                    Browse marketplace
+                  </Link>
+                </div>
               </form>
             </CardContent>
           </Card>
