@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: "/vendor/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vendor/orders", label: "Orders", icon: Package },
   { href: "/vendor/products", label: "Products", icon: Boxes },
+  { href: "/vendor/payouts", label: "Payouts", icon: CreditCard },
 ] as const;
 
 export function VendorSidebar() {
@@ -71,22 +72,7 @@ export function VendorSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="px-2 pb-3">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              className="text-sidebar-foreground hover:bg-sidebar-accent/70"
-              tooltip="Stripe payouts (soon)"
-              disabled
-            >
-              <div className="flex items-center gap-2 opacity-70">
-                <CreditCard className="h-4 w-4 text-sidebar-foreground/70" />
-                <span>Payouts (soon)</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      <SidebarFooter className="px-2 pb-3" />
 
       <SidebarRail />
     </Sidebar>
