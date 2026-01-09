@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cartTotalQty, useCartQuery, useClearCartMutation, useRemoveCartItemMutation, useUpdateCartQtyMutation } from "@/features/cart/queries";
 import { CartItemRow } from "@/features/cart/components/cart-item-row";
 import { useCreateOrderMutation } from "@/features/orders/queries";
+import { createCheckoutSession } from "@/api/payments";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+function errorStatus(err: unknown): number | undefined {
+  if (typeof err !== "object" || err === null) return undefined;
+  if (!("status" in err)) return undefined;
+  const status = (err as Record<string, unknown>).status;
+  return typeof status === "number" ? status : undefined;
+}
+
+async function createCheckoutSessionWithRetry(orderId: string) {
+  const maxAttempts = 6;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await createCheckoutSession(orderId);
+    } catch (err) {
+      const status = errorStatus(err);
+      const retryable = status === 404;
+      if (!retryable || attempt >= maxAttempts) throw err;
+      const delayMs = 250 * attempt;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  return await createCheckoutSession(orderId);
+}
 
 function formatMoney(value: number) {
   try {
@@ -376,13 +400,25 @@ export default function CartPage() {
                                 paymentMethod,
                               },
                               {
-                                onSuccess: (data) => {
+                                onSuccess: async (data) => {
                                   toast.success("Order created");
                                   setCheckoutOpen(false);
                                   setCheckoutForm({ deliveryAddress: "", mobile: "", paymentMethod: "COD" });
-                                  router.push(
-                                    paymentMethod === "ONLINE" ? `/orders/${data.orderId}?pay=1` : `/orders/${data.orderId}`
-                                  );
+
+                                  if (paymentMethod === "ONLINE") {
+                                    try {
+                                      const { url } = await createCheckoutSessionWithRetry(data.orderId);
+                                      window.location.href = url;
+                                      return;
+                                    } catch (err) {
+                                      toastApiError(err, "Failed to start checkout");
+                                      router.push(`/orders/${data.orderId}?pay=1`);
+                                      router.refresh();
+                                      return;
+                                    }
+                                  }
+
+                                  router.push(`/orders/${data.orderId}`);
                                   router.refresh();
                                 },
                               }

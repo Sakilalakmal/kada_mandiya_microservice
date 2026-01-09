@@ -13,6 +13,8 @@ export type Payment = {
   status: PaymentStatus;
   provider: string;
   providerRef: string | null;
+  stripeSessionId: string | null;
+  stripePaymentIntentId: string | null;
   correlationId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +46,8 @@ export async function findPaymentByOrderId(orderId: string): Promise<Payment | n
         status,
         provider,
         provider_ref AS providerRef,
+        stripe_session_id AS stripeSessionId,
+        stripe_payment_intent_id AS stripePaymentIntentId,
         correlation_id AS correlationId,
         CONVERT(varchar(33), created_at, 127) AS createdAt,
         CONVERT(varchar(33), updated_at, 127) AS updatedAt
@@ -64,6 +68,12 @@ export async function findPaymentByOrderId(orderId: string): Promise<Payment | n
     status: row.status as PaymentStatus,
     provider: String(row.provider),
     providerRef: row.providerRef === null || row.providerRef === undefined ? null : String(row.providerRef),
+    stripeSessionId:
+      row.stripeSessionId === null || row.stripeSessionId === undefined ? null : String(row.stripeSessionId),
+    stripePaymentIntentId:
+      row.stripePaymentIntentId === null || row.stripePaymentIntentId === undefined
+        ? null
+        : String(row.stripePaymentIntentId),
     correlationId: row.correlationId === null || row.correlationId === undefined ? null : String(row.correlationId),
     createdAt: String(row.createdAt),
     updatedAt: String(row.updatedAt),
@@ -191,6 +201,8 @@ export async function updatePaymentStatus(orderId: string, status: PaymentStatus
         inserted.status AS status,
         inserted.provider AS provider,
         inserted.provider_ref AS providerRef,
+        inserted.stripe_session_id AS stripeSessionId,
+        inserted.stripe_payment_intent_id AS stripePaymentIntentId,
         inserted.correlation_id AS correlationId,
         CONVERT(varchar(33), inserted.created_at, 127) AS createdAt,
         CONVERT(varchar(33), inserted.updated_at, 127) AS updatedAt
@@ -210,9 +222,98 @@ export async function updatePaymentStatus(orderId: string, status: PaymentStatus
     status: row.status as PaymentStatus,
     provider: String(row.provider),
     providerRef: row.providerRef === null || row.providerRef === undefined ? null : String(row.providerRef),
+    stripeSessionId:
+      row.stripeSessionId === null || row.stripeSessionId === undefined ? null : String(row.stripeSessionId),
+    stripePaymentIntentId:
+      row.stripePaymentIntentId === null || row.stripePaymentIntentId === undefined
+        ? null
+        : String(row.stripePaymentIntentId),
     correlationId: row.correlationId === null || row.correlationId === undefined ? null : String(row.correlationId),
     createdAt: String(row.createdAt),
     updatedAt: String(row.updatedAt),
   };
 }
+
+export async function attachStripeRefsByOrderId(input: {
+  orderId: string;
+  stripeSessionId: string | null;
+  stripePaymentIntentId: string | null;
+}): Promise<void> {
+  const pool = await getPool();
+  await pool
+    .request()
+    .input("orderId", sql.VarChar(100), input.orderId)
+    .input("stripeSessionId", sql.VarChar(255), input.stripeSessionId)
+    .input("stripePaymentIntentId", sql.VarChar(255), input.stripePaymentIntentId).query(`
+      UPDATE dbo.payments
+      SET
+        stripe_session_id = COALESCE(@stripeSessionId, stripe_session_id),
+        stripe_payment_intent_id = COALESCE(@stripePaymentIntentId, stripe_payment_intent_id),
+        updated_at = SYSUTCDATETIME()
+      WHERE order_id = @orderId;
+    `);
+}
+
+export async function setPaymentStatusFromStripe(input: {
+  orderId: string;
+  status: Exclude<PaymentStatus, "NOT_REQUIRED" | "CANCELLED">;
+  stripeSessionId?: string | null;
+  stripePaymentIntentId?: string | null;
+}): Promise<Payment | null> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("orderId", sql.VarChar(100), input.orderId)
+    .input("status", sql.VarChar(30), input.status)
+    .input("stripeSessionId", sql.VarChar(255), input.stripeSessionId ?? null)
+    .input("stripePaymentIntentId", sql.VarChar(255), input.stripePaymentIntentId ?? null).query(`
+      UPDATE dbo.payments
+      SET
+        status = @status,
+        stripe_session_id = COALESCE(@stripeSessionId, stripe_session_id),
+        stripe_payment_intent_id = COALESCE(@stripePaymentIntentId, stripe_payment_intent_id),
+        updated_at = SYSUTCDATETIME()
+      OUTPUT
+        CONVERT(varchar(36), inserted.payment_id) AS paymentId,
+        inserted.order_id AS orderId,
+        inserted.user_id AS userId,
+        inserted.amount AS amount,
+        inserted.currency AS currency,
+        inserted.method AS method,
+        inserted.status AS status,
+        inserted.provider AS provider,
+        inserted.provider_ref AS providerRef,
+        inserted.stripe_session_id AS stripeSessionId,
+        inserted.stripe_payment_intent_id AS stripePaymentIntentId,
+        inserted.correlation_id AS correlationId,
+        CONVERT(varchar(33), inserted.created_at, 127) AS createdAt,
+        CONVERT(varchar(33), inserted.updated_at, 127) AS updatedAt
+      WHERE order_id = @orderId AND status <> @status;
+    `);
+
+  const row = (result.recordset as any[])?.[0];
+  if (!row) return null;
+
+  return {
+    paymentId: String(row.paymentId),
+    orderId: String(row.orderId),
+    userId: String(row.userId),
+    amount: Number(row.amount),
+    currency: String(row.currency),
+    method: row.method as PaymentMethod,
+    status: row.status as PaymentStatus,
+    provider: String(row.provider),
+    providerRef: row.providerRef === null || row.providerRef === undefined ? null : String(row.providerRef),
+    stripeSessionId:
+      row.stripeSessionId === null || row.stripeSessionId === undefined ? null : String(row.stripeSessionId),
+    stripePaymentIntentId:
+      row.stripePaymentIntentId === null || row.stripePaymentIntentId === undefined
+        ? null
+        : String(row.stripePaymentIntentId),
+    correlationId: row.correlationId === null || row.correlationId === undefined ? null : String(row.correlationId),
+    createdAt: String(row.createdAt),
+    updatedAt: String(row.updatedAt),
+  };
+}
+
 

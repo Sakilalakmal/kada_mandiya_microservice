@@ -151,7 +151,7 @@ async function handleOrderCreated(message: ConsumeMessage) {
   const orderId = String(event.data.orderId);
   const userId = String(event.data.userId);
   const amount = Number(event.data.subtotal);
-  const currency = String(event.data.currency ?? "LKR");
+  const currency = String(process.env.STRIPE_CURRENCY ?? event.data.currency ?? "LKR").toUpperCase();
   const paymentMethod = String(event.data.paymentMethod ?? "COD");
 
   if (!Number.isFinite(amount)) {

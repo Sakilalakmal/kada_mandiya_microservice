@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": { "dev": "ts-node-dev --respawn --transpile-only src/server.ts" },
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -13,6 +15,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "mssql": "^12.2.0",
+    "stripe": "^20.1.2",
     "zod": "^4.3.4"
   },
   "devDependencies": {
@@ -25,4 +28,3 @@
     "typescript": "^5.9.3"
   }
 }
-
