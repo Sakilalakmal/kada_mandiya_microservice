@@ -1,21 +1,31 @@
 import React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text } from 'react-native';
-import { Link } from 'expo-router';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Link, router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Screen } from '../../src/components/layout/Screen';
+import { useLazyMeQuery, useLoginMutation, useRegisterMutation } from '../../src/api/authApi';
 import { LogoHeader } from '../../src/components/branding/LogoHeader';
-import { Input } from '../../src/components/ui/Input';
+import { Screen } from '../../src/components/layout/Screen';
 import { Button } from '../../src/components/ui/Button';
+import { Input } from '../../src/components/ui/Input';
+import { API_BASE_URL } from '../../src/constants/config';
 import { useTheme } from '../../src/providers/ThemeProvider';
+import { setUser } from '../../src/store/authSlice';
+import { useAppDispatch } from '../../src/store/hooks';
+import { getApiErrorMessage } from '../../src/utils/apiError';
+import { setTokens } from '../../src/utils/tokenStorage';
 
 const schema = z
   .object({
-    fullName: z.string().min(2, 'Enter your full name'),
+    name: z.string().trim().min(1, 'Name is required'),
     email: z.string().email('Enter a valid email'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Za-z]/, 'Password must include a letter')
+      .regex(/[0-9]/, 'Password must include a number'),
     confirmPassword: z.string().min(8, 'Confirm your password'),
   })
   .refine((v) => v.password === v.confirmPassword, {
@@ -27,6 +37,12 @@ type FormValues = z.infer<typeof schema>;
 
 export default function RegisterScreen() {
   const { theme } = useTheme();
+  const dispatch = useAppDispatch();
+
+  const [registerUser, registerState] = useRegisterMutation();
+  const [login, loginState] = useLoginMutation();
+  const [triggerMe] = useLazyMeQuery();
+  const [serverError, setServerError] = React.useState<string | null>(null);
 
   const {
     control,
@@ -35,16 +51,43 @@ export default function RegisterScreen() {
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      fullName: '',
+      name: '',
       email: '',
       password: '',
       confirmPassword: '',
     },
   });
 
-  const onSubmit = handleSubmit(async () => {
-    Alert.alert('Coming soon', 'Auth wiring coming next');
+  const onSubmit = handleSubmit(async (values) => {
+    setServerError(null);
+
+    try {
+      await registerUser({ name: values.name, email: values.email, password: values.password }).unwrap();
+      const auth = await login({ email: values.email, password: values.password }).unwrap();
+      await setTokens({ accessToken: auth.accessToken, refreshToken: auth.accessToken });
+
+      const me = await triggerMe().unwrap();
+      const user = { id: me.payload.sub, email: me.payload.email, roles: me.payload.roles };
+      dispatch(setUser(user));
+
+      router.replace(
+        user.roles.includes('vendor')
+          ? '/(app)/(vendor)/(tabs)/dashboard'
+          : '/(app)/(customer)/(tabs)/home'
+      );
+    } catch (err) {
+      const msg = getApiErrorMessage(err);
+      if (/network request failed|fetch_error/i.test(msg)) {
+        setServerError(
+          `Network error. API: ${API_BASE_URL}\nIf using a phone, set EXPO_PUBLIC_API_URL to your PC LAN IP.`
+        );
+      } else {
+        setServerError(msg);
+      }
+    }
   });
+
+  const loading = isSubmitting || registerState.isLoading || loginState.isLoading;
 
   return (
     <Screen>
@@ -62,12 +105,26 @@ export default function RegisterScreen() {
             Create account
           </Text>
 
+          {serverError ? (
+            <View
+              style={{
+                padding: theme.spacing.md,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: theme.colors.danger,
+                backgroundColor: theme.colors.muted,
+              }}
+            >
+              <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>{serverError}</Text>
+            </View>
+          ) : null}
+
           <Controller
             control={control}
-            name="fullName"
+            name="name"
             render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
               <Input
-                label="Full name"
+                label="Name"
                 placeholder="Your name"
                 textContentType="name"
                 autoComplete="name"
@@ -134,7 +191,7 @@ export default function RegisterScreen() {
             )}
           />
 
-          <Button label="Create account" onPress={onSubmit} loading={isSubmitting} />
+          <Button label="Create account" onPress={onSubmit} loading={loading} disabled={loading} />
 
           <Link href="/(auth)/login" asChild>
             <Pressable style={{ alignSelf: 'flex-start' }}>
