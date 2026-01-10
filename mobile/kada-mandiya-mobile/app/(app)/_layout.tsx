@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 
 import { Screen } from '../../src/components/layout/Screen';
-import { API_BASE_URL } from '../../src/constants/config';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { hydrateAuth } from '../../src/store/authSlice';
@@ -47,22 +46,9 @@ export default function AppLayout() {
     );
   }
 
-  return (
-    <>
-      {__DEV__ ? (
-        <View pointerEvents="none" style={styles.devBadge}>
-          <Text style={[styles.devText, { color: theme.colors.placeholder }]}>
-            {API_BASE_URL} • {user?.roles?.[0] ?? 'guest'}
-          </Text>
-        </View>
-      ) : null}
-      <Stack screenOptions={{ headerShown: false }} />
-    </>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
 
 const styles = StyleSheet.create({
   center: { justifyContent: 'center', alignItems: 'center' },
-  devBadge: { position: 'absolute', right: 10, bottom: 10, zIndex: 10 },
-  devText: { fontSize: 11, fontWeight: '600' },
 });

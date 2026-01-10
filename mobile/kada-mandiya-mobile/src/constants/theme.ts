@@ -1,28 +1,12 @@
+import { Platform } from 'react-native';
+
 export type ColorScheme = 'light' | 'dark';
 
 export const themeTokens = {
-  spacing: {
-    xs: 8,
-    sm: 12,
-    md: 16,
-    lg: 24,
-    xl: 32,
-  },
-  radius: {
-    sm: 10,
-    md: 14,
-    lg: 18,
-  },
-  typography: {
-    title: 28,
-    subtitle: 16,
-    body: 16,
-    caption: 13,
-  },
   colors: {
     light: {
       background: '#FFFFFF',
-      foreground: '#0B0B0B',
+      foreground: '#0A0A0A',
       muted: '#F3F4F6',
       border: '#E5E7EB',
       primary: '#2563EB',
@@ -31,9 +15,9 @@ export const themeTokens = {
       placeholder: '#6B7280',
     },
     dark: {
-      background: '#000000',
+      background: '#0B0B0F',
       foreground: '#FFFFFF',
-      muted: '#0B0B0B',
+      muted: '#12121A',
       border: '#1F2937',
       primary: '#2563EB',
       primaryForeground: '#FFFFFF',
@@ -41,6 +25,34 @@ export const themeTokens = {
       placeholder: '#9CA3AF',
     },
   },
+  spacing: {
+    xs: 8,
+    sm: 12,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  radius: {
+    sm: 12,
+    md: 16,
+    lg: 20,
+  },
+  typography: {
+    title: 24,
+    subtitle: 15,
+    body: 15,
+    small: 13,
+  },
+  shadow: Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
+    },
+    android: { elevation: 3 },
+    default: { elevation: 3 },
+  }),
 } as const;
 
 export type AppTheme = {
@@ -49,6 +61,7 @@ export type AppTheme = {
   spacing: typeof themeTokens.spacing;
   radius: typeof themeTokens.radius;
   typography: typeof themeTokens.typography;
+  shadow: typeof themeTokens.shadow;
 };
 
 export function getTheme(scheme: ColorScheme): AppTheme {
@@ -58,6 +71,7 @@ export function getTheme(scheme: ColorScheme): AppTheme {
     spacing: themeTokens.spacing,
     radius: themeTokens.radius,
     typography: themeTokens.typography,
+    shadow: themeTokens.shadow,
   };
 }
 

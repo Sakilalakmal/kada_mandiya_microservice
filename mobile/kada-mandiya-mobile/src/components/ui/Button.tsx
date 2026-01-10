@@ -6,25 +6,47 @@ import {
   StyleSheet,
   Text,
   type PressableProps,
+  type ViewStyle,
 } from 'react-native';
 
 import { useTheme } from '../../providers/ThemeProvider';
 
 type Variant = 'primary' | 'outline' | 'ghost';
+type Intent = 'default' | 'danger';
 
 type Props = PressableProps & {
   label: string;
   variant?: Variant;
+  intent?: Intent;
   loading?: boolean;
 };
 
-export function Button({ label, variant = 'primary', loading, disabled, style, ...props }: Props) {
+export function Button({
+  label,
+  variant = 'primary',
+  intent = 'default',
+  loading,
+  disabled,
+  style,
+  ...props
+}: Props) {
   const { theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
 
+  const controlHeight = theme.spacing.xl + theme.spacing.md;
+
   const stylesByVariant = useMemo(() => {
+    const intentColor = intent === 'danger' ? theme.colors.danger : theme.colors.primary;
+
     switch (variant) {
       case 'outline':
+        if (intent === 'danger') {
+          return {
+            backgroundColor: 'transparent',
+            borderColor: theme.colors.danger,
+            textColor: theme.colors.danger,
+          };
+        }
         return {
           backgroundColor: 'transparent',
           borderColor: theme.colors.border,
@@ -34,19 +56,27 @@ export function Button({ label, variant = 'primary', loading, disabled, style, .
         return {
           backgroundColor: 'transparent',
           borderColor: 'transparent',
-          textColor: theme.colors.primary,
+          textColor: intentColor,
         };
       case 'primary':
       default:
         return {
-          backgroundColor: theme.colors.primary,
-          borderColor: theme.colors.primary,
+          backgroundColor: intentColor,
+          borderColor: intentColor,
           textColor: theme.colors.primaryForeground,
         };
     }
-  }, [theme, variant]);
+  }, [intent, theme, variant]);
 
   const isDisabled = disabled || loading;
+  const containerStyle: ViewStyle = {
+    height: controlHeight,
+    borderWidth: 1,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
 
   return (
     <Pressable
@@ -76,7 +106,7 @@ export function Button({ label, variant = 'primary', loading, disabled, style, .
     >
       <Animated.View
         style={[
-          styles.button,
+          containerStyle,
           {
             transform: [{ scale }],
             backgroundColor: stylesByVariant.backgroundColor,
@@ -88,7 +118,14 @@ export function Button({ label, variant = 'primary', loading, disabled, style, .
         {loading ? (
           <ActivityIndicator color={stylesByVariant.textColor} />
         ) : (
-          <Text style={[styles.label, { color: stylesByVariant.textColor }]}>{label}</Text>
+          <Text
+            style={[
+              styles.label,
+              { color: stylesByVariant.textColor, fontSize: theme.typography.body },
+            ]}
+          >
+            {label}
+          </Text>
         )}
       </Animated.View>
     </Pressable>
@@ -96,12 +133,5 @@ export function Button({ label, variant = 'primary', loading, disabled, style, .
 }
 
 const styles = StyleSheet.create({
-  button: {
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: { fontSize: 16, fontWeight: '700' },
+  label: { fontWeight: '800' },
 });
