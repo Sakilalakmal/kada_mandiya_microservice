@@ -1,25 +1,36 @@
 import React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text } from 'react-native';
-import { Link } from 'expo-router';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Link, router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Screen } from '../../src/components/layout/Screen';
+import { useLazyMeQuery, useLoginMutation } from '../../src/api/authApi';
 import { LogoHeader } from '../../src/components/branding/LogoHeader';
-import { Input } from '../../src/components/ui/Input';
+import { Screen } from '../../src/components/layout/Screen';
 import { Button } from '../../src/components/ui/Button';
+import { Input } from '../../src/components/ui/Input';
+import { API_BASE_URL } from '../../src/constants/config';
 import { useTheme } from '../../src/providers/ThemeProvider';
+import { setUser } from '../../src/store/authSlice';
+import { useAppDispatch } from '../../src/store/hooks';
+import { getApiErrorMessage } from '../../src/utils/apiError';
+import { setTokens } from '../../src/utils/tokenStorage';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export default function LoginScreen() {
   const { theme } = useTheme();
+  const dispatch = useAppDispatch();
+
+  const [login, loginState] = useLoginMutation();
+  const [triggerMe] = useLazyMeQuery();
+  const [serverError, setServerError] = React.useState<string | null>(null);
 
   const {
     control,
@@ -30,8 +41,32 @@ export default function LoginScreen() {
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = handleSubmit(async () => {
-    Alert.alert('Coming soon', 'Auth wiring coming next');
+  const onSubmit = handleSubmit(async (values) => {
+    setServerError(null);
+
+    try {
+      const auth = await login(values).unwrap();
+      await setTokens({ accessToken: auth.accessToken, refreshToken: auth.accessToken });
+
+      const me = await triggerMe().unwrap();
+      const user = { id: me.payload.sub, email: me.payload.email, roles: me.payload.roles };
+      dispatch(setUser(user));
+
+      router.replace(
+        user.roles.includes('vendor')
+          ? '/(app)/(vendor)/(tabs)/dashboard'
+          : '/(app)/(customer)/(tabs)/home'
+      );
+    } catch (err) {
+      const msg = getApiErrorMessage(err);
+      if (/network request failed|fetch_error/i.test(msg)) {
+        setServerError(
+          `Network error. API: ${API_BASE_URL}\nIf using a phone, set EXPO_PUBLIC_API_URL to your PC LAN IP.`
+        );
+      } else {
+        setServerError(msg);
+      }
+    }
   });
 
   return (
@@ -52,6 +87,20 @@ export default function LoginScreen() {
           <Text style={{ fontSize: 15, fontWeight: '600', color: theme.colors.placeholder }}>
             Sign in to continue
           </Text>
+
+          {serverError ? (
+            <View
+              style={{
+                padding: theme.spacing.md,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: theme.colors.danger,
+                backgroundColor: theme.colors.muted,
+              }}
+            >
+              <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>{serverError}</Text>
+            </View>
+          ) : null}
 
           <Controller
             control={control}
@@ -90,7 +139,12 @@ export default function LoginScreen() {
             )}
           />
 
-          <Button label="Sign in" onPress={onSubmit} loading={isSubmitting} />
+          <Button
+            label="Sign in"
+            onPress={onSubmit}
+            loading={isSubmitting || loginState.isLoading}
+            disabled={loginState.isLoading}
+          />
 
           <Link href="/(auth)/forgot-password" asChild>
             <Pressable style={{ alignSelf: 'flex-start' }}>
