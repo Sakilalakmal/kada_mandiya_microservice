@@ -1,11 +1,14 @@
 import React from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
-import { router } from 'expo-router';
 
 import { useGetMyVendorProfileQuery } from '../../../src/api/vendorApi';
+import { Header } from '../../../src/components/layout/Header';
 import { Screen } from '../../../src/components/layout/Screen';
 import { Button } from '../../../src/components/ui/Button';
+import { Card } from '../../../src/components/ui/Card';
+import { Badge } from '../../../src/components/ui/Badge';
 import { useTheme } from '../../../src/providers/ThemeProvider';
+import { formatDateTime } from '../../../src/utils/format';
 
 export default function VendorStatusScreen() {
   const { theme } = useTheme();
@@ -15,54 +18,75 @@ export default function VendorStatusScreen() {
 
   return (
     <Screen>
-      <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.foreground }}>
-        Vendor status
-      </Text>
+      <Header
+        title="Vendor status"
+        subtitle="Your vendor profile and approval state."
+        canGoBack
+      />
 
-      <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.md }}>
+      <View style={{ flex: 1, marginTop: theme.spacing.lg }}>
         {isFetching ? (
-          <ActivityIndicator color={theme.colors.primary} />
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator color={theme.colors.primary} />
+          </View>
         ) : isError ? (
-          <>
-            <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>
+          <Card style={{ gap: theme.spacing.sm }}>
+            <Text style={{ color: theme.colors.danger, fontWeight: '800', fontSize: theme.typography.body }}>
               Failed to load vendor profile.
             </Text>
-            <Button label="Retry" variant="outline" onPress={refetch} />
-          </>
-        ) : vendor ? (
-          <View
-            style={{
-              padding: theme.spacing.lg,
-              borderRadius: theme.radius.lg,
-              borderWidth: 1,
-              borderColor: theme.colors.border,
-              backgroundColor: theme.colors.muted,
-              gap: theme.spacing.sm,
-            }}
-          >
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '800' }}>Store</Text>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: 18 }}>
-              {vendor.storeName}
+            <Text style={{ color: theme.colors.placeholder, fontWeight: '600', fontSize: theme.typography.body }}>
+              Check your connection and try again.
             </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '800' }}>Status</Text>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '800' }}>ACTIVE</Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '800' }}>Created</Text>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '700' }}>{vendor.createdAt}</Text>
+            <Button label="Retry" variant="outline" onPress={refetch} />
+          </Card>
+        ) : vendor ? (
+          <Card style={{ gap: theme.spacing.lg }}>
+            <View style={{ gap: theme.spacing.sm }}>
+              <Text style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}>
+                Store
+              </Text>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.title }}>
+                {vendor.storeName}
+              </Text>
+            </View>
 
-            <Text style={{ marginTop: theme.spacing.sm, color: theme.colors.placeholder, fontWeight: '600' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ gap: theme.spacing.xs }}>
+                <Text
+                  style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}
+                >
+                  Status
+                </Text>
+                <Badge label="ACTIVE" />
+              </View>
+
+              <View style={{ alignItems: 'flex-end', gap: theme.spacing.xs }}>
+                <Text
+                  style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}
+                >
+                  Created
+                </Text>
+                <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: theme.typography.body }}>
+                  {formatDateTime(vendor.createdAt)}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={{ color: theme.colors.placeholder, fontWeight: '600', fontSize: theme.typography.body }}>
               ACTIVE means your vendor profile exists and your account has the vendor role.
             </Text>
-          </View>
+          </Card>
         ) : (
-          <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>
-            No vendor profile found.
-          </Text>
+          <Card style={{ gap: theme.spacing.sm }}>
+            <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.subtitle }}>
+              No vendor profile found
+            </Text>
+            <Text style={{ color: theme.colors.placeholder, fontWeight: '600', fontSize: theme.typography.body }}>
+              If you just applied, it may take a moment to appear.
+            </Text>
+          </Card>
         )}
       </View>
-
-      <View style={{ flex: 1 }} />
-
-      <Button label="Back" variant="ghost" onPress={() => router.back()} />
     </Screen>
   );
 }
