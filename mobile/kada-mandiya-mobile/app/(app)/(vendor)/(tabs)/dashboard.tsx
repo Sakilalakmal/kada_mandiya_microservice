@@ -1,6 +1,7 @@
 import React from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 import { Screen } from '../../../../src/components/layout/Screen';
 import { Header } from '../../../../src/components/layout/Header';
@@ -22,27 +23,45 @@ export default function VendorDashboard() {
 
       <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap }}>
-          <Card style={{ width: cardWidth }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}>
-                Products
+          <Pressable
+            onPress={() => router.push('/(app)/(vendor)/products')}
+            style={({ pressed }) => [{ width: cardWidth, opacity: pressed ? 0.92 : 1 }]}
+          >
+            <Card>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text
+                  style={{
+                    color: theme.colors.placeholder,
+                    fontWeight: '800',
+                    fontSize: theme.typography.small,
+                  }}
+                >
+                  Products
+                </Text>
+                <Feather name="package" size={18} color={theme.colors.placeholder} />
+              </View>
+              <Text
+                style={{
+                  marginTop: theme.spacing.sm,
+                  color: theme.colors.foreground,
+                  fontWeight: '900',
+                  fontSize: theme.typography.title + theme.spacing.xs / 2,
+                }}
+              >
+                —
               </Text>
-              <Feather name="package" size={18} color={theme.colors.placeholder} />
-            </View>
-            <Text
-              style={{
-                marginTop: theme.spacing.sm,
-                color: theme.colors.foreground,
-                fontWeight: '900',
-                fontSize: theme.typography.title + theme.spacing.xs / 2,
-              }}
-            >
-              —
-            </Text>
-            <Text style={{ marginTop: theme.spacing.xs, color: theme.colors.placeholder, fontWeight: '600', fontSize: theme.typography.small }}>
-              Coming soon
-            </Text>
-          </Card>
+              <Text
+                style={{
+                  marginTop: theme.spacing.xs,
+                  color: theme.colors.placeholder,
+                  fontWeight: '600',
+                  fontSize: theme.typography.small,
+                }}
+              >
+                View & create
+              </Text>
+            </Card>
+          </Pressable>
 
           <Card style={{ width: cardWidth }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

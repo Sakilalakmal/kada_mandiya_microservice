@@ -1,5 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+  type TextStyle,
+} from 'react-native';
 
 import { useTheme } from '../../providers/ThemeProvider';
 
@@ -13,30 +20,36 @@ export function Input({ label, error, style, ...props }: Props) {
   const [focused, setFocused] = useState(false);
 
   const controlHeight = theme.spacing.xl + theme.spacing.md;
+  const isMultiline = Boolean(props.multiline);
   const borderColor = error
     ? theme.colors.danger
     : focused
       ? theme.colors.primary
       : theme.colors.border;
 
-  const inputStyle: ViewStyle = useMemo(() => {
+  const inputStyle: TextStyle = useMemo(() => {
     return {
-      height: controlHeight,
+      height: isMultiline ? undefined : controlHeight,
+      minHeight: isMultiline ? controlHeight * 2 : controlHeight,
       borderWidth: 1,
       borderRadius: theme.radius.md,
       paddingHorizontal: theme.spacing.md,
+      paddingVertical: isMultiline ? theme.spacing.sm : 0,
       fontSize: theme.typography.body,
       color: theme.colors.foreground,
       backgroundColor: theme.colors.muted,
       borderColor,
+      textAlignVertical: isMultiline ? 'top' : 'center',
     } as const;
   }, [
     borderColor,
     controlHeight,
+    isMultiline,
     theme.colors.foreground,
     theme.colors.muted,
     theme.radius.md,
     theme.spacing.md,
+    theme.spacing.sm,
     theme.typography.body,
   ]);
 

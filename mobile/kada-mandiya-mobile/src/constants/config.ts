@@ -36,3 +36,15 @@ const devHost = __DEV__ ? extractHost(readExpoHostUri() ?? '') : null;
 export const API_BASE_URL = normalizeBaseUrl(
   fromEnv ?? fromExpoConfig ?? (devHost ? `http://${devHost}:4001/api` : 'http://localhost:4001/api')
 );
+
+function stripApiSuffix(url: string): string {
+  return url.endsWith('/api') ? url.slice(0, -4) : url;
+}
+
+export const GATEWAY_BASE_URL = stripApiSuffix(API_BASE_URL);
+export const PRODUCTS_BASE_URL = `${GATEWAY_BASE_URL}/products`;
+
+export const UPLOADTHING_URL = normalizeBaseUrl(
+  process.env.EXPO_PUBLIC_UPLOADTHING_URL ??
+    (devHost ? `http://${devHost}:3000/api/uploadthing` : 'http://localhost:3000/api/uploadthing')
+);
