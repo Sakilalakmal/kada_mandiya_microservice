@@ -9,6 +9,7 @@ export default function CustomerTabsLayout() {
 
   return (
     <Tabs
+      initialRouteName="profile"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
@@ -26,13 +27,6 @@ export default function CustomerTabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
-        }}
-      />
-      <Tabs.Screen
         name="orders"
         options={{
           title: 'Orders',
@@ -49,4 +43,5 @@ export default function CustomerTabsLayout() {
     </Tabs>
   );
 }
+
 

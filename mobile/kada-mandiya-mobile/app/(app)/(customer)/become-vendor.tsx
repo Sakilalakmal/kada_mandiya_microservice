@@ -80,7 +80,7 @@ export default function BecomeVendorScreen() {
 
       const me = await triggerMe().unwrap();
       dispatch(setUser({ id: me.payload.sub, email: me.payload.email, roles: me.payload.roles }));
-      router.replace('/(app)/(vendor)/(tabs)/dashboard');
+      router.replace('/(app)/(vendor)/(tabs)/profile');
     } catch (err) {
       setServerError(getApiErrorMessage(err));
     }

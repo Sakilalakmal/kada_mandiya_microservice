@@ -9,6 +9,7 @@ export default function VendorTabsLayout() {
 
   return (
     <Tabs
+      initialRouteName="profile"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
@@ -25,13 +26,6 @@ export default function VendorTabsLayout() {
         tabBarLabelStyle: { fontWeight: '700', fontSize: theme.typography.small },
       }}
     >
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <Feather name="grid" size={size} color={color} />,
-        }}
-      />
       <Tabs.Screen
         name="orders"
         options={{
