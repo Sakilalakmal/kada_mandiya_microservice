@@ -48,3 +48,5 @@ export const UPLOADTHING_URL = normalizeBaseUrl(
   process.env.EXPO_PUBLIC_UPLOADTHING_URL ??
     (devHost ? `http://${devHost}:3000/api/uploadthing` : 'http://localhost:3000/api/uploadthing')
 );
+
+export const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
