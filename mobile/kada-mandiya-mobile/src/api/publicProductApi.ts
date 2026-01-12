@@ -1,6 +1,6 @@
 import { baseApi } from './baseApi';
 import { PRODUCTS_BASE_URL } from '../constants/config';
-import type { Product } from '../types/product.types';
+import type { GetProductDetailResponse, Product, ProductDetail } from '../types/product.types';
 
 export type PublicProductsQuery = {
   page?: number;
@@ -42,10 +42,19 @@ export const publicProductApi = baseApi.injectEndpoints({
         const qs = toQueryString({ page, limit, search, category });
         return { url: `${PRODUCTS_BASE_URL}${qs}`, method: 'GET' };
       },
+      providesTags: (result) => {
+        const items = result?.items ?? [];
+        return [{ type: 'Product' as const, id: 'LIST' }, ...items.map((p) => ({ type: 'Product' as const, id: p.id }))];
+      },
+    }),
+
+    getPublicProductById: builder.query<ProductDetail, string>({
+      query: (id) => ({ url: `${PRODUCTS_BASE_URL}/${encodeURIComponent(id)}`, method: 'GET' }),
+      transformResponse: (response: GetProductDetailResponse) => response.product,
+      providesTags: (_result, _err, id) => [{ type: 'Product' as const, id }],
     }),
   }),
   overrideExisting: false,
 });
 
-export const { useListPublicProductsQuery } = publicProductApi;
-
+export const { useListPublicProductsQuery, useGetPublicProductByIdQuery } = publicProductApi;
