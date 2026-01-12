@@ -55,7 +55,7 @@ export default function LoginScreen() {
       router.replace(
         user.roles.includes('vendor')
           ? '/(app)/(vendor)/(tabs)/profile'
-          : '/(app)/(customer)/(tabs)/profile'
+          : '/(app)/(customer)/(tabs)/home'
       );
     } catch (err) {
       const msg = getApiErrorMessage(err);

@@ -3,6 +3,7 @@ export type UserRole = 'customer' | 'vendor';
 export type User = {
   id: string;
   email: string;
+  name?: string;
   roles: UserRole[];
 };
 

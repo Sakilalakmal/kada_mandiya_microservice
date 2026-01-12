@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,7 +14,7 @@ import { useTheme } from '../../providers/ThemeProvider';
 
 type Props = {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   scroll?: boolean;
   keyboardAvoiding?: boolean;
   keyboardOffset?: number;

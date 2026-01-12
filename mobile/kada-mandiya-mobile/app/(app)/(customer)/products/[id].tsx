@@ -1,19 +1,21 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
+import { Button } from '../../../../src/components/ui/Button';
 import { Card } from '../../../../src/components/ui/Card';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
 
-export default function CustomerProductsPlaceholder() {
+export default function CustomerProductDetailsPlaceholder() {
   const { theme } = useTheme();
-  const { search, category } = useLocalSearchParams<{ search?: string; category?: string }>();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
 
   return (
     <Screen scroll>
-      <Header title="Products" subtitle="Browse items from vendors." canGoBack />
+      <Header title="Product" subtitle="Details and checkout coming next." canGoBack />
 
       <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
         <Card style={{ gap: theme.spacing.sm }}>
@@ -21,19 +23,16 @@ export default function CustomerProductsPlaceholder() {
             Coming next
           </Text>
           <Text style={{ color: theme.colors.placeholder, fontWeight: '600', fontSize: theme.typography.body }}>
-            Product browsing, search, filters, and product details are the next step.
+            Product details, images, vendor info, and cart flow are the next step.
           </Text>
-          {search ? (
+          {id ? (
             <Text style={{ color: theme.colors.placeholder, fontWeight: '700', fontSize: theme.typography.small }}>
-              Search: {search}
-            </Text>
-          ) : null}
-          {category ? (
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '700', fontSize: theme.typography.small }}>
-              Category: {category}
+              Product ID: {id}
             </Text>
           ) : null}
         </Card>
+
+        <Button label="Back to products" variant="outline" onPress={() => router.push('/(app)/(customer)/products')} />
       </View>
     </Screen>
   );

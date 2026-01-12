@@ -32,7 +32,7 @@ export default function AppLayout() {
       return;
     }
 
-    const target = isVendor ? '/(app)/(vendor)/(tabs)/profile' : '/(app)/(customer)/(tabs)/profile';
+    const target = isVendor ? '/(app)/(vendor)/(tabs)/profile' : '/(app)/(customer)/(tabs)/home';
 
     if (isVendor && !inVendorGroup) router.replace(target);
     if (!isVendor && !inCustomerGroup) router.replace(target);

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
@@ -9,10 +9,11 @@ type Props = {
   title: string;
   subtitle?: string;
   canGoBack?: boolean;
-  style?: ViewStyle;
+  right?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function Header({ title, subtitle, canGoBack, style }: Props) {
+export function Header({ title, subtitle, canGoBack, right, style }: Props) {
   const { theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -77,6 +78,8 @@ export function Header({ title, subtitle, canGoBack, style }: Props) {
             </Text>
           ) : null}
         </View>
+
+        {right ? <View style={styles.right}>{right}</View> : null}
       </View>
     </View>
   );
@@ -87,6 +90,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   back: { alignItems: 'center', justifyContent: 'center' },
   text: { flex: 1 },
+  right: { flexDirection: 'row', alignItems: 'center' },
   title: { fontWeight: '800' },
   subtitle: { fontWeight: '600' },
 });

@@ -11,11 +11,13 @@ import {
 import { useTheme } from '../../providers/ThemeProvider';
 
 type Props = TextInputProps & {
-  label: string;
+  label?: string;
   error?: string;
+  leadingIcon?: React.ReactNode;
+  inputRef?: React.Ref<TextInput>;
 };
 
-export function Input({ label, error, style, ...props }: Props) {
+export function Input({ label, error, leadingIcon, inputRef, style, ...props }: Props) {
   const { theme } = useTheme();
   const [focused, setFocused] = useState(false);
 
@@ -27,6 +29,11 @@ export function Input({ label, error, style, ...props }: Props) {
       ? theme.colors.primary
       : theme.colors.border;
 
+  const hasLeadingIcon = Boolean(leadingIcon);
+  const iconSize = 18;
+  const iconInset = theme.spacing.md;
+  const iconPadding = hasLeadingIcon ? iconInset + iconSize + theme.spacing.sm : 0;
+
   const inputStyle: TextStyle = useMemo(() => {
     return {
       height: isMultiline ? undefined : controlHeight,
@@ -34,6 +41,7 @@ export function Input({ label, error, style, ...props }: Props) {
       borderWidth: 1,
       borderRadius: theme.radius.md,
       paddingHorizontal: theme.spacing.md,
+      paddingLeft: theme.spacing.md + iconPadding,
       paddingVertical: isMultiline ? theme.spacing.sm : 0,
       fontSize: theme.typography.body,
       color: theme.colors.foreground,
@@ -44,6 +52,7 @@ export function Input({ label, error, style, ...props }: Props) {
   }, [
     borderColor,
     controlHeight,
+    iconPadding,
     isMultiline,
     theme.colors.foreground,
     theme.colors.muted,
@@ -55,22 +64,32 @@ export function Input({ label, error, style, ...props }: Props) {
 
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.label, { color: theme.colors.foreground, fontSize: theme.typography.small }]}>
-        {label}
-      </Text>
-      <TextInput
-        placeholderTextColor={theme.colors.placeholder}
-        onFocus={(e) => {
-          props.onFocus?.(e);
-          setFocused(true);
-        }}
-        onBlur={(e) => {
-          props.onBlur?.(e);
-          setFocused(false);
-        }}
-        style={[inputStyle, style]}
-        {...props}
-      />
+      {label ? (
+        <Text style={[styles.label, { color: theme.colors.foreground, fontSize: theme.typography.small }]}>
+          {label}
+        </Text>
+      ) : null}
+      <View style={styles.control}>
+        {leadingIcon ? (
+          <View style={[styles.leadingIcon, { left: iconInset }]} pointerEvents="none">
+            {leadingIcon}
+          </View>
+        ) : null}
+        <TextInput
+          ref={inputRef}
+          placeholderTextColor={theme.colors.placeholder}
+          onFocus={(e) => {
+            props.onFocus?.(e);
+            setFocused(true);
+          }}
+          onBlur={(e) => {
+            props.onBlur?.(e);
+            setFocused(false);
+          }}
+          style={[inputStyle, style]}
+          {...props}
+        />
+      </View>
       {error ? (
         <Text style={[styles.error, { color: theme.colors.danger, fontSize: theme.typography.small }]}>
           {error}
@@ -82,7 +101,14 @@ export function Input({ label, error, style, ...props }: Props) {
 
 const styles = StyleSheet.create({
   wrap: { gap: 8 },
+  control: { position: 'relative' },
+  leadingIcon: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   label: { fontWeight: '700' },
   error: { fontWeight: '600' },
 });
-
