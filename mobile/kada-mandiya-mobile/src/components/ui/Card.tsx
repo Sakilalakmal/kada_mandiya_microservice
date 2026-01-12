@@ -1,11 +1,11 @@
 import React from 'react';
-import { StyleSheet, View, type ViewProps, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../../providers/ThemeProvider';
 
 type Props = ViewProps & {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function Card({ children, style, ...props }: Props) {
