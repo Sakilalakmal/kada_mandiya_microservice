@@ -83,7 +83,7 @@ export default function CustomerHomeScreen() {
 
   const onPressProduct = useCallback(
     (id: string) => {
-      router.push({ pathname: '/(app)/(customer)/products/[id]', params: { id } });
+      router.push(`/(app)/(customer)/products/${encodeURIComponent(id)}`);
     },
     [router]
   );
@@ -181,7 +181,7 @@ export default function CustomerHomeScreen() {
             selectedKey={selectedCategory}
             onSelect={(key) => {
               setSelectedCategory(key);
-              goToProducts({ category: key });
+              goToProducts(key === 'all' ? {} : { category: key });
             }}
             style={{ marginTop: theme.spacing.sm }}
           />

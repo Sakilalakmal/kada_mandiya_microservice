@@ -21,13 +21,20 @@ export type ProductCardVariant = 'featured' | 'grid';
 type Props = {
   product: Product;
   variant?: ProductCardVariant;
-  onPressProduct: (id: string) => void;
+  onPress?: () => void;
+  onPressProduct?: (id: string) => void;
   style?: ViewStyle;
 };
 
-function ProductCardInner({ product, variant = 'featured', onPressProduct, style }: Props) {
+function ProductCardInner({ product, variant = 'featured', onPress, onPressProduct, style }: Props) {
   const { theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePress = useMemo(() => {
+    if (typeof onPress === 'function') return onPress;
+    if (typeof onPressProduct === 'function') return () => onPressProduct(product.id);
+    return () => {};
+  }, [onPress, onPressProduct, product.id]);
 
   const sizes = useMemo(() => {
     if (variant === 'grid') {
@@ -62,7 +69,7 @@ function ProductCardInner({ product, variant = 'featured', onPressProduct, style
 
   return (
     <Pressable
-      onPress={() => onPressProduct(product.id)}
+      onPress={handlePress}
       onPressIn={() => {
         Animated.timing(scale, { toValue: 0.985, duration: 120, useNativeDriver: true }).start();
       }}
