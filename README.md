@@ -12,6 +12,11 @@
 <h1 align="center">🛒 Kada Mandiya</h1>
 
 <p align="center">
+  <a href="IMAGE_URL_1"><img src="https://github.com/user-attachments/assets/9610cf56-485e-412e-a1a5-2aa1ca57071f" width="48%" /></a>
+  <a href="IMAGE_URL_2"><img src="https://github.com/user-attachments/assets/639c64e9-90fd-4446-840b-f462314a4af0" width="48%" /></a>
+</p>
+
+<p align="center">
   <strong>A production-grade, event-driven microservices e-commerce platform</strong>
 </p>
 
