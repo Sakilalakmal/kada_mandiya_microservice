@@ -5,8 +5,9 @@ import { router } from 'expo-router';
 import { useGetMyVendorProfileQuery } from '../../../../src/api/vendorApi';
 import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
-import { Button } from '../../../../src/components/ui/Button';
+import { Badge } from '../../../../src/components/ui/Badge';
 import { Card } from '../../../../src/components/ui/Card';
+import { ListItem } from '../../../../src/components/ui/ListItem';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
 import { API_BASE_URL } from '../../../../src/constants/config';
 import { clearAuth } from '../../../../src/store/authSlice';
@@ -31,7 +32,7 @@ export default function VendorProfile() {
             <Text style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}>
               Signed in as
             </Text>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.body }}>
+            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.body }}>
               {user?.email ?? '—'}
             </Text>
           </View>
@@ -54,6 +55,9 @@ export default function VendorProfile() {
               <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
                 {vendor.storeName}
               </Text>
+              <View style={{ marginTop: theme.spacing.xs }}>
+                <Badge label="ACTIVE" />
+              </View>
             </View>
           ) : (
             <Text style={{ color: theme.colors.placeholder, fontWeight: '700', fontSize: theme.typography.body }}>
@@ -81,23 +85,41 @@ export default function VendorProfile() {
           ) : null}
         </Card>
 
-        <View style={{ gap: theme.spacing.sm }}>
-          <Button
-            label="Vendor status"
-            variant="outline"
-            onPress={() => router.push('/(app)/(vendor)/vendor-status')}
-          />
-          <Button
-            label="Logout"
-            variant="outline"
-            intent="danger"
-            onPress={async () => {
-              await clearTokens();
-              dispatch(clearAuth());
-              router.replace('/(auth)/login');
-            }}
-          />
-        </View>
+        <Card style={{ gap: theme.spacing.sm }}>
+          <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+            Vendor hub
+          </Text>
+          <View style={{ gap: theme.spacing.sm }}>
+            <ListItem
+              title="Vendor status"
+              subtitle="Check approval and store details"
+              leftIcon="shield"
+              onPress={() => router.push('/(app)/(vendor)/vendor-status')}
+            />
+            <ListItem
+              title="Products"
+              subtitle="Create, edit, activate/deactivate"
+              leftIcon="package"
+              onPress={() => router.push('/(app)/(vendor)/products')}
+            />
+            <ListItem
+              title="Vendor dashboard"
+              subtitle="Quick store overview"
+              leftIcon="grid"
+              onPress={() => router.push('/(app)/(vendor)/dashboard')}
+            />
+            <ListItem
+              title="Logout"
+              subtitle="Sign out of this account"
+              leftIcon="log-out"
+              onPress={async () => {
+                await clearTokens();
+                dispatch(clearAuth());
+                router.replace('/(auth)/login');
+              }}
+            />
+          </View>
+        </Card>
       </View>
     </Screen>
   );
