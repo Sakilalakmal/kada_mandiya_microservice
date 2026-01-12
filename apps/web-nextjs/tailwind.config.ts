@@ -88,6 +88,22 @@ const config: Config = {
   					height: '0'
   				}
   			},
+  			marquee: {
+  				from: {
+  					transform: 'translateX(0)'
+  				},
+  				to: {
+  					transform: 'translateX(-50%)'
+  				}
+  			},
+  			'marquee-reverse': {
+  				from: {
+  					transform: 'translateX(-50%)'
+  				},
+  				to: {
+  					transform: 'translateX(0)'
+  				}
+  			},
   			aurora: {
   				from: {
   					backgroundPosition: '0% 50%'
@@ -108,6 +124,8 @@ const config: Config = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
+  			marquee: 'marquee var(--duration, 30s) linear infinite',
+  			'marquee-reverse': 'marquee-reverse var(--duration, 30s) linear infinite',
   			aurora: 'aurora 10s ease-in-out infinite alternate',
   			float: 'float 6s ease-in-out infinite'
   		}

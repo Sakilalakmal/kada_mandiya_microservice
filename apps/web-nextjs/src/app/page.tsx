@@ -10,6 +10,7 @@ import { LandingBackground } from "@/components/landing/landing-background"
 import { LandingNav } from "@/components/landing/landing-nav"
 import { MarketplaceIntroStackSection } from "@/components/landing/marketplace-intro-stack-section"
 import { FeaturesSection } from "@/components/landing/features-section"
+import { TestimonialsMarquee } from "@/components/landing/testimonials-marquee"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
@@ -112,6 +113,7 @@ export default function Home() {
 
       <MarketplaceIntroStackSection />
       <FeaturesSection />
+      <TestimonialsMarquee />
 
       {false && (
       <section id="features" className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-10">
