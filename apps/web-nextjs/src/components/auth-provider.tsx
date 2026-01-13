@@ -9,6 +9,7 @@ import {
   getToken,
   setToken as persistToken,
 } from "@/lib/auth";
+import { tokenChangedEventName } from "@/lib/auth-client";
 
 type AuthContextValue = {
   token: string | null;
@@ -46,6 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  React.useEffect(() => {
+    function handleTokenChanged() {
+      setTokenState(getToken());
+    }
+
+    window.addEventListener(tokenChangedEventName(), handleTokenChanged);
+    return () => window.removeEventListener(tokenChangedEventName(), handleTokenChanged);
   }, []);
 
   const roles = React.useMemo(() => getRoles(token), [token]);

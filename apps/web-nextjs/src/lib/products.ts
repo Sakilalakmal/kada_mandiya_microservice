@@ -139,7 +139,7 @@ function buildQuery(params: ListProductsParams) {
 
 export async function fetchProducts(params: ListProductsParams): Promise<ProductListResponse> {
   const query = buildQuery(params);
-  const data = await apiFetch<ProductListResponse>(`/products${query}`, { method: "GET" });
+  const data = await apiFetch<ProductListResponse>(`/products${query}`, { method: "GET", auth: "none" });
 
   console.log('📦 Raw API response for products:', JSON.stringify(data.items?.[0], null, 2));
 
@@ -165,6 +165,7 @@ export async function fetchProducts(params: ListProductsParams): Promise<Product
 export async function fetchProductDetail(id: string): Promise<ProductDetail> {
   const data = await apiFetch<{ ok?: boolean; product?: ProductDetail }>(`/products/${id}`, {
     method: "GET",
+    auth: "none",
   });
 
   console.log('📦 Raw API response for product detail:', JSON.stringify(data, null, 2));
@@ -185,6 +186,7 @@ export async function fetchProductDetail(id: string): Promise<ProductDetail> {
 export async function fetchMyProducts(): Promise<ProductListItem[]> {
   const data = await apiFetch<{ ok?: boolean; items?: ProductListItem[] }>("/products/mine", {
     method: "GET",
+    auth: "required",
   });
 
   const items: ProductListItem[] = (data.items ?? []).map((item) => ({
@@ -204,6 +206,7 @@ export async function createProduct(input: Required<Pick<ProductPayload, "name" 
   const data = await apiFetch<{ ok?: boolean; productId?: string }>("/products", {
     method: "POST",
     body: payload,
+    auth: "required",
   });
 
   if (data?.productId) return data.productId;
@@ -219,13 +222,14 @@ export async function updateProduct(productId: string, patch: ProductPayload) {
   await apiFetch(`/products/${productId}`, {
     method: "PUT",
     body: payload,
+    auth: "required",
   });
 }
 
 export async function deactivateProduct(productId: string) {
-  await apiFetch(`/products/${productId}/deactivate`, { method: "PATCH" });
+  await apiFetch(`/products/${productId}/deactivate`, { method: "PATCH", auth: "required" });
 }
 
 export async function reactivateProduct(productId: string) {
-  await apiFetch(`/products/${productId}/reactivate`, { method: "PATCH" });
+  await apiFetch(`/products/${productId}/reactivate`, { method: "PATCH", auth: "required" });
 }

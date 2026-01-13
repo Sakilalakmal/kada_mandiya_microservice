@@ -36,6 +36,7 @@ export async function getVendorOrders(params: { limit?: number } = {}) {
   const query = buildQuery(params);
   const data = await apiFetch<VendorOrdersResponse>(`/api/vendor/orders${query}`, {
     method: "GET",
+    auth: "required",
   });
   return data.orders ?? [];
 }
@@ -43,6 +44,7 @@ export async function getVendorOrders(params: { limit?: number } = {}) {
 export async function getVendorProfile() {
   const data = await apiFetch<VendorProfileResponse>("/vendors/me", {
     method: "GET",
+    auth: "required",
   });
   return data.vendor ?? null;
 }

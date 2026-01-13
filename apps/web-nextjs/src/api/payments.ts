@@ -32,6 +32,7 @@ export type PaymentListItem = {
 export async function getPaymentByOrderId(orderId: string): Promise<PaymentDetail> {
   const data = await apiFetch<{ ok: true; payment: PaymentDetail }>(`/api/payments/${orderId}`, {
     method: "GET",
+    auth: "required",
   });
   if (!data?.payment) throw new Error("Payment missing from response");
   return data.payment;
@@ -40,6 +41,7 @@ export async function getPaymentByOrderId(orderId: string): Promise<PaymentDetai
 export async function getMyPayments(): Promise<PaymentListItem[]> {
   const data = await apiFetch<{ ok: true; payments: PaymentListItem[] }>(`/api/payments/my`, {
     method: "GET",
+    auth: "required",
   });
   return data.payments ?? [];
 }
@@ -47,6 +49,7 @@ export async function getMyPayments(): Promise<PaymentListItem[]> {
 export async function createCheckoutSession(orderId: string): Promise<{ url: string }> {
   const data = await apiFetch<{ ok: true; url: string }>(`/api/payments/${orderId}/checkout-session`, {
     method: "POST",
+    auth: "required",
   });
   if (!data?.url) throw new Error("Stripe Checkout URL missing from response");
   return { url: data.url };
@@ -65,6 +68,7 @@ export async function simulatePaymentSuccess(orderId: string): Promise<SimulateP
   try {
     return await apiFetch<{ ok: true }>(`/api/payments/${orderId}/simulate-success`, {
       method: "POST",
+      auth: "required",
     });
   } catch (err) {
     if (errorStatus(err) === 404) return { ok: false, notSupported: true };
@@ -76,6 +80,7 @@ export async function simulatePaymentFail(orderId: string): Promise<SimulatePaym
   try {
     return await apiFetch<{ ok: true }>(`/api/payments/${orderId}/simulate-fail`, {
       method: "POST",
+      auth: "required",
     });
   } catch (err) {
     if (errorStatus(err) === 404) return { ok: false, notSupported: true };

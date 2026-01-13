@@ -7,6 +7,7 @@ import { ArrowLeft, CreditCard, ShoppingCart, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/hooks/use-auth";
+import { RequireAuth } from "@/components/require-auth";
 import { cartTotalQty, useCartQuery, useClearCartMutation, useRemoveCartItemMutation, useUpdateCartQtyMutation } from "@/features/cart/queries";
 import { CartItemRow } from "@/features/cart/components/cart-item-row";
 import { useCreateOrderMutation } from "@/features/orders/queries";
@@ -148,9 +149,10 @@ export default function CartPage() {
     checkoutForm.deliveryAddress.trim().length >= 5 && !createOrder.isPending && !hasOutOfStockItems;
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
-        <header className="flex items-center justify-between">
+    <RequireAuth nextPath="/cart">
+      <div className="min-h-screen bg-muted/30">
+        <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
+          <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-background">
               <ShoppingCart className="h-5 w-5" />
@@ -172,7 +174,7 @@ export default function CartPage() {
               </Link>
             </Button>
           </div>
-        </header>
+          </header>
 
         {!token ? (
           <Card className="shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -435,7 +437,8 @@ export default function CartPage() {
             </Card>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }

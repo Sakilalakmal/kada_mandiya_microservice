@@ -34,7 +34,7 @@ export type AddToCartPayload = {
 };
 
 export async function getCart(): Promise<Cart> {
-  const data = await apiFetch<CartResponse>("/api/cart", { method: "GET" });
+  const data = await apiFetch<CartResponse>("/api/cart", { method: "GET", auth: "required" });
   if (!data?.cart) throw new Error("Cart missing from response");
   return data.cart;
 }
@@ -43,6 +43,7 @@ export async function addToCart(payload: AddToCartPayload): Promise<Cart> {
   const data = await apiFetch<CartResponse>("/api/cart/items", {
     method: "POST",
     body: payload,
+    auth: "required",
   });
   if (!data?.cart) throw new Error("Cart missing from response");
   return data.cart;
@@ -52,6 +53,7 @@ export async function updateQty(itemId: string, qty: number): Promise<Cart> {
   const data = await apiFetch<CartResponse>(`/api/cart/items/${itemId}`, {
     method: "PATCH",
     body: { qty },
+    auth: "required",
   });
   if (!data?.cart) throw new Error("Cart missing from response");
   return data.cart;
@@ -60,6 +62,7 @@ export async function updateQty(itemId: string, qty: number): Promise<Cart> {
 export async function removeItem(itemId: string): Promise<Cart> {
   const data = await apiFetch<CartResponse>(`/api/cart/items/${itemId}`, {
     method: "DELETE",
+    auth: "required",
   });
   if (!data?.cart) throw new Error("Cart missing from response");
   return data.cart;
@@ -68,6 +71,7 @@ export async function removeItem(itemId: string): Promise<Cart> {
 export async function clearCart(): Promise<{ ok: boolean; message?: string }> {
   return apiFetch<{ ok: boolean; message?: string }>("/api/cart", {
     method: "DELETE",
+    auth: "required",
   });
 }
 

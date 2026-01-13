@@ -37,36 +37,42 @@ function buildListQuery(params: NotificationsListParams | undefined) {
 export async function getMyNotifications(params?: NotificationsListParams): Promise<NotificationsListResponse> {
   return apiFetch<NotificationsListResponse>(`/api/notifications/me${buildListQuery(params)}`, {
     method: "GET",
+    auth: "required",
   });
 }
 
 export async function markNotificationRead(id: string): Promise<{ ok: true }> {
   return apiFetch<{ ok: true }>(`/api/notifications/${encodeURIComponent(id)}/read`, {
     method: "PATCH",
+    auth: "required",
   });
 }
 
 export async function markAllNotificationsRead(): Promise<{ ok: true; updatedCount?: number }> {
   return apiFetch<{ ok: true; updatedCount?: number }>(`/api/notifications/me/read-all`, {
     method: "PATCH",
+    auth: "required",
   });
 }
 
 export async function getVendorNotifications(params?: NotificationsListParams): Promise<NotificationsListResponse> {
   return apiFetch<NotificationsListResponse>(`/api/vendor/notifications${buildListQuery(params)}`, {
     method: "GET",
+    auth: "required",
   });
 }
 
 export async function markVendorNotificationRead(id: string): Promise<{ ok: true }> {
   return apiFetch<{ ok: true }>(`/api/vendor/notifications/${encodeURIComponent(id)}/read`, {
     method: "PATCH",
+    auth: "required",
   });
 }
 
 export async function markAllVendorNotificationsRead(): Promise<{ ok: true; updatedCount?: number }> {
   return apiFetch<{ ok: true; updatedCount?: number }>(`/api/vendor/notifications/read-all`, {
     method: "PATCH",
+    auth: "required",
   });
 }
 

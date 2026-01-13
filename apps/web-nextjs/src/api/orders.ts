@@ -53,12 +53,14 @@ export async function createOrder(payload: CreateOrderPayload): Promise<CreateOr
   return apiFetch<CreateOrderResponse>("/api/orders", {
     method: "POST",
     body: payload,
+    auth: "required",
   });
 }
 
 export async function getMyOrders(): Promise<OrderListItem[]> {
   const data = await apiFetch<{ ok: true; orders: OrderListItem[] }>("/api/orders/my", {
     method: "GET",
+    auth: "required",
   });
   return data.orders ?? [];
 }
@@ -66,6 +68,7 @@ export async function getMyOrders(): Promise<OrderListItem[]> {
 export async function getOrderDetail(orderId: string): Promise<OrderDetail> {
   const data = await apiFetch<{ ok: true; order: OrderDetail }>(`/api/orders/${orderId}`, {
     method: "GET",
+    auth: "required",
   });
   if (!data?.order) throw new Error("Order missing from response");
   return data.order;
@@ -74,6 +77,7 @@ export async function getOrderDetail(orderId: string): Promise<OrderDetail> {
 export async function cancelOrder(orderId: string): Promise<{ ok: true }> {
   return apiFetch<{ ok: true }>(`/api/orders/${orderId}/cancel`, {
     method: "PATCH",
+    auth: "required",
   });
 }
 
@@ -118,6 +122,7 @@ export type VendorOrderDetail = {
 export async function getVendorOrders(): Promise<VendorOrderListItem[]> {
   const data = await apiFetch<{ ok: true; orders: VendorOrderListItem[] }>("/api/vendor/orders", {
     method: "GET",
+    auth: "required",
   });
   return data.orders ?? [];
 }
@@ -125,6 +130,7 @@ export async function getVendorOrders(): Promise<VendorOrderListItem[]> {
 export async function getVendorOrderById(orderId: string): Promise<VendorOrderDetail> {
   const data = await apiFetch<{ ok: true; order: VendorOrderDetail }>(`/api/vendor/orders/${orderId}`, {
     method: "GET",
+    auth: "required",
   });
   if (!data?.order) throw new Error("Order missing from response");
   return data.order;
@@ -137,6 +143,7 @@ export async function updateVendorOrderStatus(
   return apiFetch<{ ok: true }>(`/api/vendor/orders/${orderId}/status`, {
     method: "PATCH",
     body: { status },
+    auth: "required",
   });
 }
 
