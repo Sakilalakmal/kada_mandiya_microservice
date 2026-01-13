@@ -6,13 +6,6 @@ export const updateProfileSchema = z.object({
   phone: z.string().max(20).optional(),
   address: z.string().max(255).optional(),
   shippingAddress: z.string().max(255).optional(),
-  profileImageUrl: z
-    .string()
-    .max(500)
-    .optional()
-    .refine((v) => !v || /^https?:\/\//i.test(v), {
-      message: "Must be a valid URL",
-    }),
 });
 
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;

@@ -3,6 +3,7 @@ import { ArrowLeft, UserCircle2 } from "lucide-react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProfileForm } from "@/components/profile/profile-form";
+import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
@@ -21,6 +22,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <LogoutButton size="sm" />
             <Button asChild variant="ghost">
               <Link href="/" className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
