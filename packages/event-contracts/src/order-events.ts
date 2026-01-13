@@ -48,3 +48,64 @@ export function createOrderCreatedEvent(
     data: payload
   };
 }
+
+/**
+ * Payload (business data)
+ */
+export type OrderCancelledItem = {
+  productId: string;
+  qty: number;
+};
+
+export interface OrderCancelledPayload {
+  orderId: string;
+  userId: string;
+  items: OrderCancelledItem[];
+  reason?: string;
+}
+
+/**
+ * Runtime validation (Zod)
+ */
+export const OrderCancelledPayloadSchema = z
+  .object({
+    orderId: z.string(),
+    userId: z.string(),
+    items: z.array(
+      z.object({
+        productId: z.string(),
+        qty: z.number().int().positive(),
+      })
+    ),
+    reason: z.string().max(500).optional(),
+  })
+  .strict();
+
+/**
+ * Typed event
+ */
+export type OrderCancelledEvent = EventEnvelope<OrderCancelledPayload> & {
+  eventType: "order.cancelled";
+};
+
+/**
+ * Helper to create the event safely
+ */
+export function createOrderCancelledEvent(
+  payload: OrderCancelledPayload,
+  meta: {
+    eventId: string;
+    correlationId: string;
+  }
+): OrderCancelledEvent {
+  OrderCancelledPayloadSchema.parse(payload);
+
+  return {
+    eventId: meta.eventId,
+    eventType: "order.cancelled",
+    version: 1,
+    occurredAt: new Date().toISOString(),
+    correlationId: meta.correlationId,
+    data: payload,
+  };
+}

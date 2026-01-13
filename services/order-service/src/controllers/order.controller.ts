@@ -5,6 +5,7 @@ import {
   createOrderWithItems,
   getOrderByIdForUser,
   listOrdersByUserId,
+  listOrderStockItems,
   listVendorIdsByOrderId,
 } from "../repositories/order.repo";
 import { publishEvent } from "../messaging/publisher";
@@ -346,6 +347,7 @@ export async function cancelOrder(req: Request, res: Response) {
     if (!userId) return;
 
     const correlationId = req.header("x-correlation-id") ?? undefined;
+    const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : undefined;
 
     const idParsed = OrderIdSchema.safeParse(req.params.orderId);
     if (!idParsed.success) {
@@ -371,12 +373,19 @@ export async function cancelOrder(req: Request, res: Response) {
       return [] as string[];
     });
 
+    const items = await listOrderStockItems(idParsed.data).catch((err) => {
+      console.error("listOrderStockItems error:", err);
+      return [] as { productId: string; qty: number }[];
+    });
+
     await publishEvent(
       "order.cancelled",
       {
         orderId: idParsed.data,
         userId,
         vendorIds,
+        items,
+        ...(reason ? { reason } : {}),
         previousStatus: result.previousStatus,
         newStatus: "CANCELLED",
         occurredAt: result.occurredAt,

@@ -260,6 +260,29 @@ export async function listVendorIdsByOrderId(orderId: string): Promise<string[]>
     .filter((v) => v.trim().length > 0);
 }
 
+export type OrderStockItem = { productId: string; qty: number };
+
+export async function listOrderStockItems(orderId: string): Promise<OrderStockItem[]> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("orderId", sql.UniqueIdentifier, orderId).query(`
+      SELECT
+        product_id AS productId,
+        SUM(qty) AS qty
+      FROM dbo.order_items
+      WHERE order_id = @orderId
+      GROUP BY product_id;
+    `);
+
+  return (result.recordset as any[])
+    .map((row) => ({
+      productId: String(row.productId ?? ""),
+      qty: Number(row.qty ?? 0),
+    }))
+    .filter((row) => row.productId.trim().length > 0 && Number.isFinite(row.qty) && row.qty > 0);
+}
+
 export type OrderPaymentMeta = {
   orderId: string;
   userId: string;

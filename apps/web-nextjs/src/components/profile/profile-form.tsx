@@ -15,20 +15,22 @@ import {
   updateMe,
   type UserProfile,
 } from "@/lib/user-profile";
-import { clearToken, getToken } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import {
   resolveProfileImageSrc,
   updateProfileSchema,
   type UpdateProfileFormValues,
 } from "@/lib/profile-schema";
 import { UploadButton } from "@/lib/uploadthing";
+import { logout } from "@/lib/logout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/use-auth";
 
 function toOptionalTrimmedString(value: string | undefined) {
   const trimmed = (value ?? "").trim();
@@ -49,6 +51,7 @@ function initialsFromName(name: string) {
 export function ProfileForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { token, setAuthToken } = useAuth();
 
   const form = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileSchema),
@@ -58,11 +61,9 @@ export function ProfileForm() {
       phone: "",
       address: "",
       shippingAddress: "",
-      profileImageUrl: "",
     },
   });
 
-  const token = getToken();
   const {
     data: profile,
     isLoading,
@@ -79,10 +80,8 @@ export function ProfileForm() {
             ? (err as Record<string, unknown>).status
             : undefined;
         if (status === 401) {
-          clearToken();
-          router.replace("/auth");
-          router.refresh();
-          throw err;
+          logout({ setAuthToken, queryClient, router, redirectTo: "/auth?mode=login" });
+          return null;
         }
         toast.error(
           err instanceof Error ? err.message : "Failed to load profile"
@@ -102,7 +101,6 @@ export function ProfileForm() {
       phone: profile.phone ?? "",
       address: profile.address ?? "",
       shippingAddress: profile.shippingAddress ?? "",
-      profileImageUrl: profile.profileImageUrl ?? "",
     });
   }, [form, profile]);
 
@@ -114,7 +112,6 @@ export function ProfileForm() {
         phone: toOptionalTrimmedString(values.phone),
         address: toOptionalTrimmedString(values.address),
         shippingAddress: toOptionalTrimmedString(values.shippingAddress),
-        profileImageUrl: toOptionalTrimmedString(values.profileImageUrl),
       });
     },
     onSuccess: (updated) => {
@@ -127,9 +124,7 @@ export function ProfileForm() {
           ? (err as Record<string, unknown>).status
           : undefined;
       if (status === 401) {
-        clearToken();
-        router.replace("/auth");
-        router.refresh();
+        logout({ setAuthToken, queryClient, router, redirectTo: "/auth?mode=login" });
         return;
       }
       toast.error(
@@ -144,7 +139,6 @@ export function ProfileForm() {
     },
     onSuccess: (updated) => {
       queryClient.setQueryData(["me", token], updated);
-      form.setValue("profileImageUrl", updated.profileImageUrl ?? "");
       toast.success("Profile photo updated");
     },
     onError: (err) => {
@@ -153,9 +147,7 @@ export function ProfileForm() {
           ? (err as Record<string, unknown>).status
           : undefined;
       if (status === 401) {
-        clearToken();
-        router.replace("/auth");
-        router.refresh();
+        logout({ setAuthToken, queryClient, router, redirectTo: "/auth?mode=login" });
         return;
       }
       toast.error(err instanceof Error ? err.message : "Photo upload failed");
@@ -191,7 +183,7 @@ export function ProfileForm() {
             Please sign in to view and update your profile.
           </p>
           <Button asChild>
-            <Link href="/auth">Go to login</Link>
+            <Link href="/auth?mode=login">Go to login</Link>
           </Button>
         </CardContent>
       </Card>
@@ -221,46 +213,55 @@ export function ProfileForm() {
       </CardHeader>
 
       <CardContent>
-        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={avatarSrc} alt={name} />
-                <AvatarFallback>{initials}</AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-2 -right-2">
-                <UploadButton
-                  endpoint="imageUploader"
-                  onClientUploadComplete={(res) => {
-                    const url = res?.[0]?.url;
-                    if (!url) {
-                      toast.error("Upload failed");
-                      return;
-                    }
-                    photoMutation.mutate(url);
-                  }}
-                  onUploadError={(error) => {
-                    toast.error(error?.message ?? "Upload failed");
-                  }}
-                  appearance={{
-                    button:
-                      "h-9 w-9 rounded-full bg-secondary text-secondary-foreground shadow hover:bg-secondary/90",
-                  }}
-                  content={{
-                    button({ ready }) {
-                      if (photoMutation.isPending) {
-                        return <Loader2 className="h-4 w-4 animate-spin" />;
-                      }
-                      return ready ? "Up" : "...";
-                    },
-                  }}
-                />
-              </div>
+            <Avatar className="h-16 w-16 border">
+              <AvatarImage src={avatarSrc} alt={name} />
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 text-sm">
+              <p className="truncate font-medium leading-tight">{name}</p>
+              <p className="truncate text-muted-foreground leading-tight">
+                {profile.email}
+              </p>
             </div>
-            <div className="text-sm">
-              <p className="font-medium leading-tight">{name}</p>
-              <p className="text-muted-foreground leading-tight">{profile.email}</p>
-            </div>
+          </div>
+
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <UploadButton
+              endpoint="imageUploader"
+              onClientUploadComplete={(res) => {
+                const url = res?.[0]?.url;
+                if (!url) {
+                  toast.error("Upload failed");
+                  return;
+                }
+                photoMutation.mutate(url);
+              }}
+              onUploadError={(error) => {
+                toast.error(error?.message ?? "Upload failed");
+              }}
+              appearance={{
+                button: cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "transition-transform active:scale-[0.98]"
+                ),
+              }}
+              content={{
+                button({ ready }) {
+                  if (photoMutation.isPending) {
+                    return (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    );
+                  }
+                  return ready ? "Change photo" : "Preparing...";
+                },
+              }}
+            />
+            <p className="text-xs text-muted-foreground">PNG/JPG up to 4MB</p>
           </div>
         </div>
 
@@ -276,22 +277,9 @@ export function ProfileForm() {
               <Label htmlFor="lastName">Last name</Label>
               <Input id="lastName" {...form.register("lastName")} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" inputMode="tel" {...form.register("phone")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profileImageUrl">Profile image URL</Label>
-              <Input
-                id="profileImageUrl"
-                placeholder="https://... (optional)"
-                {...form.register("profileImageUrl")}
-              />
-              {form.formState.errors.profileImageUrl && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.profileImageUrl.message}
-                </p>
-              )}
             </div>
           </div>
 

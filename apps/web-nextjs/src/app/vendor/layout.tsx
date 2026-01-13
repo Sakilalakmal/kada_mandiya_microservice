@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, LogOut } from "lucide-react";
+import { Home } from "lucide-react";
 
 import { VendorShellLayout } from "@/components/vendor-shell/VendorShellLayout";
+import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 
 function VendorGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { token, isVendor, setAuthToken } = useAuth();
+  const { token, isVendor } = useAuth();
 
   React.useEffect(() => {
     if (!token) {
@@ -35,16 +36,7 @@ function VendorGate({ children }: { children: React.ReactNode }) {
               Home
             </Button>
             {token ? (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setAuthToken(null);
-                  router.push("/auth?mode=login");
-                }}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
+              <LogoutButton redirectTo="/auth?mode=login" />
             ) : null}
           </div>
         </div>

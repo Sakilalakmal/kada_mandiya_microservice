@@ -8,6 +8,83 @@ function normalizeQty(value: unknown) {
   return n;
 }
 
+export async function adjustStock(
+  tx: sql.Transaction,
+  params: { productId: string; deltaQty: number; reason: string }
+): Promise<StockRow | null> {
+  const delta = Math.trunc(Number(params.deltaQty));
+  if (!Number.isFinite(delta) || delta === 0) return null;
+
+  const result = await tx
+    .request()
+    .input("id", sql.UniqueIdentifier, params.productId)
+    .input("delta", sql.Int, delta)
+    .query(`
+      UPDATE products
+      SET stock_qty = stock_qty + @delta,
+          updated_at = SYSUTCDATETIME()
+      OUTPUT
+        CONVERT(varchar(36), inserted.id) AS productId,
+        inserted.stock_qty AS stockQty
+      WHERE id = @id;
+    `);
+
+  const row = (result.recordset as any[])?.[0];
+  if (!row) return null;
+  return { productId: String(row.productId), stockQty: normalizeQty(row.stockQty) };
+}
+
+export async function adjustStockBulk(
+  tx: sql.Transaction,
+  params: { items: { productId: string; deltaQty: number }[]; reason: string }
+): Promise<StockRow[]> {
+  const normalized = params.items
+    .map((item) => ({
+      productId: String(item.productId ?? "").trim(),
+      deltaQty: Math.trunc(Number(item.deltaQty)),
+    }))
+    .filter((item) => item.productId.length > 0 && Number.isFinite(item.deltaQty) && item.deltaQty !== 0);
+
+  if (normalized.length === 0) return [];
+
+  const itemsJson = JSON.stringify(normalized);
+
+  const result = await tx
+    .request()
+    .input("itemsJson", sql.NVarChar(sql.MAX), itemsJson)
+    .query(`
+      DECLARE @items TABLE (
+        product_id UNIQUEIDENTIFIER NOT NULL,
+        delta_qty INT NOT NULL
+      );
+
+      INSERT INTO @items (product_id, delta_qty)
+      SELECT
+        productId,
+        deltaQty
+      FROM OPENJSON(@itemsJson)
+      WITH (
+        productId UNIQUEIDENTIFIER '$.productId',
+        deltaQty INT '$.deltaQty'
+      );
+
+      UPDATE p
+      SET
+        stock_qty = p.stock_qty + i.delta_qty,
+        updated_at = SYSUTCDATETIME()
+      OUTPUT
+        CONVERT(varchar(36), inserted.id) AS productId,
+        inserted.stock_qty AS stockQty
+      FROM products p
+      INNER JOIN @items i ON i.product_id = p.id;
+    `);
+
+  return (result.recordset as any[]).map((r) => ({
+    productId: String(r.productId),
+    stockQty: normalizeQty(r.stockQty),
+  }));
+}
+
 export async function getStockByProductIds(productIds: string[]): Promise<StockRow[]> {
   const unique = Array.from(new Set(productIds.filter((id) => typeof id === "string" && id.trim().length > 0)));
   if (unique.length === 0) return [];
