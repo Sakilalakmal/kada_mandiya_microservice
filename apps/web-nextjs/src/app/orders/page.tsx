@@ -10,6 +10,7 @@ import { OrderCard } from "@/features/orders/components/order-card";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
+import { RequireAuth } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,7 +62,8 @@ export default function OrdersPage() {
   const orders = ordersQuery.data ?? [];
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <RequireAuth nextPath="/orders">
+      <div className="min-h-screen bg-muted/30">
       <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -146,6 +148,7 @@ export default function OrdersPage() {
           </main>
         )}
       </div>
-    </div>
+      </div>
+    </RequireAuth>
   );
 }

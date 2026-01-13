@@ -11,6 +11,7 @@ import { NotificationBell } from "@/features/notifications/components/notificati
 import { useAuth } from "@/hooks/use-auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
+import { RequireAuth } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
@@ -42,8 +43,9 @@ export default function PaymentsPage() {
   const payments = paymentsQuery.data ?? [];
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
+    <RequireAuth nextPath="/payments">
+      <div className="min-h-screen bg-muted/30">
+        <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-background">
@@ -123,8 +125,9 @@ export default function PaymentsPage() {
             ))}
           </main>
         )}
+        </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }
 

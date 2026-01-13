@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, LogIn, ShieldCheck, Store, UserPlus } from "lucide-react";
@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/hooks/use-auth";
+import { buildNextParam } from "@/lib/auth-client";
 
 type Mode = "login" | "register";
 
@@ -40,16 +41,26 @@ export default function AuthPage() {
 function AuthShell() {
   const router = useRouter();
   const params = useSearchParams();
-  const { setAuthToken } = useAuth();
-  const initialMode = useMemo<Mode>(() => {
-    return params.get("mode") === "register" ? "register" : "login";
-  }, [params]);
+  const { token, setAuthToken } = useAuth();
+  const modeParam = params.get("mode");
+  const rawNextParam = params.get("next");
+
+  const initialMode: Mode = modeParam === "register" ? "register" : "login";
+  const nextPath = buildNextParam(rawNextParam);
+  const redirectTarget = nextPath.startsWith("/auth") ? "/" : nextPath;
+  const showContinueHint = typeof rawNextParam === "string" && rawNextParam.trim().length > 0;
 
   const [mode, setMode] = useState<Mode>(initialMode);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
 
   useEffect(() => setMode(initialMode), [initialMode]);
+
+  useEffect(() => {
+    if (!token) return;
+    if (!showContinueHint) return;
+    router.replace(redirectTarget || "/");
+  }, [redirectTarget, router, showContinueHint, token]);
 
   const handleChange =
     (key: "name" | "email" | "password") =>
@@ -101,8 +112,12 @@ function AuthShell() {
 
       if (mode === "register") setMode("login");
       if (mode === "login") {
-        router.push("/");
-        router.refresh();
+        const liveNext =
+          (typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("next")
+            : null) ?? rawNextParam;
+        const liveTarget = buildNextParam(liveNext);
+        router.replace(liveTarget.startsWith("/auth") ? "/" : liveTarget);
       }
     } catch (err) {
       const message =
@@ -189,6 +204,11 @@ function AuthShell() {
                   ? "Create your account to start exploring."
                   : "Enter your email and password to continue."}
               </CardDescription>
+              {mode === "login" && showContinueHint ? (
+                <p className="mt-3 rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  Please login to continue.
+                </p>
+              ) : null}
               <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
                 <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2">
                   <TabsTrigger

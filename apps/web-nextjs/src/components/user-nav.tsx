@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { UserRound } from "lucide-react";
 
 import {
@@ -9,6 +10,7 @@ import {
   profileDisplayName,
   type UserProfile,
 } from "@/lib/user-profile";
+import { buildAuthRedirectUrl, buildNextParam } from "@/lib/auth-client";
 import { resolveProfileImageSrc } from "@/lib/profile-schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,6 +35,8 @@ function errorStatus(err: unknown): number | undefined {
 
 export function UserNav() {
   const { token, setAuthToken } = useAuth();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const { data: profile, isFetching } = useQuery<UserProfile | null>({
     queryKey: ["me", token],
@@ -52,12 +56,17 @@ export function UserNav() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const name = profile ? profileDisplayName(profile) : "Account";
+  const name = profile ? profileDisplayName(profile) : token ? "Account" : "Sign in";
   const initials = initialsFromName(name);
+
+  const nextPath = buildNextParam(
+    `${pathname ?? "/"}${searchParams?.toString() ? `?${searchParams.toString()}` : ""}`
+  );
+  const href = token ? "/profile" : buildAuthRedirectUrl(nextPath);
 
   return (
     <Link
-      href="/profile"
+      href={href}
       aria-busy={isFetching}
       className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-white backdrop-blur transition-colors hover:bg-white/20"
     >

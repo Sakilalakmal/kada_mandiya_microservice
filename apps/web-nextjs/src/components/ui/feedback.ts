@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 
 import type { ApiError } from "@/lib/api";
+import { isAuthenticated } from "@/lib/auth-client";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -30,7 +31,21 @@ export function getErrorMessage(err: unknown, fallback = "Something went wrong")
 }
 
 export function toastApiError(err: unknown, fallback = "Request failed") {
-  toast.error(getErrorMessage(err, fallback));
+  const apiErr = err as ApiError | undefined;
+  const message = getErrorMessage(err, fallback);
+  const status = apiErr?.status;
+
+  const isAuthFailure =
+    status === 401 ||
+    (status === 403 && /invalid|expired|token|jwt/i.test(message));
+
+  // Auth failures should not show noisy toasts. Guests get redirected when needed.
+  if (isAuthFailure) {
+    if (!isAuthenticated()) return;
+    return;
+  }
+
+  toast.error(message);
 }
 
 export function vendorAccessToast(onAction?: () => void) {

@@ -9,8 +9,11 @@ import { ArrowLeft, Loader2, ShoppingCart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { fetchProductDetail, productKeys } from "@/lib/products";
+import { buildAuthRedirectUrl, getAccessToken, getCurrentPathWithQuery } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useAddToCartMutation } from "@/features/cart/queries";
+import { useAuth } from "@/hooks/use-auth";
+import type { AddToCartPayload } from "@/api/cart";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,6 +59,7 @@ function DetailSkeleton() {
 export default function ProductDetailPage() {
   const params = useParams<{ id?: string }>();
   const router = useRouter();
+  const { token } = useAuth();
   const productId = React.useMemo(() => {
     if (!params?.id) return "";
     return Array.isArray(params.id) ? params.id[0] : params.id;
@@ -73,6 +77,27 @@ export default function ProductDetailPage() {
 
   const images = data?.images ?? [];
   const activeImage = images[activeIndex];
+
+  React.useEffect(() => {
+    if (!token) return;
+    if (!data) return;
+
+    const raw = window.sessionStorage.getItem("post_login_action");
+    if (!raw) return;
+
+    try {
+      const action = JSON.parse(raw) as { type?: string; payload?: unknown };
+      if (action?.type !== "add_to_cart") return;
+      const payload = action.payload as AddToCartPayload | undefined;
+      if (!payload) return;
+      if (payload.productId !== data.id) return;
+
+      window.sessionStorage.removeItem("post_login_action");
+      addToCart.mutate(payload);
+    } catch {
+      window.sessionStorage.removeItem("post_login_action");
+    }
+  }, [addToCart, data, token]);
 
   React.useEffect(() => {
     setActiveIndex(0);
@@ -104,6 +129,24 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!data) return;
+    if (!getAccessToken()) {
+      window.sessionStorage.setItem(
+        "post_login_action",
+        JSON.stringify({
+          type: "add_to_cart",
+          payload: {
+            productId: data.id,
+            title: data.name,
+            unitPrice: data.price,
+            imageUrl: data.images?.[0]?.imageUrl ?? undefined,
+            vendorId: data.vendorUserId,
+            qty: 1,
+          },
+        })
+      );
+      router.replace(buildAuthRedirectUrl(getCurrentPathWithQuery()));
+      return;
+    }
     addToCart.mutate({
       productId: data.id,
       title: data.name,

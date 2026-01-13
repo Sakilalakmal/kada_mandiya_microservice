@@ -61,12 +61,14 @@ export async function getProductReviews(productId: string, page = 1, pageSize = 
 
   return apiFetch<ProductReviewsResponse>(`/api/products/${encodeURIComponent(productId)}/reviews?${query}`, {
     method: "GET",
+    auth: "none",
   });
 }
 
 export async function getProductRating(productId: string) {
   return apiFetch<ProductRatingResponse>(`/api/products/${encodeURIComponent(productId)}/rating`, {
     method: "GET",
+    auth: "none",
   });
 }
 
@@ -74,6 +76,7 @@ export async function createReview(payload: CreateReviewPayload) {
   return apiFetch<CreateReviewResponse>("/api/reviews", {
     method: "POST",
     body: payload,
+    auth: "required",
   });
 }
 
@@ -81,12 +84,14 @@ export async function updateReview(reviewId: string, payload: UpdateReviewPayloa
   return apiFetch<{ ok: true }>(`/api/reviews/${encodeURIComponent(reviewId)}`, {
     method: "PATCH",
     body: payload,
+    auth: "required",
   });
 }
 
 export async function deleteReview(reviewId: string) {
   return apiFetch<{ ok: true; message?: string }>(`/api/reviews/${encodeURIComponent(reviewId)}`, {
     method: "DELETE",
+    auth: "required",
   });
 }
 
@@ -94,6 +99,7 @@ export async function getMyReviews(includeDeleted = false) {
   const query = includeDeleted ? "?includeDeleted=true" : "";
   const data = await apiFetch<{ ok: true; reviews: MyReview[] }>(`/api/reviews/me${query}`, {
     method: "GET",
+    auth: "required",
   });
   return data.reviews ?? [];
 }

@@ -16,6 +16,7 @@ import { PaymentSkeleton } from "@/features/payments/components/payment-skeleton
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CartNavButton } from "@/components/cart-nav-button";
 import { NotificationBell } from "@/features/notifications/components/notification-bell";
+import { RequireAuth } from "@/components/require-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -175,9 +176,10 @@ export default function OrderDetailPage() {
   const isCancelling = cancelMutation.isPending && cancelMutation.variables === orderId;
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
-        <header className="flex items-center justify-between">
+    <RequireAuth>
+      <div className="min-h-screen bg-muted/30">
+        <div className="mx-auto flex min-h-screen max-w-5xl flex-col gap-10 px-6 py-10 sm:px-10">
+          <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-background">
               <Package className="h-5 w-5" />
@@ -200,7 +202,7 @@ export default function OrderDetailPage() {
               </Link>
             </Button>
           </div>
-        </header>
+          </header>
 
         {detailQuery.isLoading ? (
           <DetailSkeleton />
@@ -368,7 +370,8 @@ export default function OrderDetailPage() {
             )}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }

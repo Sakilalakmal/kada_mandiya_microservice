@@ -48,11 +48,13 @@ export function getToken(): string | null {
 export function setToken(token: string) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  window.dispatchEvent(new CustomEvent("auth:token-changed"));
 }
 
 export function clearToken() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+  window.dispatchEvent(new CustomEvent("auth:token-changed"));
 }
 
 export function getRoles(token?: string | null): string[] {
