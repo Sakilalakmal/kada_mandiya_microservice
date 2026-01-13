@@ -7,6 +7,7 @@ import type { OrderDetail, OrderListItem, OrderStatus } from "@/api/orders";
 import { cancelOrder, createOrder, getMyOrders, getOrderDetail, type CreateOrderPayload } from "@/api/orders";
 import { toastApiError } from "@/components/ui/feedback";
 import { useAuth } from "@/hooks/use-auth";
+import { productKeys } from "@/lib/products";
 
 export const ordersKeys = {
   my: ["orders", "my"] as const,
@@ -106,6 +107,13 @@ export function useCancelOrderMutation() {
     onSettled: async (_data, _err, orderId) => {
       await queryClient.invalidateQueries({ queryKey: ordersKeys.detail(orderId) });
       await queryClient.invalidateQueries({ queryKey: ordersKeys.my });
+
+      const detail = queryClient.getQueryData<OrderDetail>(ordersKeys.detail(orderId));
+      const productIds = Array.from(new Set((detail?.items ?? []).map((i) => i.productId).filter(Boolean)));
+      for (const productId of productIds) {
+        await queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) });
+      }
+      await queryClient.invalidateQueries({ queryKey: productKeys.all });
     },
   });
 }

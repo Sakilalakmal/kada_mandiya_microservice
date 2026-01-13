@@ -1,9 +1,12 @@
 import "dotenv/config";
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import productRoutes from "./routes/product.routes";
 import ProductVendorRouter from "./routes/product.vendor.routes";
 import internalRoutes from "./routes/internal.routes";
+import { ensureDbSchema } from "./db/schema";
+import { startConsumer } from "./messaging/consumer";
 
 const app = express();
 app.use(cors());
@@ -20,6 +23,16 @@ app.use("/", ProductVendorRouter);
 app.use("/", productRoutes);
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4004;
-app.listen(PORT, () => {
-  console.log(`product-service running on http://localhost:${PORT}`);
-});
+(async () => {
+  await ensureDbSchema().catch((err) => {
+    console.error("[product-service] ensureDbSchema failed:", err);
+  });
+
+  app.listen(PORT, () => {
+    console.log(`product-service running on http://localhost:${PORT}`);
+  });
+
+  startConsumer().catch((err) => {
+    console.error("[product-service] consumer failed:", err);
+  });
+})();
