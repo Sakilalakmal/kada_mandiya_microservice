@@ -74,6 +74,42 @@ export default function ProductDetailPage() {
   });
 
   const addToCart = useAddToCartMutation();
+  const [isAddingToCart, setIsAddingToCart] = React.useState(false);
+  const addToCartTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startAddToCart = React.useCallback(
+    (payload: AddToCartPayload) => {
+      if (addToCartTimeoutRef.current) {
+        clearTimeout(addToCartTimeoutRef.current);
+        addToCartTimeoutRef.current = null;
+      }
+
+      setIsAddingToCart(true);
+      addToCartTimeoutRef.current = window.setTimeout(() => {
+        addToCartTimeoutRef.current = null;
+        setIsAddingToCart(false);
+      }, 12000);
+
+      addToCart.mutate(payload, {
+        onSettled: () => {
+          if (addToCartTimeoutRef.current) {
+            clearTimeout(addToCartTimeoutRef.current);
+            addToCartTimeoutRef.current = null;
+          }
+          setIsAddingToCart(false);
+        },
+      });
+    },
+    [addToCart]
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (addToCartTimeoutRef.current) {
+        clearTimeout(addToCartTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const images = data?.images ?? [];
   const activeImage = images[activeIndex];
@@ -93,11 +129,11 @@ export default function ProductDetailPage() {
       if (payload.productId !== data.id) return;
 
       window.sessionStorage.removeItem("post_login_action");
-      addToCart.mutate(payload);
+      startAddToCart(payload);
     } catch {
       window.sessionStorage.removeItem("post_login_action");
     }
-  }, [addToCart, data, token]);
+  }, [data, startAddToCart, token]);
 
   React.useEffect(() => {
     setActiveIndex(0);
@@ -147,7 +183,7 @@ export default function ProductDetailPage() {
       router.replace(buildAuthRedirectUrl(getCurrentPathWithQuery()));
       return;
     }
-    addToCart.mutate({
+    startAddToCart({
       productId: data.id,
       title: data.name,
       unitPrice: data.price,
@@ -279,12 +315,12 @@ export default function ProductDetailPage() {
                 <MotionButton
                   size="lg"
                   onClick={handleAddToCart}
-                  disabled={addToCart.isPending || data.stockQty <= 0}
+                  disabled={isAddingToCart || data.stockQty <= 0}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   className="w-full sm:w-auto"
                 >
-                  {addToCart.isPending ? (
+                  {isAddingToCart ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <ShoppingCart className="mr-2 h-4 w-4" />
