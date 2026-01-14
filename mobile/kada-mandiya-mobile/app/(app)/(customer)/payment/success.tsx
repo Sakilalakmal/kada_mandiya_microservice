@@ -70,7 +70,7 @@ export default function PaymentSuccessScreen() {
           label="View order"
           onPress={() => {
             if (!orderId) return;
-            router.push({ pathname: '/(app)/(customer)/orders/[id]', params: { id: orderId } });
+            router.push(`/(app)/(customer)/orders/${encodeURIComponent(orderId)}`);
           }}
           disabled={!orderId}
         />

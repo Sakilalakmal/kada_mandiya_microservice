@@ -3,21 +3,20 @@ import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } fr
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { useCancelOrderMutation, useGetOrderByIdQuery } from '../../../../src/api/orderApi';
-import { useGetPaymentByOrderIdQuery } from '../../../../src/api/paymentApi';
+import { useGetVendorOrderByIdQuery, useUpdateVendorOrderStatusMutation } from '../../../../src/api/orderApi';
 import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
 import { OrderStatusBadge } from '../../../../src/components/orders/OrderStatusBadge';
-import { PaymentStatusBadge } from '../../../../src/components/orders/PaymentStatusBadge';
 import { StatusPill } from '../../../../src/components/orders/StatusPill';
 import { Button } from '../../../../src/components/ui/Button';
 import { Card } from '../../../../src/components/ui/Card';
 import { Toast } from '../../../../src/components/ui/Toast';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
+import { getOrderStatusBadgeMeta, type VendorUpdatableOrderStatus } from '../../../../src/types/order.types';
 import { getApiErrorMessage } from '../../../../src/utils/apiError';
 import { formatDateTime } from '../../../../src/utils/format';
 import { formatMoney } from '../../../../src/utils/money';
-import { canCancelOrder } from '../../../../src/utils/orderStatus';
+import { getNextVendorOrderStatuses } from '../../../../src/utils/orderStatus';
 
 function singleParam(v: string | string[] | undefined): string | undefined {
   if (Array.isArray(v)) return v[0];
@@ -25,24 +24,19 @@ function singleParam(v: string | string[] | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function sumQty(items: { qty: number }[]): number {
-  return items.reduce((sum, item) => sum + Math.max(0, Math.floor(Number(item.qty ?? 0))), 0);
-}
-
-export default function CustomerOrderDetailsScreen() {
+export default function VendorOrderDetailsScreen() {
   const { theme } = useTheme();
   const router = useRouter();
   const { id: rawId } = useLocalSearchParams<{ id?: string | string[] }>();
   const orderId = singleParam(rawId);
 
-  const { data: order, isLoading, isFetching, error, refetch } = useGetOrderByIdQuery(orderId ?? '', {
+  const { data: order, isLoading, isFetching, error, refetch } = useGetVendorOrderByIdQuery(orderId ?? '', {
     skip: !orderId,
     refetchOnFocus: true,
     refetchOnReconnect: true,
   });
 
-  const { data: payment } = useGetPaymentByOrderIdQuery(orderId ?? '', { skip: !orderId, refetchOnFocus: true });
-  const [cancelOrder, cancelState] = useCancelOrderMutation();
+  const [updateStatus, updateState] = useUpdateVendorOrderStatusMutation();
   const [toast, setToast] = useState<{ visible: boolean; message: string }>({ visible: false, message: '' });
 
   const currency = 'LKR';
@@ -63,34 +57,37 @@ export default function CustomerOrderDetailsScreen() {
     );
   }, [isFetching, refetch, theme.colors.primary]);
 
-  const totalQty = useMemo(() => sumQty(order?.items ?? []), [order?.items]);
-
-  const paymentMethodPill = useMemo(() => {
+  const paidPill = useMemo(() => {
     const accent = theme.colors.primary;
     const backgroundColor = theme.scheme === 'dark' ? 'rgba(37, 99, 235, 0.22)' : 'rgba(37, 99, 235, 0.12)';
     const borderColor = theme.scheme === 'dark' ? 'rgba(37, 99, 235, 0.42)' : 'rgba(37, 99, 235, 0.24)';
     return { accent, backgroundColor, borderColor };
   }, [theme.colors.primary, theme.scheme]);
 
-  const onCancel = useCallback(() => {
-    if (!orderId) return;
-    Alert.alert('Cancel order?', 'Only pending orders can be cancelled.', [
-      { text: 'Keep', style: 'cancel' },
-      {
-        text: 'Cancel order',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await cancelOrder({ orderId }).unwrap();
-            setToast({ visible: true, message: 'Order cancelled' });
-            setTimeout(() => setToast({ visible: false, message: '' }), 2200);
-          } catch (e) {
-            Alert.alert('Could not cancel order', getApiErrorMessage(e));
-          }
+  const nextStatuses = useMemo(() => (order ? getNextVendorOrderStatuses(order.status) : []), [order]);
+
+  const onUpdateStatus = useCallback(
+    (nextStatus: VendorUpdatableOrderStatus) => {
+      if (!orderId) return;
+      const nextLabel = getOrderStatusBadgeMeta(nextStatus).label;
+      Alert.alert('Update order status?', `Mark this order as ${nextLabel}?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Update',
+          onPress: async () => {
+            try {
+              await updateStatus({ orderId, status: nextStatus }).unwrap();
+              setToast({ visible: true, message: `Status updated: ${nextLabel}` });
+              setTimeout(() => setToast({ visible: false, message: '' }), 2200);
+            } catch (e) {
+              Alert.alert('Could not update status', getApiErrorMessage(e));
+            }
+          },
         },
-      },
-    ]);
-  }, [cancelOrder, orderId]);
+      ]);
+    },
+    [orderId, updateStatus]
+  );
 
   return (
     <Screen scroll>
@@ -133,32 +130,12 @@ export default function CustomerOrderDetailsScreen() {
 
               <View style={styles.row}>
                 <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Payment</Text>
-                {payment?.status ? (
-                  <PaymentStatusBadge status={payment.status} />
-                ) : (
-                  <StatusPill
-                    label={String(order.paymentMethod)}
-                    accent={paymentMethodPill.accent}
-                    backgroundColor={paymentMethodPill.backgroundColor}
-                    borderColor={paymentMethodPill.borderColor}
-                  />
-                )}
+                <StatusPill label="Paid" accent={paidPill.accent} backgroundColor={paidPill.backgroundColor} borderColor={paidPill.borderColor} />
               </View>
 
               <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>
                 Placed {formatDateTime(order.createdAt)}
               </Text>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>
-                Updated {formatDateTime(order.updatedAt)}
-              </Text>
-            </Card>
-
-            <Card style={{ gap: theme.spacing.sm }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
-                Shipping address
-              </Text>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>{order.deliveryAddress}</Text>
-              {order.mobile ? <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Mobile: {order.mobile}</Text> : null}
             </Card>
 
             <Card style={{ gap: theme.spacing.sm }}>
@@ -169,7 +146,18 @@ export default function CustomerOrderDetailsScreen() {
                 {order.items.map((item) => {
                   const imageUrl = item.imageUrl?.trim() ? item.imageUrl.trim() : null;
                   return (
-                    <View key={item.itemId} style={[styles.itemRow, { borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.background, padding: theme.spacing.md }]}>
+                    <View
+                      key={`${item.productId}-${item.title}`}
+                      style={[
+                        styles.itemRow,
+                        {
+                          borderColor: theme.colors.border,
+                          borderRadius: theme.radius.md,
+                          backgroundColor: theme.colors.background,
+                          padding: theme.spacing.md,
+                        },
+                      ]}
+                    >
                       <View
                         style={{
                           width: 56,
@@ -213,68 +201,51 @@ export default function CustomerOrderDetailsScreen() {
                 Totals
               </Text>
               <View style={styles.row}>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Items</Text>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>{totalQty}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Subtotal</Text>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>{formatMoney(order.subtotal, currency)}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Total</Text>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>{formatMoney(order.subtotal, currency)}</Text>
+                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Vendor total</Text>
+                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>{formatMoney(order.vendorSubtotal, currency)}</Text>
               </View>
             </Card>
 
-            {payment?.status === 'PENDING' ? (
-              <Card style={{ gap: theme.spacing.sm }}>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>Payment pending</Text>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-                  Complete payment to proceed.
-                </Text>
-                <Button
-                  label="Continue payment"
-                  onPress={() => router.push({ pathname: '/(app)/(customer)/payment/pending', params: { orderId } })}
-                />
-              </Card>
-            ) : null}
-
-            {canCancelOrder(order.status) ? (
-              <Card style={{ gap: theme.spacing.sm }}>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>Cancel order</Text>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-                  If you no longer need this order, you can cancel it while it's pending.
-                </Text>
-                <Button
-                  label={cancelState.isLoading ? 'Cancelling…' : 'Cancel order'}
-                  variant="outline"
-                  intent="danger"
-                  onPress={onCancel}
-                  disabled={cancelState.isLoading}
-                />
-              </Card>
-            ) : null}
+            <Card style={{ gap: theme.spacing.sm }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+                Shipping address
+              </Text>
+              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
+                {order.deliveryAddress?.trim() ? order.deliveryAddress.trim() : 'Not available for vendor view.'}
+              </Text>
+            </Card>
 
             <Card style={{ gap: theme.spacing.sm }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>Need help?</Text>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-                Contact support if something looks wrong with this order.
+              <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+                Update status
               </Text>
-              <Button
-                label="Contact support"
-                variant="outline"
-                onPress={() => Alert.alert('Support', 'Support contact coming soon.')}
-              />
+              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
+                Choose the next step for this order.
+              </Text>
+
+              {nextStatuses.length ? (
+                nextStatuses.map((s) => {
+                  const label = getOrderStatusBadgeMeta(s).label;
+                  return (
+                    <Button
+                      key={s}
+                      label={updateState.isLoading ? 'Updating…' : `Mark as ${label}`}
+                      onPress={() => onUpdateStatus(s)}
+                      disabled={updateState.isLoading}
+                    />
+                  );
+                })
+              ) : (
+                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>
+                  No further updates available for this status.
+                </Text>
+              )}
             </Card>
           </>
         )}
       </View>
 
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        onDismiss={() => setToast({ visible: false, message: '' })}
-      />
+      <Toast visible={toast.visible} message={toast.message} onDismiss={() => setToast({ visible: false, message: '' })} />
     </Screen>
   );
 }
