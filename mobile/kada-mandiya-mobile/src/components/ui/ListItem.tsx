@@ -85,7 +85,7 @@ function ListItemInner({
                 marginTop: theme.spacing.xs / 2,
                 color: theme.colors.placeholder,
                 fontWeight: '600',
-                fontSize: theme.typography.small,
+                fontSize: theme.typography.bodySmall,
               }}
             >
               {subtitle}
@@ -96,7 +96,7 @@ function ListItemInner({
         <View style={[styles.right, { gap: theme.spacing.xs }]}>
           {rightBadge ?? null}
           {rightText ? (
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}>
+            <Text style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.bodySmall }}>
               {rightText}
             </Text>
           ) : null}

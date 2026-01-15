@@ -153,9 +153,9 @@ export default function CustomerProductsScreen() {
 
   return (
     <Screen scroll>
-      <Header title="Products" subtitle="Browse items from vendors." canGoBack />
+      <Header title="Products" subtitle="Browse items from vendors" canGoBack />
 
-      <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
+      <View style={{ marginTop: theme.spacing.xl, gap: theme.spacing.xl }}>
         <View style={{ gap: theme.spacing.sm }}>
           <Input
             inputRef={searchRef}
@@ -173,10 +173,10 @@ export default function CustomerProductsScreen() {
               onPress={() => {
                 searchRef.current?.focus();
               }}
-              style={({ pressed }) => ({ opacity: pressed ? 0.86 : 1 })}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
             >
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>
-                {searchParam ? `Search: ${searchParam}` : 'Tip: type and hit search'}
+              <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', fontSize: theme.typography.caption }}>
+                {searchParam ? `Search: "${searchParam}"` : 'Type to search products...'}
               </Text>
             </Pressable>
 
@@ -186,38 +186,39 @@ export default function CustomerProductsScreen() {
                   setDraftSearch('');
                   setQueryParams({ search: undefined, category: selectedCategory });
                 }}
-                style={({ pressed }) => ({ opacity: pressed ? 0.86 : 1 })}
+                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
               >
-                <Text style={{ color: theme.colors.primary, fontWeight: '800' }}>Clear</Text>
+                <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>Clear</Text>
               </Pressable>
             ) : null}
           </View>
         </View>
 
         <View>
-          <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+          <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4, letterSpacing: -0.3 }}>
             Categories
           </Text>
           <CategoryChips
             items={CATEGORIES}
             selectedKey={selectedCategory}
             onSelect={(key) => setQueryParams({ category: key === 'all' ? undefined : key, search: searchParam })}
-            style={{ marginTop: theme.spacing.sm }}
+            style={{ marginTop: theme.spacing.md }}
           />
         </View>
 
         {hasActiveFilters ? (
-          <Card style={{ gap: theme.spacing.sm }}>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+          <Card variant="bordered" style={{ gap: theme.spacing.sm, padding: theme.spacing.md }}>
+            <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: theme.typography.body }}>
               Active filters
             </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>
+            <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', fontSize: theme.typography.bodySmall }}>
               {selectedCategory !== 'all' ? `Category: ${selectedCategory}` : 'Category: All'}
-              {searchParam ? ` • Search: ${searchParam}` : ''}
+              {searchParam ? ` • Search: "${searchParam}"` : ''}
             </Text>
             <Button
               label="Clear filters"
               variant="outline"
+              size="sm"
               onPress={() => setQueryParams({ search: undefined, category: undefined })}
             />
           </Card>
@@ -226,21 +227,51 @@ export default function CustomerProductsScreen() {
         {isLoading && page === 1 ? (
           skeletonGrid
         ) : error ? (
-          <Card style={{ gap: theme.spacing.sm }}>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
-              Couldn't load products
-            </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>{getApiErrorMessage(error)}</Text>
-            <Button label="Retry" onPress={() => refetch()} loading={isFetching} />
+          <Card variant="bordered" style={{ gap: theme.spacing.md, padding: theme.spacing.lg, alignItems: 'center' }}>
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: theme.radius.full,
+                backgroundColor: theme.colors.dangerMuted,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="alert-circle" size={28} color={theme.colors.danger} />
+            </View>
+            <View style={{ gap: theme.spacing.xs, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4 }}>
+                Couldn't load products
+              </Text>
+              <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', textAlign: 'center' }}>
+                {getApiErrorMessage(error)}
+              </Text>
+            </View>
+            <Button label="Try Again" onPress={() => refetch()} loading={isFetching} />
           </Card>
         ) : items.length === 0 ? (
-          <Card style={{ gap: theme.spacing.sm }}>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
-              No results
-            </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-              Try a different search or clear filters.
-            </Text>
+          <Card variant="bordered" style={{ gap: theme.spacing.md, padding: theme.spacing.lg, alignItems: 'center' }}>
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: theme.radius.full,
+                backgroundColor: theme.colors.muted,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="search" size={28} color={theme.colors.mutedForeground} />
+            </View>
+            <View style={{ gap: theme.spacing.xs, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4 }}>
+                No products found
+              </Text>
+              <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', textAlign: 'center' }}>
+                Try adjusting your search or clearing filters
+              </Text>
+            </View>
             <Button label="Clear filters" variant="outline" onPress={() => setQueryParams({})} />
           </Card>
         ) : (

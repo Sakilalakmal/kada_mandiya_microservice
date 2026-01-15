@@ -21,46 +21,76 @@ export function Header({ title, subtitle, canGoBack, right, style }: Props) {
     const v = theme.spacing.sm;
     return { top: v, bottom: v, left: v, right: v };
   }, [theme.spacing.sm]);
-  const backSize = theme.spacing.xl + theme.spacing.xs / 2;
+
+  const animateIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.94,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 0,
+    }).start();
+  };
+
+  const animateOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 8,
+    }).start();
+  };
 
   return (
     <View
       style={[
         styles.wrap,
         {
-          gap: theme.spacing.sm,
-          paddingTop: theme.spacing.xs / 2,
-          paddingBottom: theme.spacing.xs / 2,
+          gap: theme.spacing.xs,
+          paddingTop: theme.spacing.xs,
+          paddingBottom: theme.spacing.xs,
         },
         style,
       ]}
     >
-      <View style={[styles.row, { gap: theme.spacing.sm }]}>
+      <View style={[styles.row, { gap: theme.spacing.md }]}>
         {canGoBack ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
             hitSlop={backHitSlop}
             onPress={() => router.back()}
-            onPressIn={() => {
-              Animated.timing(scale, { toValue: 0.96, duration: 120, useNativeDriver: true }).start();
-            }}
-            onPressOut={() => {
-              Animated.timing(scale, { toValue: 1, duration: 120, useNativeDriver: true }).start();
-            }}
+            onPressIn={animateIn}
+            onPressOut={animateOut}
             style={({ pressed }) => [
-              styles.back,
-              { width: backSize, height: backSize, opacity: pressed ? 0.85 : 1 },
+              styles.backButton,
+              {
+                width: 40,
+                height: 40,
+                borderRadius: theme.radius.sm,
+                backgroundColor: theme.colors.muted,
+                opacity: pressed ? 0.7 : 1,
+              },
             ]}
           >
-            <Animated.View style={{ transform: [{ scale }] }}>
-              <Feather name="chevron-left" size={22} color={theme.colors.foreground} />
+            <Animated.View style={[styles.backInner, { transform: [{ scale }] }]}>
+              <Feather name="arrow-left" size={20} color={theme.colors.foreground} />
             </Animated.View>
           </Pressable>
         ) : null}
 
         <View style={styles.text}>
-          <Text style={[styles.title, { color: theme.colors.foreground, fontSize: theme.typography.title }]}>
+          <Text
+            style={[
+              styles.title,
+              {
+                color: theme.colors.foreground,
+                fontSize: theme.typography.h2,
+                lineHeight: theme.typography.h2 * theme.typography.lineHeight.tight,
+                letterSpacing: -0.5,
+              },
+            ]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           {subtitle ? (
@@ -68,11 +98,13 @@ export function Header({ title, subtitle, canGoBack, right, style }: Props) {
               style={[
                 styles.subtitle,
                 {
-                  color: theme.colors.placeholder,
-                  fontSize: theme.typography.body,
-                  marginTop: theme.spacing.xs / 2,
+                  color: theme.colors.foregroundSecondary,
+                  fontSize: theme.typography.bodySmall,
+                  marginTop: theme.spacing.xxs,
+                  lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.normal,
                 },
               ]}
+              numberOfLines={1}
             >
               {subtitle}
             </Text>
@@ -87,10 +119,29 @@ export function Header({ title, subtitle, canGoBack, right, style }: Props) {
 
 const styles = StyleSheet.create({
   wrap: {},
-  row: { flexDirection: 'row', alignItems: 'center' },
-  back: { alignItems: 'center', justifyContent: 'center' },
-  text: { flex: 1 },
-  right: { flexDirection: 'row', alignItems: 'center' },
-  title: { fontWeight: '800' },
-  subtitle: { fontWeight: '600' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  text: {
+    flex: 1,
+  },
+  right: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  title: {
+    fontWeight: '800',
+  },
+  subtitle: {
+    fontWeight: '500',
+  },
 });

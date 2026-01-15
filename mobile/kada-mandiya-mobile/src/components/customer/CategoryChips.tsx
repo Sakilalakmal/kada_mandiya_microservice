@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import React, { useRef } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../../providers/ThemeProvider';
 
@@ -15,55 +15,100 @@ type Props = {
   style?: ViewStyle;
 };
 
-export function CategoryChips({ items, selectedKey, onSelect, style }: Props) {
-  const { theme, scheme } = useTheme();
+function Chip({
+  item,
+  selected,
+  onPress,
+}: {
+  item: CategoryChip;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const { theme } = useTheme();
+  const scale = useRef(new Animated.Value(1)).current;
 
-  const selectedBg = scheme === 'dark' ? 'rgba(37, 99, 235, 0.22)' : 'rgba(37, 99, 235, 0.12)';
-  const selectedBorder = scheme === 'dark' ? 'rgba(37, 99, 235, 0.42)' : 'rgba(37, 99, 235, 0.24)';
+  const animateIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 0,
+    }).start();
+  };
+
+  const animateOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 8,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={animateIn}
+      onPressOut={animateOut}
+      style={({ pressed }) => ({
+        opacity: pressed ? 0.9 : 1,
+      })}
+    >
+      <Animated.View
+        style={[
+          styles.chip,
+          {
+            transform: [{ scale }],
+            borderRadius: theme.radius.full,
+            borderColor: selected ? theme.colors.primary : theme.colors.border,
+            backgroundColor: selected ? theme.colors.primary : theme.colors.card,
+            paddingHorizontal: theme.spacing.lg,
+            paddingVertical: theme.spacing.sm,
+            ...( selected ? theme.shadow.sm : {}),
+          },
+        ]}
+      >
+        <Text
+          style={{
+            color: selected ? theme.colors.primaryForeground : theme.colors.foreground,
+            fontWeight: '700',
+            fontSize: theme.typography.bodySmall,
+            letterSpacing: 0.2,
+          }}
+        >
+          {item.label}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+export function CategoryChips({ items, selectedKey, onSelect, style }: Props) {
+  const { theme } = useTheme();
 
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.container, { gap: theme.spacing.sm }, style]}
+      contentContainerStyle={[styles.container, { gap: theme.spacing.sm, paddingRight: theme.spacing.md }, style]}
     >
-      {items.map((item) => {
-        const selected = item.key === selectedKey;
-        return (
-          <Pressable
-            key={item.key}
-            onPress={() => onSelect(item.key)}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                opacity: pressed ? 0.9 : 1,
-                borderRadius: theme.radius.lg,
-                borderColor: selected ? selectedBorder : theme.colors.border,
-                backgroundColor: selected ? selectedBg : theme.colors.muted,
-                paddingHorizontal: theme.spacing.md,
-                paddingVertical: theme.spacing.xs,
-              },
-            ]}
-          >
-            <Text
-              style={{
-                color: selected ? theme.colors.primary : theme.colors.foreground,
-                fontWeight: '800',
-                fontSize: theme.typography.small,
-              }}
-            >
-              {item.label}
-            </Text>
-          </Pressable>
-        );
-      })}
-      <View style={{ width: 2 }} />
+      {items.map((item) => (
+        <Chip
+          key={item.key}
+          item={item}
+          selected={item.key === selectedKey}
+          onPress={() => onSelect(item.key)}
+        />
+      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingRight: 2 },
-  chip: { borderWidth: 1 },
+  container: {
+    flexDirection: 'row',
+  },
+  chip: {
+    borderWidth: 1,
+  },
 });
-
