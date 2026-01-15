@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Alert, ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 
 import { useClearCartMutation, useGetCartQuery, useRemoveCartItemMutation, useUpdateCartItemMutation } from '../../../../src/api/cartApi';
 import { CartItemCard } from '../../../../src/components/cart/CartItemCard';
@@ -109,7 +110,7 @@ export default function CustomerCartScreen() {
 
   return (
     <Screen style={{ paddingBottom: theme.spacing.lg }}>
-      <Header title="Cart" subtitle="Review and update your items." right={headerRight} />
+      <Header title="Cart" subtitle="Review your items" right={headerRight} />
 
       <View style={{ flex: 1, marginTop: theme.spacing.lg }}>
         {isLoading ? (
@@ -131,14 +132,28 @@ export default function CustomerCartScreen() {
             <Button label="Retry" onPress={() => refetch()} loading={isFetching} />
           </Card>
         ) : items.length === 0 ? (
-          <Card style={{ gap: theme.spacing.sm }}>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
-              Your cart is empty
-            </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-              Browse products and add what you like.
-            </Text>
-            <Button label="Browse products" onPress={() => router.push('/(app)/(customer)/products')} />
+          <Card variant="bordered" style={{ gap: theme.spacing.lg, padding: theme.spacing.xl, alignItems: 'center' }}>
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: theme.radius.full,
+                backgroundColor: theme.colors.muted,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="shopping-cart" size={36} color={theme.colors.mutedForeground} />
+            </View>
+            <View style={{ gap: theme.spacing.xs, alignItems: 'center' }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h3 }}>
+                Your cart is empty
+              </Text>
+              <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', textAlign: 'center' }}>
+                Browse products and add items to get started
+              </Text>
+            </View>
+            <Button label="Browse Products" onPress={() => router.push('/(app)/(customer)/products')} size="lg" />
           </Card>
         ) : (
           <>
@@ -152,22 +167,40 @@ export default function CustomerCartScreen() {
               contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
             />
 
-            <Card style={{ gap: theme.spacing.sm }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Total items</Text>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>{count}</Text>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '700' }}>Subtotal</Text>
-                <Text style={{ color: theme.colors.foreground, fontWeight: '900' }}>
-                  {formatMoney(subtotal, currency)}
-                </Text>
+            <Card variant="elevated" style={{ gap: theme.spacing.md, padding: theme.spacing.lg }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4, marginBottom: theme.spacing.xs }}>
+                Order Summary
+              </Text>
+              
+              <View style={{ gap: theme.spacing.sm }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', fontSize: theme.typography.body }}>
+                    Total items
+                  </Text>
+                  <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: theme.typography.body }}>
+                    {count}
+                  </Text>
+                </View>
+                
+                <View style={{ height: 1, backgroundColor: theme.colors.border }} />
+                
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: theme.typography.bodyLarge }}>
+                    Subtotal
+                  </Text>
+                  <Text style={{ color: theme.colors.primary, fontWeight: '800', fontSize: theme.typography.h4, letterSpacing: -0.3 }}>
+                    {formatMoney(subtotal, currency)}
+                  </Text>
+                </View>
               </View>
 
               <Button
-                label="Checkout"
+                label="Proceed to Checkout"
                 onPress={() => router.push('/(app)/(customer)/checkout')}
                 disabled={items.length === 0 || busy}
+                size="lg"
+                fullWidth
+                style={{ marginTop: theme.spacing.sm }}
               />
             </Card>
           </>

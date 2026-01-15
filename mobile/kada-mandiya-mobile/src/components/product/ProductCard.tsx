@@ -29,6 +29,7 @@ type Props = {
 function ProductCardInner({ product, variant = 'featured', onPress, onPressProduct, style }: Props) {
   const { theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
   const handlePress = useMemo(() => {
     if (typeof onPress === 'function') return onPress;
@@ -39,68 +40,120 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
   const sizes = useMemo(() => {
     if (variant === 'grid') {
       return {
-        cardPadding: theme.spacing.md,
-        imageHeight: 112,
+        cardPadding: theme.spacing.sm,
+        imageHeight: 140,
         imageRadius: theme.radius.md,
+        priceSize: theme.typography.bodyLarge,
+        nameSize: theme.typography.bodySmall,
       };
     }
     return {
       cardPadding: theme.spacing.md,
-      imageHeight: 124,
+      imageHeight: 160,
       imageRadius: theme.radius.md,
+      priceSize: theme.typography.bodyLarge,
+      nameSize: theme.typography.body,
     };
-  }, [theme.radius.md, theme.spacing.md, variant]);
+  }, [theme, variant]);
 
   const imageWrapStyle: ViewStyle = useMemo(
     () => ({
       height: sizes.imageHeight,
       borderRadius: sizes.imageRadius,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.background,
+      backgroundColor: theme.colors.backgroundSecondary,
       overflow: 'hidden',
       alignItems: 'center',
       justifyContent: 'center',
     }),
-    [sizes.imageHeight, sizes.imageRadius, theme.colors.background, theme.colors.border]
+    [sizes.imageHeight, sizes.imageRadius, theme.colors.backgroundSecondary]
   );
 
   const imageStyle: ImageStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
 
+  const animateIn = () => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 0.97,
+        useNativeDriver: true,
+        speed: 50,
+        bounciness: 0,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const animateOut = () => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+        speed: 50,
+        bounciness: 6,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
-    <Pressable
-      onPress={handlePress}
-      onPressIn={() => {
-        Animated.timing(scale, { toValue: 0.985, duration: 120, useNativeDriver: true }).start();
-      }}
-      onPressOut={() => {
-        Animated.timing(scale, { toValue: 1, duration: 140, useNativeDriver: true }).start();
-      }}
-      style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }, style]}
-    >
-      <Animated.View style={{ transform: [{ scale }] }}>
-        <Card style={{ padding: sizes.cardPadding, gap: theme.spacing.sm }}>
+    <Pressable onPress={handlePress} onPressIn={animateIn} onPressOut={animateOut} style={style}>
+      <Animated.View style={{ transform: [{ scale }], opacity }}>
+        <Card
+          variant="elevated"
+          style={{
+            padding: sizes.cardPadding,
+            gap: theme.spacing.sm,
+          }}
+        >
+          {/* Product Image */}
           <View style={imageWrapStyle}>
             {product.thumbnailImageUrl ? (
               <Image source={{ uri: product.thumbnailImageUrl }} style={imageStyle} resizeMode="cover" />
             ) : (
-              <Feather name="image" size={18} color={theme.colors.placeholder} />
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: theme.radius.sm,
+                  backgroundColor: theme.colors.muted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="image" size={20} color={theme.colors.placeholder} />
+              </View>
             )}
           </View>
 
-          <View style={{ gap: 6 }}>
+          {/* Product Info */}
+          <View style={{ gap: theme.spacing.xxs }}>
             <Text
               numberOfLines={2}
               style={{
                 color: theme.colors.foreground,
-                fontWeight: '900',
-                fontSize: theme.typography.body,
-                lineHeight: theme.typography.body * 1.22,
+                fontWeight: '700',
+                fontSize: sizes.nameSize,
+                lineHeight: sizes.nameSize * 1.3,
+                letterSpacing: -0.2,
               }}
             >
               {product.name}
             </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '800', fontSize: theme.typography.small }}>
+            <Text
+              style={{
+                color: theme.colors.primary,
+                fontWeight: '800',
+                fontSize: sizes.priceSize,
+                letterSpacing: -0.3,
+              }}
+            >
               {formatMoney(product.price, product.currency)}
             </Text>
           </View>
@@ -120,24 +173,29 @@ type SkeletonProps = {
 export function ProductCardSkeleton({ variant = 'featured', style }: SkeletonProps) {
   const { theme } = useTheme();
 
-  const imageHeight = variant === 'grid' ? 112 : 124;
-  const shimmer = theme.scheme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
+  const imageHeight = variant === 'grid' ? 140 : 160;
+  const shimmer = theme.scheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)';
+  const shimmerBright = theme.scheme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
 
   return (
     <View style={style}>
-      <Card style={{ gap: theme.spacing.sm }}>
+      <Card
+        variant="elevated"
+        style={{
+          gap: theme.spacing.sm,
+          padding: variant === 'grid' ? theme.spacing.sm : theme.spacing.md,
+        }}
+      >
         <View
           style={{
             height: imageHeight,
             borderRadius: theme.radius.md,
             backgroundColor: shimmer,
-            borderWidth: 1,
-            borderColor: theme.colors.border,
           }}
         />
-        <View style={{ gap: 10 }}>
-          <View style={[styles.line, { backgroundColor: shimmer, width: '90%' }]} />
-          <View style={[styles.line, { backgroundColor: shimmer, width: '55%' }]} />
+        <View style={{ gap: theme.spacing.xs }}>
+          <View style={[styles.line, { backgroundColor: shimmerBright, width: '90%', height: 14 }]} />
+          <View style={[styles.line, { backgroundColor: shimmer, width: '50%', height: 16 }]} />
         </View>
       </Card>
     </View>
@@ -145,6 +203,5 @@ export function ProductCardSkeleton({ variant = 'featured', style }: SkeletonPro
 }
 
 const styles = StyleSheet.create({
-  line: { height: 12, borderRadius: 8 },
+  line: { borderRadius: 6 },
 });
-

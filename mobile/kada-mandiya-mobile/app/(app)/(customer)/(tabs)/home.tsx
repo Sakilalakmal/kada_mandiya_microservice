@@ -113,7 +113,7 @@ export default function CustomerHomeScreen() {
   }, [goToProducts, search, selectedCategory]);
 
   const featuredCardStyle = useMemo<ViewStyle>(() => ({ width: 204 }), []);
-  const sectionTop = useMemo(() => ({ marginTop: theme.spacing.lg }), [theme.spacing.lg]);
+  const sectionTop = useMemo(() => ({ marginTop: theme.spacing.xl }), [theme.spacing.xl]);
 
   const renderFeaturedItem = useCallback(
     ({ item }: { item: (typeof featuredItems)[number] }) => {
@@ -133,14 +133,14 @@ export default function CustomerHomeScreen() {
         style={({ pressed }) => [
           styles.iconButton,
           {
-            opacity: pressed ? 0.86 : 1,
-            borderColor: theme.colors.border,
+            opacity: pressed ? 0.7 : 1,
             backgroundColor: theme.colors.muted,
-            borderRadius: theme.radius.md,
+            borderRadius: theme.radius.sm,
+            ...theme.shadow.sm,
           },
         ]}
       >
-        <Feather name={icon} size={18} color={theme.colors.foreground} />
+        <Feather name={icon} size={20} color={theme.colors.foreground} />
       </Pressable>
     );
 
@@ -316,12 +316,19 @@ export default function CustomerHomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { fontSize: 16, fontWeight: '900' },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
   iconButton: {
     width: 40,
     height: 40,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

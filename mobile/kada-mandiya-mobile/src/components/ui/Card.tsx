@@ -3,26 +3,59 @@ import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from
 
 import { useTheme } from '../../providers/ThemeProvider';
 
+type Variant = 'default' | 'elevated' | 'bordered' | 'ghost';
+
 type Props = ViewProps & {
   children: React.ReactNode;
+  variant?: Variant;
   style?: StyleProp<ViewStyle>;
 };
 
-export function Card({ children, style, ...props }: Props) {
+export function Card({ children, variant = 'default', style, ...props }: Props) {
   const { theme } = useTheme();
+
+  const variantStyles = React.useMemo(() => {
+    switch (variant) {
+      case 'elevated':
+        return {
+          backgroundColor: theme.colors.cardElevated,
+          borderWidth: 0,
+          ...theme.shadow.md,
+        };
+      case 'bordered':
+        return {
+          backgroundColor: theme.colors.card,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          ...theme.shadow.none,
+        };
+      case 'ghost':
+        return {
+          backgroundColor: 'transparent',
+          borderWidth: 0,
+          ...theme.shadow.none,
+        };
+      case 'default':
+      default:
+        return {
+          backgroundColor: theme.colors.card,
+          borderWidth: 1,
+          borderColor: theme.colors.borderSubtle,
+          ...theme.shadow.sm,
+        };
+    }
+  }, [variant, theme]);
 
   return (
     <View
       {...props}
       style={[
         styles.card,
-        theme.shadow,
         {
-          backgroundColor: theme.colors.muted,
           borderRadius: theme.radius.md,
-          borderColor: theme.colors.border,
           padding: theme.spacing.md,
         },
+        variantStyles,
         style,
       ]}
     >
@@ -33,6 +66,6 @@ export function Card({ children, style, ...props }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
+    overflow: 'hidden',
   },
 });
