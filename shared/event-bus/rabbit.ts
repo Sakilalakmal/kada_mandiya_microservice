@@ -56,7 +56,7 @@ function registerShutdownHooks() {
 
 async function getConnection(): Promise<ChannelModel> {
   if (!connectionPromise) {
-    connectionPromise = amqp.connect(getRabbitUrl()).catch((err) => {
+    connectionPromise = amqp.connect(getRabbitUrl()).catch((err: unknown) => {
       connectionPromise = null;
       throw err;
     });
@@ -96,7 +96,7 @@ export async function getRabbitChannel(): Promise<Channel> {
 
       registerShutdownHooks();
       return channel;
-    })().catch((err) => {
+    })().catch((err: unknown) => {
       channelPromise = null;
       exchangeAsserted = false;
       throw err;
