@@ -91,11 +91,25 @@ export default function CustomerCartScreen() {
 
   const headerRight = useMemo(() => {
     return (
-      <Pressable onPress={onClear} disabled={!items.length || busy} style={({ pressed }) => ({ opacity: pressed ? 0.86 : busy ? 0.5 : 1 })}>
-        <Text style={{ color: theme.colors.primary, fontWeight: '900' }}>Clear</Text>
+      <Pressable 
+        onPress={onClear} 
+        disabled={!items.length || busy} 
+        style={({ pressed }) => ({ 
+          opacity: pressed ? 0.7 : busy ? 0.4 : !items.length ? 0.3 : 1,
+          paddingHorizontal: theme.spacing.sm,
+          paddingVertical: theme.spacing.xs,
+        })}
+      >
+        <Text style={{ 
+          color: theme.colors.danger, 
+          fontWeight: '700',
+          fontSize: theme.typography.bodySmall,
+        }}>
+          Clear all
+        </Text>
       </Pressable>
     );
-  }, [busy, items.length, onClear, theme.colors.primary]);
+  }, [busy, items.length, onClear, theme.colors.danger, theme.spacing.sm, theme.spacing.xs]);
 
   const keyExtractor = useCallback((item: CartItem) => item.itemId, []);
 
@@ -109,51 +123,65 @@ export default function CustomerCartScreen() {
   );
 
   return (
-    <Screen style={{ paddingBottom: theme.spacing.lg }}>
-      <Header title="Cart" subtitle="Review your items" right={headerRight} />
+    <Screen style={{ paddingBottom: 0 }}>
+      <Header title="Shopping Cart" subtitle={`${count} ${count === 1 ? 'item' : 'items'}`} right={headerRight} />
 
       <View style={{ flex: 1, marginTop: theme.spacing.lg }}>
         {isLoading ? (
-          <View style={{ gap: theme.spacing.md }}>
-            <ActivityIndicator color={theme.colors.primary} />
+          <View style={{ gap: theme.spacing.lg }}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
             <Card>
-              <View style={{ height: 96 }} />
+              <View style={{ height: 100 }} />
             </Card>
             <Card>
-              <View style={{ height: 96 }} />
+              <View style={{ height: 100 }} />
             </Card>
           </View>
         ) : error ? (
-          <Card style={{ gap: theme.spacing.sm }}>
-            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+          <Card style={{ gap: theme.spacing.md }}>
+            <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h3 }}>
               Couldn't load cart
             </Text>
-            <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>{getApiErrorMessage(error)}</Text>
+            <Text style={{ color: theme.colors.foregroundSecondary, fontWeight: '500' }}>{getApiErrorMessage(error)}</Text>
             <Button label="Retry" onPress={() => refetch()} loading={isFetching} />
           </Card>
         ) : items.length === 0 ? (
-          <Card variant="bordered" style={{ gap: theme.spacing.lg, padding: theme.spacing.xl, alignItems: 'center' }}>
+          <Card variant="tinted" style={{ gap: theme.spacing.xl, padding: theme.spacing.xxxl, alignItems: 'center' }}>
             <View
               style={{
-                width: 80,
-                height: 80,
+                width: 96,
+                height: 96,
                 borderRadius: theme.radius.full,
-                backgroundColor: theme.colors.muted,
+                backgroundColor: theme.colors.primaryMuted,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Feather name="shopping-cart" size={36} color={theme.colors.mutedForeground} />
+              <Feather name="shopping-cart" size={44} color={theme.colors.primary} />
             </View>
-            <View style={{ gap: theme.spacing.xs, alignItems: 'center' }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h3 }}>
+            <View style={{ gap: theme.spacing.sm, alignItems: 'center' }}>
+              <Text style={{ 
+                color: theme.colors.foreground, 
+                fontWeight: '900', 
+                fontSize: theme.typography.h2,
+                textAlign: 'center',
+              }}>
                 Your cart is empty
               </Text>
-              <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', textAlign: 'center' }}>
+              <Text style={{ 
+                color: theme.colors.foregroundSecondary, 
+                fontWeight: '500', 
+                textAlign: 'center',
+                fontSize: theme.typography.body,
+              }}>
                 Browse products and add items to get started
               </Text>
             </View>
-            <Button label="Browse Products" onPress={() => router.push('/(app)/(customer)/products')} size="lg" />
+            <Button 
+              label="Start Shopping" 
+              onPress={() => router.push('/(app)/(customer)/products')} 
+              size="lg" 
+            />
           </Card>
         ) : (
           <>
@@ -164,45 +192,69 @@ export default function CustomerCartScreen() {
               showsVerticalScrollIndicator={false}
               refreshing={isFetching}
               onRefresh={() => refetch()}
-              contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
+              contentContainerStyle={{ paddingBottom: theme.spacing.xxxl }}
             />
 
-            <Card variant="elevated" style={{ gap: theme.spacing.md, padding: theme.spacing.lg }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4, marginBottom: theme.spacing.xs }}>
-                Order Summary
-              </Text>
-              
-              <View style={{ gap: theme.spacing.sm }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', fontSize: theme.typography.body }}>
-                    Total items
-                  </Text>
-                  <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: theme.typography.body }}>
-                    {count}
-                  </Text>
+            {/* Fixed Checkout Summary */}
+            <View style={{ 
+              backgroundColor: theme.colors.card,
+              borderTopLeftRadius: theme.radius.xxl,
+              borderTopRightRadius: theme.radius.xxl,
+              paddingTop: theme.spacing.lg,
+              paddingHorizontal: theme.spacing.lg,
+              paddingBottom: theme.spacing.xl,
+              ...theme.shadow.xl,
+            }}>
+              <View style={{ gap: theme.spacing.md }}>
+                <View style={{ gap: theme.spacing.sm }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ 
+                      color: theme.colors.foregroundSecondary, 
+                      fontWeight: '600', 
+                      fontSize: theme.typography.body,
+                    }}>
+                      Items ({count})
+                    </Text>
+                    <Text style={{ 
+                      color: theme.colors.foreground, 
+                      fontWeight: '700', 
+                      fontSize: theme.typography.body,
+                    }}>
+                      {formatMoney(subtotal, currency)}
+                    </Text>
+                  </View>
+                  
+                  <View style={{ height: 1, backgroundColor: theme.colors.border }} />
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: theme.spacing.xs }}>
+                    <Text style={{ 
+                      color: theme.colors.foreground, 
+                      fontWeight: '900', 
+                      fontSize: theme.typography.h3,
+                    }}>
+                      Total
+                    </Text>
+                    <Text style={{ 
+                      color: theme.colors.primary, 
+                      fontWeight: '900', 
+                      fontSize: theme.typography.priceDisplay, 
+                      letterSpacing: -0.8,
+                    }}>
+                      {formatMoney(subtotal, currency)}
+                    </Text>
+                  </View>
                 </View>
-                
-                <View style={{ height: 1, backgroundColor: theme.colors.border }} />
-                
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ color: theme.colors.foreground, fontWeight: '700', fontSize: theme.typography.bodyLarge }}>
-                    Subtotal
-                  </Text>
-                  <Text style={{ color: theme.colors.primary, fontWeight: '800', fontSize: theme.typography.h4, letterSpacing: -0.3 }}>
-                    {formatMoney(subtotal, currency)}
-                  </Text>
-                </View>
-              </View>
 
-              <Button
-                label="Proceed to Checkout"
-                onPress={() => router.push('/(app)/(customer)/checkout')}
-                disabled={items.length === 0 || busy}
-                size="lg"
-                fullWidth
-                style={{ marginTop: theme.spacing.sm }}
-              />
-            </Card>
+                <Button
+                  label="Proceed to Checkout"
+                  onPress={() => router.push('/(app)/(customer)/checkout')}
+                  disabled={items.length === 0 || busy}
+                  size="lg"
+                  fullWidth
+                  style={{ marginTop: theme.spacing.md }}
+                />
+              </View>
+            </View>
           </>
         )}
       </View>

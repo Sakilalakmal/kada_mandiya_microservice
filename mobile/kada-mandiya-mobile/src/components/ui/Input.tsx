@@ -34,7 +34,7 @@ export function Input({
   const [focused, setFocused] = useState(false);
   const focusAnim = React.useRef(new Animated.Value(0)).current;
 
-  const controlHeight = 48;
+  const controlHeight = 52;
   const isMultiline = Boolean(props.multiline);
   
   const borderColor = error
@@ -46,7 +46,7 @@ export function Input({
   const hasLeadingIcon = Boolean(leadingIcon);
   const hasTrailingIcon = Boolean(trailingIcon);
   const iconSize = 20;
-  const iconInset = theme.spacing.md;
+  const iconInset = theme.spacing.lg;
   const iconPadding = hasLeadingIcon ? iconInset + iconSize + theme.spacing.sm : 0;
   const trailingPadding = hasTrailingIcon ? iconInset + iconSize + theme.spacing.sm : 0;
 
@@ -60,19 +60,20 @@ export function Input({
 
   const animatedBorderWidth = focusAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 2],
+    outputRange: [1.5, 2],
   });
 
   const inputStyle: TextStyle = useMemo(() => {
     return {
       height: isMultiline ? undefined : controlHeight,
       minHeight: isMultiline ? controlHeight * 2 : controlHeight,
-      borderRadius: theme.radius.md,
-      paddingHorizontal: theme.spacing.md,
-      paddingLeft: theme.spacing.md + iconPadding,
-      paddingRight: theme.spacing.md + trailingPadding,
+      borderRadius: theme.radius.lg,
+      paddingHorizontal: theme.spacing.lg,
+      paddingLeft: theme.spacing.lg + iconPadding,
+      paddingRight: theme.spacing.lg + trailingPadding,
       paddingVertical: isMultiline ? theme.spacing.md : 0,
       fontSize: theme.typography.body,
+      fontWeight: '500',
       color: theme.colors.foreground,
       backgroundColor: focused ? theme.colors.background : theme.colors.muted,
       textAlignVertical: isMultiline ? 'top' : 'center',
@@ -86,7 +87,8 @@ export function Input({
     theme.colors.foreground,
     theme.colors.muted,
     theme.colors.background,
-    theme.radius.md,
+    theme.radius.lg,
+    theme.spacing.lg,
     theme.spacing.md,
     theme.typography.body,
   ]);
@@ -124,7 +126,7 @@ export function Input({
             {
               borderWidth: animatedBorderWidth,
               borderColor,
-              borderRadius: theme.radius.md,
+              borderRadius: theme.radius.lg,
             },
           ]}
         >

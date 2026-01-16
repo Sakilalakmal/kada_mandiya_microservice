@@ -29,9 +29,9 @@ function Chip({
 
   const animateIn = () => {
     Animated.spring(scale, {
-      toValue: 0.95,
+      toValue: 0.94,
       useNativeDriver: true,
-      speed: 50,
+      speed: 60,
       bounciness: 0,
     }).start();
   };
@@ -40,8 +40,8 @@ function Chip({
     Animated.spring(scale, {
       toValue: 1,
       useNativeDriver: true,
-      speed: 50,
-      bounciness: 8,
+      speed: 60,
+      bounciness: 10,
     }).start();
   };
 
@@ -59,12 +59,14 @@ function Chip({
           styles.chip,
           {
             transform: [{ scale }],
-            borderRadius: theme.radius.full,
-            borderColor: selected ? theme.colors.primary : theme.colors.border,
+            borderRadius: theme.radius.lg,
+            borderWidth: 0,
             backgroundColor: selected ? theme.colors.primary : theme.colors.card,
             paddingHorizontal: theme.spacing.lg,
-            paddingVertical: theme.spacing.sm,
-            ...( selected ? theme.shadow.sm : {}),
+            paddingVertical: theme.spacing.md,
+            height: 42,
+            justifyContent: 'center',
+            ...( selected ? theme.shadow.md : theme.shadow.sm),
           },
         ]}
       >
@@ -73,7 +75,7 @@ function Chip({
             color: selected ? theme.colors.primaryForeground : theme.colors.foreground,
             fontWeight: '700',
             fontSize: theme.typography.bodySmall,
-            letterSpacing: 0.2,
+            letterSpacing: 0.3,
           }}
         >
           {item.label}

@@ -77,88 +77,148 @@ export default function LoginScreen() {
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', gap: theme.spacing.lg }}
+          contentContainerStyle={{ 
+            flexGrow: 1, 
+            justifyContent: 'center', 
+            paddingHorizontal: theme.spacing.lg,
+            paddingTop: theme.spacing.xxxl,
+            paddingBottom: theme.spacing.xxl,
+            gap: theme.spacing.md 
+          }}
         >
-          <LogoHeader />
-
-          <Text style={{ fontSize: 26, fontWeight: '800', color: theme.colors.foreground }}>
-            Welcome back
-          </Text>
-          <Text style={{ fontSize: 15, fontWeight: '600', color: theme.colors.placeholder }}>
-            Sign in to continue
-          </Text>
+          {/* Welcome section with soft background */}
+          <View style={{ 
+            marginBottom: theme.spacing.xl,
+            gap: theme.spacing.xs 
+          }}>
+            <Text style={{ 
+              fontSize: theme.typography.displayLarge, 
+              fontWeight: '900', 
+              color: theme.colors.foreground,
+              letterSpacing: -0.5,
+            }}>
+              Welcome back
+            </Text>
+            <Text style={{ 
+              fontSize: theme.typography.bodyLarge, 
+              fontWeight: '500', 
+              color: theme.colors.foregroundSecondary,
+              marginTop: theme.spacing.xs,
+            }}>
+              Sign in to continue shopping
+            </Text>
+          </View>
 
           {serverError ? (
             <View
               style={{
-                padding: theme.spacing.md,
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: theme.colors.danger,
-                backgroundColor: theme.colors.muted,
+                padding: theme.spacing.lg,
+                borderRadius: theme.radius.lg,
+                borderWidth: 0,
+                backgroundColor: theme.colors.dangerMuted,
+                marginBottom: theme.spacing.sm,
               }}
             >
-              <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>{serverError}</Text>
+              <Text style={{ 
+                color: theme.colors.danger, 
+                fontWeight: '600',
+                fontSize: theme.typography.bodySmall,
+                lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
+              }}>
+                {serverError}
+              </Text>
             </View>
           ) : null}
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Email"
-                placeholder="you@example.com"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
-          />
+          <View style={{ gap: theme.spacing.lg }}>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <Input
+                  label="Email"
+                  placeholder="you@example.com"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={onChange}
+                  error={error?.message}
+                />
+              )}
+            />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Password"
-                placeholder="••••••••"
-                secureTextEntry
-                textContentType="password"
-                autoComplete="password"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
-          />
-
-          <Button
-            label="Sign in"
-            onPress={onSubmit}
-            loading={isSubmitting || loginState.isLoading}
-            disabled={loginState.isLoading}
-          />
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <Input
+                  label="Password"
+                  placeholder="••••••••"
+                  secureTextEntry
+                  textContentType="password"
+                  autoComplete="password"
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={onChange}
+                  error={error?.message}
+                />
+              )}
+            />
+          </View>
 
           <Link href="/(auth)/forgot-password" asChild>
-            <Pressable style={{ alignSelf: 'flex-start' }}>
-              <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>Forgot password?</Text>
-            </Pressable>
-          </Link>
-
-          <Link href="/(auth)/register" asChild>
-            <Pressable style={{ alignSelf: 'flex-start' }}>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-                Create an account
+            <Pressable style={{ alignSelf: 'flex-end', marginTop: theme.spacing.sm }}>
+              <Text style={{ 
+                color: theme.colors.primary, 
+                fontWeight: '600',
+                fontSize: theme.typography.bodySmall,
+              }}>
+                Forgot password?
               </Text>
             </Pressable>
           </Link>
+
+          <Button
+            label="Sign in"
+            size="lg"
+            onPress={onSubmit}
+            loading={isSubmitting || loginState.isLoading}
+            disabled={loginState.isLoading}
+            style={{ marginTop: theme.spacing.md }}
+          />
+
+          {/* Spacer */}
+          <View style={{ height: theme.spacing.xl }} />
+
+          {/* Sign up link */}
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: theme.spacing.xs,
+          }}>
+            <Text style={{ 
+              color: theme.colors.foregroundSecondary, 
+              fontWeight: '500',
+              fontSize: theme.typography.body,
+            }}>
+              New here?
+            </Text>
+            <Link href="/(auth)/register" asChild>
+              <Pressable>
+                <Text style={{ 
+                  color: theme.colors.primary, 
+                  fontWeight: '700',
+                  fontSize: theme.typography.body,
+                }}>
+                  Create account
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

@@ -40,18 +40,18 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
   const sizes = useMemo(() => {
     if (variant === 'grid') {
       return {
-        cardPadding: theme.spacing.sm,
-        imageHeight: 140,
-        imageRadius: theme.radius.md,
-        priceSize: theme.typography.bodyLarge,
+        cardPadding: theme.spacing.md,
+        imageHeight: 150,
+        imageRadius: theme.radius.lg,
+        priceSize: theme.typography.h4,
         nameSize: theme.typography.bodySmall,
       };
     }
     return {
       cardPadding: theme.spacing.md,
-      imageHeight: 160,
-      imageRadius: theme.radius.md,
-      priceSize: theme.typography.bodyLarge,
+      imageHeight: 180,
+      imageRadius: theme.radius.lg,
+      priceSize: theme.typography.h4,
       nameSize: theme.typography.body,
     };
   }, [theme, variant]);
@@ -73,14 +73,14 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
   const animateIn = () => {
     Animated.parallel([
       Animated.spring(scale, {
-        toValue: 0.97,
+        toValue: 0.96,
         useNativeDriver: true,
-        speed: 50,
+        speed: 60,
         bounciness: 0,
       }),
       Animated.timing(opacity, {
-        toValue: 0.9,
-        duration: 100,
+        toValue: 0.92,
+        duration: 80,
         useNativeDriver: true,
       }),
     ]).start();
@@ -91,12 +91,12 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
       Animated.spring(scale, {
         toValue: 1,
         useNativeDriver: true,
-        speed: 50,
-        bounciness: 6,
+        speed: 60,
+        bounciness: 8,
       }),
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 150,
+        duration: 120,
         useNativeDriver: true,
       }),
     ]).start();
@@ -133,14 +133,14 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
           </View>
 
           {/* Product Info */}
-          <View style={{ gap: theme.spacing.xxs }}>
+          <View style={{ gap: 4 }}>
             <Text
               numberOfLines={2}
               style={{
                 color: theme.colors.foreground,
-                fontWeight: '700',
+                fontWeight: '600',
                 fontSize: sizes.nameSize,
-                lineHeight: sizes.nameSize * 1.3,
+                lineHeight: sizes.nameSize * 1.4,
                 letterSpacing: -0.2,
               }}
             >
@@ -149,9 +149,10 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
             <Text
               style={{
                 color: theme.colors.primary,
-                fontWeight: '800',
+                fontWeight: '900',
                 fontSize: sizes.priceSize,
-                letterSpacing: -0.3,
+                letterSpacing: -0.5,
+                marginTop: 2,
               }}
             >
               {formatMoney(product.price, product.currency)}
