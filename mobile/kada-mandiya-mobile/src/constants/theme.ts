@@ -5,117 +5,112 @@ export type ColorScheme = 'light' | 'dark';
 export const themeTokens = {
   colors: {
     light: {
-      // Soft, warm backgrounds (cream/beige tones)
-      background: '#FAF9F7',
-      backgroundSecondary: '#F5F3F0',
-      backgroundTertiary: '#FFF8F0',
+      // Clean, minimal backgrounds
+      background: '#FFFFFF',
+      backgroundSecondary: '#F8F9FA',
+      backgroundTertiary: '#F1F3F5',
       
-      // Text colors - softer blacks
-      foreground: '#1F1F1F',
-      foregroundSecondary: '#525252',
+      // Clear text hierarchy
+      foreground: '#000000',
+      foregroundSecondary: '#495057',
       
-      // Muted tones
-      muted: '#F0EDE8',
-      mutedForeground: '#737373',
+      // Minimal grays
+      muted: '#F1F3F5',
+      mutedForeground: '#6C757D',
       
-      // Borders - very subtle
-      border: '#E8E5E0',
-      borderSubtle: '#F0EDE8',
+      // Clean borders
+      border: '#DEE2E6',
+      borderSubtle: '#E9ECEF',
       
-      // Primary - soft green/teal (nature inspired)
-      primary: '#4B9B8C',
+      // Simple accent - professional teal
+      primary: '#0EA5E9',
       primaryForeground: '#FFFFFF',
-      primaryMuted: '#E6F4F1',
-      primaryDark: '#3A7A6F',
+      primaryMuted: '#E0F2FE',
+      primaryDark: '#0284C7',
       
-      // Accent - warm terracotta/coral
-      accent: '#E87461',
+      // Minimal accent
+      accent: '#3B82F6',
       accentForeground: '#FFFFFF',
-      accentMuted: '#FFF0ED',
+      accentMuted: '#DBEAFE',
       
-      // Success - soft mint green
-      success: '#52B788',
+      // System colors - clean
+      success: '#10B981',
       successForeground: '#FFFFFF',
-      successMuted: '#E8F5E9',
+      successMuted: '#D1FAE5',
       
-      // Warning - soft amber
-      warning: '#F4A261',
+      warning: '#F59E0B',
       warningForeground: '#FFFFFF',
-      warningMuted: '#FFF4E6',
+      warningMuted: '#FEF3C7',
       
-      // Danger - soft coral red
-      danger: '#E76F51',
+      danger: '#EF4444',
       dangerForeground: '#FFFFFF',
-      dangerMuted: '#FFE8E3',
+      dangerMuted: '#FEE2E2',
       
-      // Utility colors
-      placeholder: '#A3A3A3',
-      overlay: 'rgba(31, 31, 31, 0.5)',
+      // Utility
+      placeholder: '#9CA3AF',
+      overlay: 'rgba(0, 0, 0, 0.5)',
       
-      // Cards - soft whites with warmth
+      // Clean cards
       card: '#FFFFFF',
       cardElevated: '#FFFFFF',
-      cardTinted: '#FFF8F0',
+      cardTinted: '#F8F9FA',
       
-      // Feature colors for variety
-      lavender: '#B4A7D6',
-      lavenderMuted: '#F3F0FA',
-      peach: '#FFB5A7',
-      peachMuted: '#FFF5F3',
-      sage: '#A8DADC',
-      sageMuted: '#F0F8F8',
+      // Minimal variants
+      lavender: '#A78BFA',
+      lavenderMuted: '#EDE9FE',
+      peach: '#FB923C',
+      peachMuted: '#FED7AA',
+      sage: '#34D399',
+      sageMuted: '#D1FAE5',
     },
     dark: {
-      // Dark mode - softer, warmer darks
-      background: '#1A1816',
-      backgroundSecondary: '#252320',
-      backgroundTertiary: '#2D2A27',
+      background: '#000000',
+      backgroundSecondary: '#0A0A0A',
+      backgroundTertiary: '#141414',
       
-      foreground: '#F5F5F5',
-      foregroundSecondary: '#C7C7C7',
+      foreground: '#FFFFFF',
+      foregroundSecondary: '#A1A1AA',
       
-      muted: '#2D2A27',
-      mutedForeground: '#8A8A8A',
+      muted: '#18181B',
+      mutedForeground: '#71717A',
       
-      border: '#3A3633',
-      borderSubtle: '#2D2A27',
+      border: '#27272A',
+      borderSubtle: '#18181B',
       
-      // Primary - slightly brighter for dark mode
-      primary: '#5FB3A3',
-      primaryForeground: '#FFFFFF',
-      primaryMuted: '#2A4541',
-      primaryDark: '#4B9B8C',
+      primary: '#38BDF8',
+      primaryForeground: '#000000',
+      primaryMuted: '#082F49',
+      primaryDark: '#0EA5E9',
       
-      // Accent
-      accent: '#F08A76',
-      accentForeground: '#FFFFFF',
-      accentMuted: '#3D2B28',
+      accent: '#60A5FA',
+      accentForeground: '#000000',
+      accentMuted: '#1E3A8A',
       
-      success: '#66C29A',
-      successForeground: '#FFFFFF',
-      successMuted: '#2A3F35',
+      success: '#34D399',
+      successForeground: '#000000',
+      successMuted: '#064E3B',
       
-      warning: '#F4A261',
-      warningForeground: '#FFFFFF',
-      warningMuted: '#3D342B',
+      warning: '#FBBF24',
+      warningForeground: '#000000',
+      warningMuted: '#78350F',
       
-      danger: '#EC8A7A',
-      dangerForeground: '#FFFFFF',
-      dangerMuted: '#3D2F2B',
+      danger: '#F87171',
+      dangerForeground: '#000000',
+      dangerMuted: '#7F1D1D',
       
-      placeholder: '#6B6B6B',
-      overlay: 'rgba(0, 0, 0, 0.75)',
+      placeholder: '#52525B',
+      overlay: 'rgba(0, 0, 0, 0.8)',
       
-      card: '#252320',
-      cardElevated: '#2D2A27',
-      cardTinted: '#2D2723',
+      card: '#0A0A0A',
+      cardElevated: '#141414',
+      cardTinted: '#18181B',
       
-      lavender: '#9B8FC4',
-      lavenderMuted: '#2D2A33',
-      peach: '#E09C8E',
-      peachMuted: '#342E2C',
-      sage: '#8EC5C7',
-      sageMuted: '#2A3535',
+      lavender: '#A78BFA',
+      lavenderMuted: '#2E1065',
+      peach: '#FB923C',
+      peachMuted: '#431407',
+      sage: '#34D399',
+      sageMuted: '#064E3B',
     },
   },
   spacing: {
@@ -130,39 +125,39 @@ export const themeTokens = {
     xxxxl: 48,
   },
   radius: {
-    xs: 8,
-    sm: 12,
-    md: 16,
-    lg: 20,
-    xl: 24,
-    xxl: 28,
+    xs: 4,
+    sm: 6,
+    md: 8,
+    lg: 12,
+    xl: 16,
+    xxl: 20,
     full: 9999,
   },
   typography: {
-    // Display & Headings - increased sizes for impact
-    display: 36,
-    displayLarge: 42,
-    h1: 30,
-    h2: 26,
-    h3: 22,
+    // Clean, readable sizes
+    display: 32,
+    displayLarge: 36,
+    h1: 28,
+    h2: 24,
+    h3: 20,
     h4: 18,
     subtitle: 16,
-    // Body & UI
+    // Body text
     body: 15,
-    bodyLarge: 17,
+    bodyLarge: 16,
     bodySmall: 14,
-    caption: 13,
+    caption: 12,
     tiny: 11,
-    // Price display - special formatting
-    priceDisplay: 28,
-    priceLarge: 24,
-    // Line Heights
+    // Price
+    priceDisplay: 24,
+    priceLarge: 20,
+    // Line heights
     lineHeight: {
-      tight: 1.2,
+      tight: 1.25,
       normal: 1.5,
-      relaxed: 1.7,
+      relaxed: 1.625,
     },
-    // Font weights (for easy reference)
+    // Font weights
     weight: {
       regular: '400' as const,
       medium: '500' as const,
@@ -174,56 +169,56 @@ export const themeTokens = {
   },
   shadow: {
     none: {},
-    // Soft, subtle shadows for modern feel
+    // Minimal shadows
     sm: Platform.select({
       ios: {
-        shadowColor: '#1F1F1F',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
       },
-      android: { elevation: 2 },
+      android: { elevation: 1 },
       default: {},
     }),
     md: Platform.select({
       ios: {
-        shadowColor: '#1F1F1F',
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: { elevation: 2 },
+      default: {},
+    }),
+    lg: Platform.select({
+      ios: {
+        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.06,
+        shadowOpacity: 0.1,
         shadowRadius: 8,
       },
       android: { elevation: 4 },
       default: {},
     }),
-    lg: Platform.select({
-      ios: {
-        shadowColor: '#1F1F1F',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-      },
-      android: { elevation: 6 },
-      default: {},
-    }),
     xl: Platform.select({
       ios: {
-        shadowColor: '#1F1F1F',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.1,
-        shadowRadius: 24,
-      },
-      android: { elevation: 10 },
-      default: {},
-    }),
-    // Special shadow for floating elements
-    float: Platform.select({
-      ios: {
-        shadowColor: '#1F1F1F',
-        shadowOffset: { width: 0, height: 6 },
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.12,
-        shadowRadius: 20,
+        shadowRadius: 16,
       },
       android: { elevation: 8 },
+      default: {},
+    }),
+    // For floating elements
+    float: Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: { elevation: 6 },
       default: {},
     }),
   },

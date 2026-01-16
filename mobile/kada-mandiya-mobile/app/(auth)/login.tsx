@@ -88,22 +88,20 @@ export default function LoginScreen() {
         >
           {/* Welcome section with soft background */}
           <View style={{ 
-            marginBottom: theme.spacing.xl,
+            marginBottom: theme.spacing.lg,
             gap: theme.spacing.xs 
           }}>
             <Text style={{ 
-              fontSize: theme.typography.displayLarge, 
-              fontWeight: '900', 
+              fontSize: theme.typography.display, 
+              fontWeight: '700', 
               color: theme.colors.foreground,
-              letterSpacing: -0.5,
             }}>
               Welcome back
             </Text>
             <Text style={{ 
-              fontSize: theme.typography.bodyLarge, 
-              fontWeight: '500', 
+              fontSize: theme.typography.body, 
+              fontWeight: '400', 
               color: theme.colors.foregroundSecondary,
-              marginTop: theme.spacing.xs,
             }}>
               Sign in to continue shopping
             </Text>
@@ -112,16 +110,17 @@ export default function LoginScreen() {
           {serverError ? (
             <View
               style={{
-                padding: theme.spacing.lg,
-                borderRadius: theme.radius.lg,
-                borderWidth: 0,
+                padding: theme.spacing.md,
+                borderRadius: theme.radius.md,
+                borderWidth: 1,
+                borderColor: theme.colors.danger,
                 backgroundColor: theme.colors.dangerMuted,
                 marginBottom: theme.spacing.sm,
               }}
             >
               <Text style={{ 
                 color: theme.colors.danger, 
-                fontWeight: '600',
+                fontWeight: '500',
                 fontSize: theme.typography.bodySmall,
                 lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
               }}>
@@ -183,7 +182,7 @@ export default function LoginScreen() {
 
           <Button
             label="Sign in"
-            size="lg"
+            size="md"
             onPress={onSubmit}
             loading={isSubmitting || loginState.isLoading}
             disabled={loginState.isLoading}
@@ -191,7 +190,7 @@ export default function LoginScreen() {
           />
 
           {/* Spacer */}
-          <View style={{ height: theme.spacing.xl }} />
+          <View style={{ height: theme.spacing.lg }} />
 
           {/* Sign up link */}
           <View style={{ 
@@ -202,7 +201,7 @@ export default function LoginScreen() {
           }}>
             <Text style={{ 
               color: theme.colors.foregroundSecondary, 
-              fontWeight: '500',
+              fontWeight: '400',
               fontSize: theme.typography.body,
             }}>
               New here?
@@ -211,7 +210,7 @@ export default function LoginScreen() {
               <Pressable>
                 <Text style={{ 
                   color: theme.colors.primary, 
-                  fontWeight: '700',
+                  fontWeight: '600',
                   fontSize: theme.typography.body,
                 }}>
                   Create account

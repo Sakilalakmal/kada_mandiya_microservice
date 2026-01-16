@@ -40,18 +40,18 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
   const sizes = useMemo(() => {
     if (variant === 'grid') {
       return {
-        cardPadding: theme.spacing.md,
-        imageHeight: 150,
+        cardPadding: 0,
+        imageHeight: 140,
         imageRadius: theme.radius.lg,
-        priceSize: theme.typography.h4,
+        priceSize: theme.typography.subtitle,
         nameSize: theme.typography.bodySmall,
       };
     }
     return {
-      cardPadding: theme.spacing.md,
-      imageHeight: 180,
+      cardPadding: 0,
+      imageHeight: 160,
       imageRadius: theme.radius.lg,
-      priceSize: theme.typography.h4,
+      priceSize: theme.typography.subtitle,
       nameSize: theme.typography.body,
     };
   }, [theme, variant]);
@@ -71,45 +71,29 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
   const imageStyle: ImageStyle = useMemo(() => ({ width: '100%', height: '100%' }), []);
 
   const animateIn = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 0.96,
-        useNativeDriver: true,
-        speed: 60,
-        bounciness: 0,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0.92,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(scale, {
+      toValue: 0.98,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
   };
 
   const animateOut = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 60,
-        bounciness: 8,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
     <Pressable onPress={handlePress} onPressIn={animateIn} onPressOut={animateOut} style={style}>
-      <Animated.View style={{ transform: [{ scale }], opacity }}>
+      <Animated.View style={{ transform: [{ scale }] }}>
         <Card
-          variant="elevated"
+          variant="bordered"
+          noPadding
           style={{
-            padding: sizes.cardPadding,
-            gap: theme.spacing.sm,
+            overflow: 'hidden',
           }}
         >
           {/* Product Image */}
@@ -133,7 +117,7 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
           </View>
 
           {/* Product Info */}
-          <View style={{ gap: 4 }}>
+          <View style={{ padding: theme.spacing.md, gap: 4 }}>
             <Text
               numberOfLines={2}
               style={{
@@ -141,17 +125,15 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
                 fontWeight: '600',
                 fontSize: sizes.nameSize,
                 lineHeight: sizes.nameSize * 1.4,
-                letterSpacing: -0.2,
               }}
             >
               {product.name}
             </Text>
             <Text
               style={{
-                color: theme.colors.primary,
-                fontWeight: '900',
+                color: theme.colors.foreground,
+                fontWeight: '700',
                 fontSize: sizes.priceSize,
-                letterSpacing: -0.5,
                 marginTop: 2,
               }}
             >

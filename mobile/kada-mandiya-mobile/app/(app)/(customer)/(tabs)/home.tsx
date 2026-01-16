@@ -133,10 +133,9 @@ export default function CustomerHomeScreen() {
         style={({ pressed }) => [
           styles.iconButton,
           {
-            opacity: pressed ? 0.7 : 1,
-            backgroundColor: theme.colors.card,
-            borderRadius: theme.radius.lg,
-            ...theme.shadow.sm,
+            opacity: pressed ? 0.6 : 1,
+            backgroundColor: theme.colors.backgroundSecondary,
+            borderRadius: theme.radius.full,
           },
         ]}
       >
@@ -156,8 +155,8 @@ export default function CustomerHomeScreen() {
     <Screen scroll>
       <Animated.View style={{ opacity: intro, transform: [{ translateY: introY }] }}>
         <Header 
-          title={`Hi, ${firstName} 👋`} 
-          subtitle="Find what you love today" 
+          title={`Hello, ${firstName}`} 
+          subtitle="Discover unique products" 
           right={headerRight} 
         />
 
