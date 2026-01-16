@@ -28,20 +28,18 @@ function Chip({
   const scale = useRef(new Animated.Value(1)).current;
 
   const animateIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.94,
+    Animated.timing(scale, {
+      toValue: 0.96,
+      duration: 100,
       useNativeDriver: true,
-      speed: 60,
-      bounciness: 0,
     }).start();
   };
 
   const animateOut = () => {
-    Animated.spring(scale, {
+    Animated.timing(scale, {
       toValue: 1,
+      duration: 100,
       useNativeDriver: true,
-      speed: 60,
-      bounciness: 10,
     }).start();
   };
 
@@ -59,23 +57,22 @@ function Chip({
           styles.chip,
           {
             transform: [{ scale }],
-            borderRadius: theme.radius.lg,
-            borderWidth: 0,
-            backgroundColor: selected ? theme.colors.primary : theme.colors.card,
+            borderRadius: theme.radius.full,
+            borderWidth: 1,
+            borderColor: selected ? theme.colors.primary : theme.colors.border,
+            backgroundColor: selected ? theme.colors.primary : theme.colors.background,
             paddingHorizontal: theme.spacing.lg,
-            paddingVertical: theme.spacing.md,
-            height: 42,
+            paddingVertical: theme.spacing.sm,
+            height: 36,
             justifyContent: 'center',
-            ...( selected ? theme.shadow.md : theme.shadow.sm),
           },
         ]}
       >
         <Text
           style={{
             color: selected ? theme.colors.primaryForeground : theme.colors.foreground,
-            fontWeight: '700',
+            fontWeight: '600',
             fontSize: theme.typography.bodySmall,
-            letterSpacing: 0.3,
           }}
         >
           {item.label}

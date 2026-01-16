@@ -25,19 +25,18 @@ export default function CustomerTabsLayout() {
         tabBarStyle: {
           backgroundColor: theme.colors.card,
           borderTopColor: theme.colors.border,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
           height: tabBarHeight,
           paddingTop: theme.spacing.sm,
           paddingBottom: Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.md,
-          ...theme.shadow.xl,
         },
         tabBarLabelStyle: {
           fontWeight: '600',
           fontSize: theme.typography.caption,
-          marginTop: 4,
+          marginTop: 2,
         },
         tabBarIconStyle: {
-          marginTop: 6,
+          marginTop: 4,
         },
       }}
     >
@@ -46,7 +45,7 @@ export default function CustomerTabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size, focused }) => (
-            <Feather name="home" size={focused ? size + 3 : size} color={color} />
+            <Feather name="home" size={size} color={color} />
           ),
         }}
       />
@@ -55,18 +54,18 @@ export default function CustomerTabsLayout() {
         options={{
           title: 'Cart',
           tabBarIcon: ({ color, size, focused }) => (
-            <Feather name="shopping-cart" size={focused ? size + 3 : size} color={color} />
+            <Feather name="shopping-cart" size={size} color={color} />
           ),
           tabBarBadge: cartCount > 0 ? cartCount : undefined,
           tabBarBadgeStyle: {
             backgroundColor: theme.colors.primary,
             color: theme.colors.primaryForeground,
-            fontWeight: '800',
+            fontWeight: '700',
             fontSize: 10,
-            minWidth: 20,
-            height: 20,
-            borderRadius: 10,
-            lineHeight: 20,
+            minWidth: 18,
+            height: 18,
+            borderRadius: 9,
+            lineHeight: 18,
           },
         }}
       />
@@ -75,7 +74,7 @@ export default function CustomerTabsLayout() {
         options={{
           title: 'Orders',
           tabBarIcon: ({ color, size, focused }) => (
-            <Feather name="shopping-bag" size={focused ? size + 3 : size} color={color} />
+            <Feather name="shopping-bag" size={size} color={color} />
           ),
         }}
       />
@@ -84,7 +83,7 @@ export default function CustomerTabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size, focused }) => (
-            <Feather name="user" size={focused ? size + 3 : size} color={color} />
+            <Feather name="user" size={size} color={color} />
           ),
         }}
       />

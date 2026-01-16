@@ -40,13 +40,14 @@ export function Card({ children, variant = 'default', style, noPadding = false, 
         return {
           backgroundColor: theme.colors.cardTinted,
           borderWidth: 0,
-          ...theme.shadow.sm,
+          ...theme.shadow.none,
         };
       case 'default':
       default:
         return {
           backgroundColor: theme.colors.card,
-          borderWidth: 0,
+          borderWidth: 1,
+          borderColor: theme.colors.borderSubtle,
           ...theme.shadow.sm,
         };
     }
@@ -58,8 +59,8 @@ export function Card({ children, variant = 'default', style, noPadding = false, 
       style={[
         styles.card,
         {
-          borderRadius: theme.radius.xl,
-          padding: noPadding ? 0 : theme.spacing.lg,
+          borderRadius: theme.radius.lg,
+          padding: noPadding ? 0 : theme.spacing.md,
         },
         variantStyles,
         style,

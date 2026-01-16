@@ -34,7 +34,7 @@ export function Input({
   const [focused, setFocused] = useState(false);
   const focusAnim = React.useRef(new Animated.Value(0)).current;
 
-  const controlHeight = 52;
+  const controlHeight = 44;
   const isMultiline = Boolean(props.multiline);
   
   const borderColor = error
@@ -60,22 +60,22 @@ export function Input({
 
   const animatedBorderWidth = focusAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1.5, 2],
+    outputRange: [1, 2],
   });
 
   const inputStyle: TextStyle = useMemo(() => {
     return {
       height: isMultiline ? undefined : controlHeight,
       minHeight: isMultiline ? controlHeight * 2 : controlHeight,
-      borderRadius: theme.radius.lg,
-      paddingHorizontal: theme.spacing.lg,
-      paddingLeft: theme.spacing.lg + iconPadding,
-      paddingRight: theme.spacing.lg + trailingPadding,
-      paddingVertical: isMultiline ? theme.spacing.md : 0,
+      borderRadius: theme.radius.md,
+      paddingHorizontal: theme.spacing.md,
+      paddingLeft: theme.spacing.md + iconPadding,
+      paddingRight: theme.spacing.md + trailingPadding,
+      paddingVertical: isMultiline ? theme.spacing.sm : 0,
       fontSize: theme.typography.body,
       fontWeight: '500',
       color: theme.colors.foreground,
-      backgroundColor: focused ? theme.colors.background : theme.colors.muted,
+      backgroundColor: theme.colors.background,
       textAlignVertical: isMultiline ? 'top' : 'center',
     } as const;
   }, [
@@ -87,9 +87,9 @@ export function Input({
     theme.colors.foreground,
     theme.colors.muted,
     theme.colors.background,
-    theme.radius.lg,
-    theme.spacing.lg,
+    theme.radius.md,
     theme.spacing.md,
+    theme.spacing.sm,
     theme.typography.body,
   ]);
 

@@ -146,23 +146,23 @@ export default function CustomerCartScreen() {
             <Button label="Retry" onPress={() => refetch()} loading={isFetching} />
           </Card>
         ) : items.length === 0 ? (
-          <Card variant="tinted" style={{ gap: theme.spacing.xl, padding: theme.spacing.xxxl, alignItems: 'center' }}>
+          <Card variant="tinted" style={{ gap: theme.spacing.lg, padding: theme.spacing.xxl, alignItems: 'center' }}>
             <View
               style={{
-                width: 96,
-                height: 96,
+                width: 80,
+                height: 80,
                 borderRadius: theme.radius.full,
-                backgroundColor: theme.colors.primaryMuted,
+                backgroundColor: theme.colors.backgroundSecondary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Feather name="shopping-cart" size={44} color={theme.colors.primary} />
+              <Feather name="shopping-cart" size={36} color={theme.colors.foregroundSecondary} />
             </View>
-            <View style={{ gap: theme.spacing.sm, alignItems: 'center' }}>
+            <View style={{ gap: theme.spacing.xs, alignItems: 'center' }}>
               <Text style={{ 
                 color: theme.colors.foreground, 
-                fontWeight: '900', 
+                fontWeight: '700', 
                 fontSize: theme.typography.h2,
                 textAlign: 'center',
               }}>
@@ -170,7 +170,7 @@ export default function CustomerCartScreen() {
               </Text>
               <Text style={{ 
                 color: theme.colors.foregroundSecondary, 
-                fontWeight: '500', 
+                fontWeight: '400', 
                 textAlign: 'center',
                 fontSize: theme.typography.body,
               }}>
@@ -180,7 +180,7 @@ export default function CustomerCartScreen() {
             <Button 
               label="Start Shopping" 
               onPress={() => router.push('/(app)/(customer)/products')} 
-              size="lg" 
+              size="md" 
             />
           </Card>
         ) : (
@@ -198,12 +198,11 @@ export default function CustomerCartScreen() {
             {/* Fixed Checkout Summary */}
             <View style={{ 
               backgroundColor: theme.colors.card,
-              borderTopLeftRadius: theme.radius.xxl,
-              borderTopRightRadius: theme.radius.xxl,
-              paddingTop: theme.spacing.lg,
+              borderTopWidth: 1,
+              borderTopColor: theme.colors.border,
+              paddingTop: theme.spacing.md,
               paddingHorizontal: theme.spacing.lg,
-              paddingBottom: theme.spacing.xl,
-              ...theme.shadow.xl,
+              paddingBottom: theme.spacing.lg,
             }}>
               <View style={{ gap: theme.spacing.md }}>
                 <View style={{ gap: theme.spacing.sm }}>
@@ -229,16 +228,15 @@ export default function CustomerCartScreen() {
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: theme.spacing.xs }}>
                     <Text style={{ 
                       color: theme.colors.foreground, 
-                      fontWeight: '900', 
+                      fontWeight: '700', 
                       fontSize: theme.typography.h3,
                     }}>
                       Total
                     </Text>
                     <Text style={{ 
-                      color: theme.colors.primary, 
-                      fontWeight: '900', 
-                      fontSize: theme.typography.priceDisplay, 
-                      letterSpacing: -0.8,
+                      color: theme.colors.foreground, 
+                      fontWeight: '700', 
+                      fontSize: theme.typography.h2,
                     }}>
                       {formatMoney(subtotal, currency)}
                     </Text>
@@ -249,9 +247,8 @@ export default function CustomerCartScreen() {
                   label="Proceed to Checkout"
                   onPress={() => router.push('/(app)/(customer)/checkout')}
                   disabled={items.length === 0 || busy}
-                  size="lg"
+                  size="md"
                   fullWidth
-                  style={{ marginTop: theme.spacing.md }}
                 />
               </View>
             </View>

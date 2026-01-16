@@ -43,25 +43,25 @@ export function Button({
     switch (size) {
       case 'sm':
         return {
-          height: 44,
+          height: 40,
           paddingHorizontal: theme.spacing.lg,
           fontSize: theme.typography.bodySmall,
-          borderRadius: theme.radius.lg,
+          borderRadius: theme.radius.md,
         };
       case 'lg':
         return {
-          height: 60,
+          height: 48,
           paddingHorizontal: theme.spacing.xxl,
-          fontSize: theme.typography.bodyLarge,
-          borderRadius: theme.radius.xl,
+          fontSize: theme.typography.body,
+          borderRadius: theme.radius.md,
         };
       case 'md':
       default:
         return {
-          height: 52,
+          height: 44,
           paddingHorizontal: theme.spacing.xl,
           fontSize: theme.typography.body,
-          borderRadius: theme.radius.lg,
+          borderRadius: theme.radius.md,
         };
     }
   }, [size, theme]);
@@ -122,35 +122,19 @@ export function Button({
   };
 
   const animateIn = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 0.97,
-        useNativeDriver: true,
-        speed: 60,
-        bounciness: 0,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0.88,
-        duration: 80,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(scale, {
+      toValue: 0.98,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
   };
 
   const animateOut = () => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 60,
-        bounciness: 6,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
@@ -175,14 +159,13 @@ export function Button({
       <Animated.View
         style={[
           containerStyle,
-          theme.shadow.sm,
+          variant === 'primary' && theme.shadow.md,
           {
             transform: [{ scale }],
             backgroundColor: stylesByVariant.backgroundColor,
             borderColor: stylesByVariant.borderColor,
           },
-          !isDisabled && { opacity },
-          isDisabled && { opacity: 0.5 },
+          isDisabled && { opacity: 0.4 },
         ]}
       >
         {loading ? (
