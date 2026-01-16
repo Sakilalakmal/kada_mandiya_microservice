@@ -43,25 +43,25 @@ export function Button({
     switch (size) {
       case 'sm':
         return {
-          height: 40,
-          paddingHorizontal: theme.spacing.md,
+          height: 44,
+          paddingHorizontal: theme.spacing.lg,
           fontSize: theme.typography.bodySmall,
-          borderRadius: theme.radius.sm,
+          borderRadius: theme.radius.lg,
         };
       case 'lg':
         return {
-          height: 56,
-          paddingHorizontal: theme.spacing.xl,
+          height: 60,
+          paddingHorizontal: theme.spacing.xxl,
           fontSize: theme.typography.bodyLarge,
-          borderRadius: theme.radius.md,
+          borderRadius: theme.radius.xl,
         };
       case 'md':
       default:
         return {
-          height: 48,
-          paddingHorizontal: theme.spacing.lg,
+          height: 52,
+          paddingHorizontal: theme.spacing.xl,
           fontSize: theme.typography.body,
-          borderRadius: theme.radius.md,
+          borderRadius: theme.radius.lg,
         };
     }
   }, [size, theme]);
@@ -124,14 +124,14 @@ export function Button({
   const animateIn = () => {
     Animated.parallel([
       Animated.spring(scale, {
-        toValue: 0.96,
+        toValue: 0.97,
         useNativeDriver: true,
-        speed: 50,
+        speed: 60,
         bounciness: 0,
       }),
       Animated.timing(opacity, {
-        toValue: 0.85,
-        duration: 100,
+        toValue: 0.88,
+        duration: 80,
         useNativeDriver: true,
       }),
     ]).start();
@@ -142,12 +142,12 @@ export function Button({
       Animated.spring(scale, {
         toValue: 1,
         useNativeDriver: true,
-        speed: 50,
-        bounciness: 4,
+        speed: 60,
+        bounciness: 6,
       }),
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 150,
+        duration: 120,
         useNativeDriver: true,
       }),
     ]).start();

@@ -97,109 +97,171 @@ export default function RegisterScreen() {
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', gap: theme.spacing.lg }}
+          contentContainerStyle={{ 
+            flexGrow: 1, 
+            justifyContent: 'center',
+            paddingHorizontal: theme.spacing.lg,
+            paddingTop: theme.spacing.xxxl,
+            paddingBottom: theme.spacing.xxl,
+            gap: theme.spacing.md 
+          }}
         >
-          <LogoHeader />
-
-          <Text style={{ fontSize: 26, fontWeight: '800', color: theme.colors.foreground }}>
-            Create account
-          </Text>
+          {/* Welcome section */}
+          <View style={{ 
+            marginBottom: theme.spacing.xl,
+            gap: theme.spacing.xs 
+          }}>
+            <Text style={{ 
+              fontSize: theme.typography.displayLarge, 
+              fontWeight: '900', 
+              color: theme.colors.foreground,
+              letterSpacing: -0.5,
+            }}>
+              Create account
+            </Text>
+            <Text style={{ 
+              fontSize: theme.typography.bodyLarge, 
+              fontWeight: '500', 
+              color: theme.colors.foregroundSecondary,
+              marginTop: theme.spacing.xs,
+            }}>
+              Start your shopping journey today
+            </Text>
+          </View>
 
           {serverError ? (
             <View
               style={{
-                padding: theme.spacing.md,
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: theme.colors.danger,
-                backgroundColor: theme.colors.muted,
+                padding: theme.spacing.lg,
+                borderRadius: theme.radius.lg,
+                borderWidth: 0,
+                backgroundColor: theme.colors.dangerMuted,
+                marginBottom: theme.spacing.sm,
               }}
             >
-              <Text style={{ color: theme.colors.danger, fontWeight: '700' }}>{serverError}</Text>
+              <Text style={{ 
+                color: theme.colors.danger, 
+                fontWeight: '600',
+                fontSize: theme.typography.bodySmall,
+                lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
+              }}>
+                {serverError}
+              </Text>
             </View>
           ) : null}
 
-          <Controller
-            control={control}
-            name="name"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Name"
-                placeholder="Your name"
-                textContentType="name"
-                autoComplete="name"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
+          <View style={{ gap: theme.spacing.lg }}>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <Input
+                  label="Name"
+                  placeholder="Your name"
+                  textContentType="name"
+                  autoComplete="name"
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={onChange}
+                  error={error?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <Input
+                  label="Email"
+                  placeholder="you@example.com"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={onChange}
+                  error={error?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <Input
+                  label="Password"
+                  placeholder="••••••••"
+                  secureTextEntry
+                  textContentType="newPassword"
+                  autoComplete="password-new"
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={onChange}
+                  error={error?.message}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                <Input
+                  label="Confirm password"
+                  placeholder="••••••••"
+                  secureTextEntry
+                  textContentType="newPassword"
+                  autoComplete="password-new"
+                  onBlur={onBlur}
+                  value={value}
+                  onChangeText={onChange}
+                  error={error?.message}
+                />
+              )}
+            />
+          </View>
+
+          <Button 
+            label="Create account" 
+            size="lg"
+            onPress={onSubmit} 
+            loading={loading} 
+            disabled={loading}
+            style={{ marginTop: theme.spacing.lg }}
           />
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Email"
-                placeholder="you@example.com"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
-          />
+          {/* Spacer */}
+          <View style={{ height: theme.spacing.xl }} />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Password"
-                placeholder="••••••••"
-                secureTextEntry
-                textContentType="newPassword"
-                autoComplete="password-new"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="confirmPassword"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Confirm password"
-                placeholder="••••••••"
-                secureTextEntry
-                textContentType="newPassword"
-                autoComplete="password-new"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
-          />
-
-          <Button label="Create account" onPress={onSubmit} loading={loading} disabled={loading} />
-
-          <Link href="/(auth)/login" asChild>
-            <Pressable style={{ alignSelf: 'flex-start' }}>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
-                Already have an account?
-              </Text>
-            </Pressable>
-          </Link>
+          {/* Sign in link */}
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: theme.spacing.xs,
+          }}>
+            <Text style={{ 
+              color: theme.colors.foregroundSecondary, 
+              fontWeight: '500',
+              fontSize: theme.typography.body,
+            }}>
+              Already have an account?
+            </Text>
+            <Link href="/(auth)/login" asChild>
+              <Pressable>
+                <Text style={{ 
+                  color: theme.colors.primary, 
+                  fontWeight: '700',
+                  fontSize: theme.typography.body,
+                }}>
+                  Sign in
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

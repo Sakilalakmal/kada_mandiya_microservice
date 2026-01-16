@@ -3,15 +3,16 @@ import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from
 
 import { useTheme } from '../../providers/ThemeProvider';
 
-type Variant = 'default' | 'elevated' | 'bordered' | 'ghost';
+type Variant = 'default' | 'elevated' | 'bordered' | 'ghost' | 'tinted';
 
 type Props = ViewProps & {
   children: React.ReactNode;
   variant?: Variant;
   style?: StyleProp<ViewStyle>;
+  noPadding?: boolean;
 };
 
-export function Card({ children, variant = 'default', style, ...props }: Props) {
+export function Card({ children, variant = 'default', style, noPadding = false, ...props }: Props) {
   const { theme } = useTheme();
 
   const variantStyles = React.useMemo(() => {
@@ -35,12 +36,17 @@ export function Card({ children, variant = 'default', style, ...props }: Props) 
           borderWidth: 0,
           ...theme.shadow.none,
         };
+      case 'tinted':
+        return {
+          backgroundColor: theme.colors.cardTinted,
+          borderWidth: 0,
+          ...theme.shadow.sm,
+        };
       case 'default':
       default:
         return {
           backgroundColor: theme.colors.card,
-          borderWidth: 1,
-          borderColor: theme.colors.borderSubtle,
+          borderWidth: 0,
           ...theme.shadow.sm,
         };
     }
@@ -52,8 +58,8 @@ export function Card({ children, variant = 'default', style, ...props }: Props) 
       style={[
         styles.card,
         {
-          borderRadius: theme.radius.md,
-          padding: theme.spacing.md,
+          borderRadius: theme.radius.xl,
+          padding: noPadding ? 0 : theme.spacing.lg,
         },
         variantStyles,
         style,

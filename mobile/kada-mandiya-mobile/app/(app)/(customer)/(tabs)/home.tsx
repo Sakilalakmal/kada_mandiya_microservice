@@ -134,13 +134,13 @@ export default function CustomerHomeScreen() {
           styles.iconButton,
           {
             opacity: pressed ? 0.7 : 1,
-            backgroundColor: theme.colors.muted,
-            borderRadius: theme.radius.sm,
+            backgroundColor: theme.colors.card,
+            borderRadius: theme.radius.lg,
             ...theme.shadow.sm,
           },
         ]}
       >
-        <Feather name={icon} size={20} color={theme.colors.foreground} />
+        <Feather name={icon} size={21} color={theme.colors.foreground} />
       </Pressable>
     );
 
@@ -150,12 +150,16 @@ export default function CustomerHomeScreen() {
         {iconButton('bell', 'Notifications', () => router.push('/(app)/(customer)/settings'))}
       </View>
     );
-  }, [router, theme.colors.border, theme.colors.foreground, theme.colors.muted, theme.radius.md, theme.spacing.sm]);
+  }, [router, theme.colors.card, theme.colors.foreground, theme.radius.lg, theme.spacing.sm, theme.shadow.sm]);
 
   return (
     <Screen scroll>
       <Animated.View style={{ opacity: intro, transform: [{ translateY: introY }] }}>
-        <Header title={`Hi, ${firstName}`} subtitle="Find what you need today" right={headerRight} />
+        <Header 
+          title={`Hi, ${firstName} 👋`} 
+          subtitle="Find what you love today" 
+          right={headerRight} 
+        />
 
         <View style={sectionTop}>
           <HomeHero onBrowseProducts={goToProducts} />
@@ -165,17 +169,23 @@ export default function CustomerHomeScreen() {
           <Input
             inputRef={searchRef}
             label={undefined}
-            placeholder="Search products"
+            placeholder="Search for products..."
             returnKeyType="search"
             value={search}
             onChangeText={setSearch}
             onSubmitEditing={() => goToProducts({ search, category: selectedCategory })}
-            leadingIcon={<Feather name="search" size={18} color={theme.colors.placeholder} />}
+            leadingIcon={<Feather name="search" size={20} color={theme.colors.placeholder} />}
           />
         </View>
 
         <View style={sectionTop}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.foreground }]}>Categories</Text>
+          <Text style={[styles.sectionTitle, { 
+            color: theme.colors.foreground,
+            fontSize: theme.typography.h3,
+            marginBottom: theme.spacing.md,
+          }]}>
+            Categories
+          </Text>
           <CategoryChips
             items={CATEGORIES}
             selectedKey={selectedCategory}
@@ -183,40 +193,50 @@ export default function CustomerHomeScreen() {
               setSelectedCategory(key);
               goToProducts(key === 'all' ? {} : { category: key });
             }}
-            style={{ marginTop: theme.spacing.sm }}
           />
         </View>
 
-        <View style={sectionTop}>
+        <View style={[sectionTop, { marginTop: theme.spacing.xxl }]}>
           <View style={styles.sectionRow}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.foreground }]}>Featured</Text>
-            <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-              <Text style={{ color: theme.colors.primary, fontWeight: '800' }}>See all</Text>
+            <Text style={[styles.sectionTitle, { 
+              color: theme.colors.foreground,
+              fontSize: theme.typography.h3,
+            }]}>
+              Featured Products
+            </Text>
+            <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+              <Text style={{ 
+                color: theme.colors.primary, 
+                fontWeight: '700',
+                fontSize: theme.typography.bodySmall,
+              }}>
+                See all →
+              </Text>
             </Pressable>
           </View>
 
           {isLoading ? (
-            <View style={{ flexDirection: 'row', marginTop: theme.spacing.sm, gap: theme.spacing.md }}>
+            <View style={{ flexDirection: 'row', marginTop: theme.spacing.lg, gap: theme.spacing.md }}>
               <ProductCardSkeleton style={featuredCardStyle} />
               <ProductCardSkeleton style={featuredCardStyle} />
               <ProductCardSkeleton style={featuredCardStyle} />
             </View>
           ) : error ? (
-            <Card style={{ marginTop: theme.spacing.sm, gap: theme.spacing.sm }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+            <Card style={{ marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4 }}>
                 Couldn't load products
               </Text>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
+              <Text style={{ color: theme.colors.foregroundSecondary, fontWeight: '500' }}>
                 {getApiErrorMessage(error)}
               </Text>
               <Button label="Retry" onPress={() => refetch()} loading={isFetching} />
             </Card>
           ) : featuredItems.length === 0 ? (
-            <Card style={{ marginTop: theme.spacing.sm, gap: theme.spacing.sm }}>
-              <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.subtitle }}>
+            <Card variant="tinted" style={{ marginTop: theme.spacing.lg, gap: theme.spacing.sm }}>
+              <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h4 }}>
                 No products yet
               </Text>
-              <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>
+              <Text style={{ color: theme.colors.foregroundSecondary, fontWeight: '500' }}>
                 Check back soon for new listings.
               </Text>
             </Card>
@@ -228,7 +248,7 @@ export default function CustomerHomeScreen() {
               keyExtractor={(item) => item.id}
               renderItem={renderFeaturedItem}
               ItemSeparatorComponent={featuredSeparator}
-              style={{ marginTop: theme.spacing.sm }}
+              style={{ marginTop: theme.spacing.lg }}
               contentContainerStyle={{ paddingRight: theme.spacing.md }}
               initialNumToRender={6}
               maxToRenderPerBatch={8}
@@ -238,16 +258,27 @@ export default function CustomerHomeScreen() {
           )}
         </View>
 
-        <View style={sectionTop}>
+        <View style={[sectionTop, { marginTop: theme.spacing.xxl, marginBottom: theme.spacing.xxl }]}>
           <View style={styles.sectionRow}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.foreground }]}>Trending</Text>
-            <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-              <Text style={{ color: theme.colors.primary, fontWeight: '800' }}>See all</Text>
+            <Text style={[styles.sectionTitle, { 
+              color: theme.colors.foreground,
+              fontSize: theme.typography.h3,
+            }]}>
+              Trending Now
+            </Text>
+            <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+              <Text style={{ 
+                color: theme.colors.primary, 
+                fontWeight: '700',
+                fontSize: theme.typography.bodySmall,
+              }}>
+                See all →
+              </Text>
             </Pressable>
           </View>
 
           {isLoading ? (
-            <View style={{ marginTop: theme.spacing.sm }}>
+            <View style={{ marginTop: theme.spacing.lg }}>
               <View style={{ flexDirection: 'row' }}>
                 <ProductCardSkeleton variant="grid" style={{ flex: 1 }} />
                 <View style={{ width: theme.spacing.md }} />
@@ -261,7 +292,7 @@ export default function CustomerHomeScreen() {
               </View>
             </View>
           ) : trendingItems.length ? (
-            <View style={{ marginTop: theme.spacing.sm }}>
+            <View style={{ marginTop: theme.spacing.lg }}>
               <View style={{ flexDirection: 'row' }}>
                 <ProductCard
                   variant="grid"
@@ -322,13 +353,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sectionTitle: {
-    fontSize: 20,
     fontWeight: '800',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
   },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
