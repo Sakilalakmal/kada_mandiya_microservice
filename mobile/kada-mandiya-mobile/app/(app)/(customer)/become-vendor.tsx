@@ -15,6 +15,7 @@ import { setUser } from '../../../src/store/authSlice';
 import { useAppDispatch } from '../../../src/store/hooks';
 import type { VendorApplication } from '../../../src/types/vendor.types';
 import { getApiErrorMessage } from '../../../src/utils/apiError';
+import { normalizeUserRoles } from '../../../src/utils/roles';
 import { setTokens } from '../../../src/utils/tokenStorage';
 
 const schema = z.object({
@@ -79,7 +80,7 @@ export default function BecomeVendorScreen() {
       await setTokens({ accessToken: refreshed.accessToken, refreshToken: refreshed.accessToken });
 
       const me = await triggerMe().unwrap();
-      dispatch(setUser({ id: me.payload.sub, email: me.payload.email, roles: me.payload.roles }));
+      dispatch(setUser({ id: me.payload.sub, email: me.payload.email, roles: normalizeUserRoles(me.payload.roles as unknown) }));
       router.replace('/(app)/(vendor)/(tabs)/profile');
     } catch (err) {
       setServerError(getApiErrorMessage(err));

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useGetMyVendorProfileQuery } from '../../../../src/api/vendorApi';
 import { Header } from '../../../../src/components/layout/Header';
@@ -9,21 +10,22 @@ import { Badge } from '../../../../src/components/ui/Badge';
 import { Card } from '../../../../src/components/ui/Card';
 import { ListItem } from '../../../../src/components/ui/ListItem';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
-import { API_BASE_URL } from '../../../../src/constants/config';
 import { clearAuth } from '../../../../src/store/authSlice';
 import { useAppDispatch, useAppSelector } from '../../../../src/store/hooks';
 import { clearTokens } from '../../../../src/utils/tokenStorage';
 
 export default function VendorProfile() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
   const { data, isFetching, isError } = useGetMyVendorProfileQuery();
 
   const vendor = data?.vendor ?? null;
+  const bottomSpacer = 60 + Math.max(insets.bottom, theme.spacing.sm) + theme.spacing.md;
 
   return (
-    <Screen scroll>
+    <Screen scroll style={{ paddingBottom: bottomSpacer }}>
       <Header title="Profile" subtitle="Account and vendor settings." />
 
       <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
@@ -64,25 +66,6 @@ export default function VendorProfile() {
               No vendor profile found.
             </Text>
           )}
-
-          {__DEV__ ? (
-            <View style={{ marginTop: theme.spacing.sm, alignSelf: 'flex-start' }}>
-              <View
-                style={{
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.background,
-                  borderRadius: theme.radius.lg,
-                  paddingHorizontal: theme.spacing.sm,
-                  paddingVertical: theme.spacing.xs / 2,
-                }}
-              >
-                <Text style={{ color: theme.colors.placeholder, fontWeight: '700', fontSize: theme.typography.small }}>
-                  API: {API_BASE_URL}
-                </Text>
-              </View>
-            </View>
-          ) : null}
         </Card>
 
         <Card style={{ gap: theme.spacing.sm }}>

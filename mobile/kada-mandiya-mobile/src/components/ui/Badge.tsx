@@ -52,6 +52,7 @@ export function Badge({ label, variant = 'default', size = 'md', style }: Props)
           paddingVertical: theme.spacing.xxs,
           fontSize: theme.typography.tiny,
           borderRadius: theme.radius.xs,
+          minHeight: 20,
         };
       case 'lg':
         return {
@@ -59,6 +60,7 @@ export function Badge({ label, variant = 'default', size = 'md', style }: Props)
           paddingVertical: theme.spacing.xs,
           fontSize: theme.typography.bodySmall,
           borderRadius: theme.radius.sm,
+          minHeight: 30,
         };
       case 'md':
       default:
@@ -67,6 +69,7 @@ export function Badge({ label, variant = 'default', size = 'md', style }: Props)
           paddingVertical: theme.spacing.xxs + 1,
           fontSize: theme.typography.caption,
           borderRadius: theme.radius.xs,
+          minHeight: 24,
         };
     }
   }, [size, theme]);
@@ -130,6 +133,9 @@ export function Badge({ label, variant = 'default', size = 'md', style }: Props)
           borderRadius: sizeConfig.borderRadius,
           paddingHorizontal: sizeConfig.paddingHorizontal,
           paddingVertical: sizeConfig.paddingVertical,
+          minHeight: sizeConfig.minHeight,
+          alignItems: 'center',
+          justifyContent: 'center',
         },
         style,
       ]}
@@ -140,6 +146,7 @@ export function Badge({ label, variant = 'default', size = 'md', style }: Props)
           {
             color: variantStyles.textColor,
             fontSize: sizeConfig.fontSize,
+            lineHeight: Math.ceil(sizeConfig.fontSize * 1.2),
           },
         ]}
       >
@@ -158,5 +165,7 @@ const styles = StyleSheet.create({
   text: {
     fontWeight: '700',
     letterSpacing: 0.5,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 });

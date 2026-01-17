@@ -1,25 +1,29 @@
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
 import { Card } from '../../../../src/components/ui/Card';
 import { ListItem } from '../../../../src/components/ui/ListItem';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
+import { hasVendorRole } from '../../../../src/utils/roles';
 import { clearAuth } from '../../../../src/store/authSlice';
 import { useAppDispatch, useAppSelector } from '../../../../src/store/hooks';
 import { clearTokens } from '../../../../src/utils/tokenStorage';
 
 export default function CustomerProfile() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
 
-  const isVendor = useMemo(() => user?.roles?.includes('vendor') ?? false, [user?.roles]);
+  const isVendor = useMemo(() => hasVendorRole(user?.roles), [user?.roles]);
+  const bottomSpacer = 60 + Math.max(insets.bottom, theme.spacing.sm) + theme.spacing.md;
 
   return (
-    <Screen scroll>
+    <Screen scroll style={{ paddingBottom: bottomSpacer }}>
       <Header title="Profile" subtitle="Your account and settings." />
 
       <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
