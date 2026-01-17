@@ -37,7 +37,6 @@ export function Button({
 }: Props) {
   const { theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
 
   const sizeConfig = useMemo(() => {
     switch (size) {
@@ -46,14 +45,14 @@ export function Button({
           height: 40,
           paddingHorizontal: theme.spacing.lg,
           fontSize: theme.typography.bodySmall,
-          borderRadius: theme.radius.md,
+          borderRadius: theme.radius.full,
         };
       case 'lg':
         return {
           height: 48,
           paddingHorizontal: theme.spacing.xxl,
           fontSize: theme.typography.body,
-          borderRadius: theme.radius.md,
+          borderRadius: theme.radius.full,
         };
       case 'md':
       default:
@@ -61,7 +60,7 @@ export function Button({
           height: 44,
           paddingHorizontal: theme.spacing.xl,
           fontSize: theme.typography.body,
-          borderRadius: theme.radius.md,
+          borderRadius: theme.radius.full,
         };
     }
   }, [size, theme]);
@@ -159,7 +158,7 @@ export function Button({
       <Animated.View
         style={[
           containerStyle,
-          variant === 'primary' && theme.shadow.md,
+          variant === 'primary' && theme.shadow.lg,
           {
             transform: [{ scale }],
             backgroundColor: stylesByVariant.backgroundColor,

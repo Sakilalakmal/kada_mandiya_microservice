@@ -5,36 +5,36 @@ export type ColorScheme = 'light' | 'dark';
 export const themeTokens = {
   colors: {
     light: {
-      // Clean, minimal backgrounds
-      background: '#FFFFFF',
-      backgroundSecondary: '#F8F9FA',
-      backgroundTertiary: '#F1F3F5',
+      // Modern, airy backgrounds
+      background: '#F6F7FB',
+      backgroundSecondary: '#FFFFFF',
+      backgroundTertiary: '#EEF1F7',
       
       // Clear text hierarchy
-      foreground: '#000000',
-      foregroundSecondary: '#495057',
+      foreground: '#0B1220',
+      foregroundSecondary: '#3D4A66',
       
       // Minimal grays
-      muted: '#F1F3F5',
-      mutedForeground: '#6C757D',
+      muted: '#EEF1F7',
+      mutedForeground: '#6A7691',
       
       // Clean borders
-      border: '#DEE2E6',
-      borderSubtle: '#E9ECEF',
+      border: '#E1E6F0',
+      borderSubtle: '#EDF1F7',
       
-      // Simple accent - professional teal
-      primary: '#0EA5E9',
+      // Primary brand - fresh green
+      primary: '#2FB44A',
       primaryForeground: '#FFFFFF',
-      primaryMuted: '#E0F2FE',
-      primaryDark: '#0284C7',
+      primaryMuted: '#DDF7E3',
+      primaryDark: '#1F8A37',
       
       // Minimal accent
-      accent: '#3B82F6',
-      accentForeground: '#FFFFFF',
-      accentMuted: '#DBEAFE',
+      accent: '#A3E635',
+      accentForeground: '#0B1220',
+      accentMuted: '#ECFCCB',
       
       // System colors - clean
-      success: '#10B981',
+      success: '#16A34A',
       successForeground: '#FFFFFF',
       successMuted: '#D1FAE5',
       
@@ -47,13 +47,13 @@ export const themeTokens = {
       dangerMuted: '#FEE2E2',
       
       // Utility
-      placeholder: '#9CA3AF',
+      placeholder: '#9AA6BF',
       overlay: 'rgba(0, 0, 0, 0.5)',
       
       // Clean cards
       card: '#FFFFFF',
       cardElevated: '#FFFFFF',
-      cardTinted: '#F8F9FA',
+      cardTinted: '#F2FFF5',
       
       // Minimal variants
       lavender: '#A78BFA',
@@ -64,46 +64,46 @@ export const themeTokens = {
       sageMuted: '#D1FAE5',
     },
     dark: {
-      background: '#000000',
-      backgroundSecondary: '#0A0A0A',
-      backgroundTertiary: '#141414',
+      background: '#070A10',
+      backgroundSecondary: '#0B1020',
+      backgroundTertiary: '#0F1730',
       
       foreground: '#FFFFFF',
       foregroundSecondary: '#A1A1AA',
       
-      muted: '#18181B',
-      mutedForeground: '#71717A',
+      muted: '#121A33',
+      mutedForeground: '#8A96B5',
       
-      border: '#27272A',
-      borderSubtle: '#18181B',
+      border: '#1C2547',
+      borderSubtle: '#121A33',
       
-      primary: '#38BDF8',
-      primaryForeground: '#000000',
-      primaryMuted: '#082F49',
-      primaryDark: '#0EA5E9',
+      primary: '#3BD66A',
+      primaryForeground: '#05110A',
+      primaryMuted: '#0F2A18',
+      primaryDark: '#2FB44A',
       
-      accent: '#60A5FA',
-      accentForeground: '#000000',
-      accentMuted: '#1E3A8A',
+      accent: '#A3E635',
+      accentForeground: '#05110A',
+      accentMuted: '#1E2A10',
       
-      success: '#34D399',
-      successForeground: '#000000',
+      success: '#22C55E',
+      successForeground: '#05110A',
       successMuted: '#064E3B',
       
       warning: '#FBBF24',
-      warningForeground: '#000000',
+      warningForeground: '#0B1220',
       warningMuted: '#78350F',
       
       danger: '#F87171',
-      dangerForeground: '#000000',
+      dangerForeground: '#0B1220',
       dangerMuted: '#7F1D1D',
       
-      placeholder: '#52525B',
+      placeholder: '#657196',
       overlay: 'rgba(0, 0, 0, 0.8)',
       
-      card: '#0A0A0A',
-      cardElevated: '#141414',
-      cardTinted: '#18181B',
+      card: '#0B1020',
+      cardElevated: '#0F1730',
+      cardTinted: '#0F2A18',
       
       lavender: '#A78BFA',
       lavenderMuted: '#2E1065',
@@ -126,11 +126,11 @@ export const themeTokens = {
   },
   radius: {
     xs: 4,
-    sm: 6,
-    md: 8,
-    lg: 12,
-    xl: 16,
-    xxl: 20,
+    sm: 10,
+    md: 14,
+    lg: 18,
+    xl: 24,
+    xxl: 28,
     full: 9999,
   },
   typography: {
@@ -138,15 +138,18 @@ export const themeTokens = {
     display: 32,
     displayLarge: 36,
     h1: 28,
-    h2: 24,
+    h2: 26,
     h3: 20,
     h4: 18,
+    // Back-compat aliases (used across screens/components)
+    title: 18,
     subtitle: 16,
     // Body text
     body: 15,
     bodyLarge: 16,
     bodySmall: 14,
     caption: 12,
+    small: 12,
     tiny: 11,
     // Price
     priceDisplay: 24,
@@ -174,8 +177,8 @@ export const themeTokens = {
       ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
       },
       android: { elevation: 1 },
       default: {},
@@ -184,8 +187,8 @@ export const themeTokens = {
       ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
       },
       android: { elevation: 2 },
       default: {},
@@ -194,8 +197,8 @@ export const themeTokens = {
       ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
       },
       android: { elevation: 4 },
       default: {},
@@ -204,8 +207,8 @@ export const themeTokens = {
       ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
+        shadowOpacity: 0.14,
+        shadowRadius: 18,
       },
       android: { elevation: 8 },
       default: {},

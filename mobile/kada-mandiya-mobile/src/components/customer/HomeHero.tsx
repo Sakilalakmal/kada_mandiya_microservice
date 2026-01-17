@@ -15,47 +15,82 @@ export function HomeHero({ onBrowseProducts }: Props) {
 
   return (
     <Card
-      variant="tinted"
+      variant="elevated"
       style={[
         styles.card,
         {
-          borderRadius: theme.radius.lg,
-          padding: theme.spacing.xl,
+          borderRadius: theme.radius.xl,
+          padding: theme.spacing.lg,
         },
       ]}
     >
-      {/* Text content */}
-      <View style={{ gap: theme.spacing.sm }}>
-        <Text
-          style={{
-            color: theme.colors.foreground,
-            fontWeight: '700',
-            fontSize: theme.typography.h2,
-            lineHeight: theme.typography.h2 * theme.typography.lineHeight.tight,
-          }}
-        >
-          Discover Local Artisan Goods
-        </Text>
-        <Text
-          style={{
-            color: theme.colors.foregroundSecondary,
-            fontWeight: '400',
-            fontSize: theme.typography.body,
-            lineHeight: theme.typography.body * theme.typography.lineHeight.normal,
-          }}
-        >
-          Support local vendors, get fresh finds delivered fast
-        </Text>
-      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+        <View style={{ flex: 1, gap: theme.spacing.xs }}>
+          <View
+            style={{
+              alignSelf: 'flex-start',
+              paddingHorizontal: theme.spacing.sm,
+              paddingVertical: theme.spacing.xxs,
+              borderRadius: theme.radius.full,
+              backgroundColor: theme.colors.accentMuted,
+            }}
+          >
+            <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.caption }}>
+              Discount 25%
+            </Text>
+          </View>
 
-      {/* CTA */}
-      <View style={{ marginTop: theme.spacing.md }}>
-        <Button
-          label="Browse Products"
-          onPress={onBrowseProducts}
-          size="md"
-          style={{ alignSelf: 'flex-start' }}
-        />
+          <Text
+            style={{
+              color: theme.colors.foreground,
+              fontWeight: '900',
+              fontSize: theme.typography.h2,
+              lineHeight: theme.typography.h2 * theme.typography.lineHeight.tight,
+              letterSpacing: -0.6,
+            }}
+          >
+            Fresh finds, delivered fast
+          </Text>
+          <Text
+            style={{
+              color: theme.colors.foregroundSecondary,
+              fontWeight: '600',
+              fontSize: theme.typography.bodySmall,
+              lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.normal,
+            }}
+          >
+            Shop local vendors and discover unique products.
+          </Text>
+
+          <View style={{ marginTop: theme.spacing.sm }}>
+            <Button label="Shop now" onPress={onBrowseProducts} size="sm" style={{ alignSelf: 'flex-start' }} />
+          </View>
+        </View>
+
+        <View
+          style={{
+            width: 76,
+            height: 76,
+            borderRadius: theme.radius.full,
+            backgroundColor: theme.colors.primaryMuted,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <View
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: theme.radius.full,
+              backgroundColor: theme.colors.primary,
+              alignItems: 'center',
+              justifyContent: 'center',
+              ...theme.shadow.sm,
+            }}
+          >
+            <Feather name="shopping-bag" size={22} color={theme.colors.primaryForeground} />
+          </View>
+        </View>
       </View>
     </Card>
   );

@@ -109,7 +109,7 @@ export default function CustomerCartScreen() {
         </Text>
       </Pressable>
     );
-  }, [busy, items.length, onClear, theme.colors.danger, theme.spacing.sm, theme.spacing.xs]);
+  }, [busy, items.length, onClear, theme.colors.danger, theme.spacing.sm, theme.spacing.xs, theme.typography.bodySmall]);
 
   const keyExtractor = useCallback((item: CartItem) => item.itemId, []);
 

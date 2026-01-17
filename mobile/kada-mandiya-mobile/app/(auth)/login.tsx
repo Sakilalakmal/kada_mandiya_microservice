@@ -6,9 +6,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useLazyMeQuery, useLoginMutation } from '../../src/api/authApi';
-import { LogoHeader } from '../../src/components/branding/LogoHeader';
 import { Screen } from '../../src/components/layout/Screen';
 import { Button } from '../../src/components/ui/Button';
+import { Card } from '../../src/components/ui/Card';
 import { Input } from '../../src/components/ui/Input';
 import { API_BASE_URL } from '../../src/constants/config';
 import { useTheme } from '../../src/providers/ThemeProvider';
@@ -70,153 +70,126 @@ export default function LoginScreen() {
   });
 
   return (
-    <Screen>
+    <Screen style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ 
-            flexGrow: 1, 
-            justifyContent: 'center', 
-            paddingHorizontal: theme.spacing.lg,
-            paddingTop: theme.spacing.xxxl,
-            paddingBottom: theme.spacing.xxl,
-            gap: theme.spacing.md 
-          }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: theme.spacing.xxxl }}
         >
-          {/* Welcome section with soft background */}
-          <View style={{ 
-            marginBottom: theme.spacing.lg,
-            gap: theme.spacing.xs 
-          }}>
-            <Text style={{ 
-              fontSize: theme.typography.display, 
-              fontWeight: '700', 
-              color: theme.colors.foreground,
-            }}>
-              Welcome back
+          <View
+            style={{
+              backgroundColor: theme.colors.primary,
+              paddingTop: theme.spacing.xxxl,
+              paddingBottom: theme.spacing.xxxxl,
+              paddingHorizontal: theme.spacing.md,
+              borderBottomLeftRadius: theme.radius.xxl,
+              borderBottomRightRadius: theme.radius.xxl,
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: theme.typography.displayLarge, letterSpacing: -1 }}>
+              Kada <Text style={{ color: theme.colors.accent }}>Mandiya</Text>
             </Text>
-            <Text style={{ 
-              fontSize: theme.typography.body, 
-              fontWeight: '400', 
-              color: theme.colors.foregroundSecondary,
-            }}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '700', fontSize: theme.typography.body }}>
               Sign in to continue shopping
             </Text>
           </View>
 
-          {serverError ? (
-            <View
-              style={{
-                padding: theme.spacing.md,
-                borderRadius: theme.radius.md,
-                borderWidth: 1,
-                borderColor: theme.colors.danger,
-                backgroundColor: theme.colors.dangerMuted,
-                marginBottom: theme.spacing.sm,
-              }}
-            >
-              <Text style={{ 
-                color: theme.colors.danger, 
-                fontWeight: '500',
-                fontSize: theme.typography.bodySmall,
-                lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
-              }}>
-                {serverError}
-              </Text>
-            </View>
-          ) : null}
+          <View style={{ marginTop: -theme.spacing.xl, paddingHorizontal: theme.spacing.md }}>
+            <Card variant="elevated" style={{ gap: theme.spacing.lg, padding: theme.spacing.lg }}>
+              {serverError ? (
+                <View
+                  style={{
+                    padding: theme.spacing.md,
+                    borderRadius: theme.radius.lg,
+                    borderWidth: 1,
+                    borderColor: theme.colors.danger,
+                    backgroundColor: theme.colors.dangerMuted,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: theme.colors.danger,
+                      fontWeight: '700',
+                      fontSize: theme.typography.bodySmall,
+                      lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
+                    }}
+                  >
+                    {serverError}
+                  </Text>
+                </View>
+              ) : null}
 
-          <View style={{ gap: theme.spacing.lg }}>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-                <Input
-                  label="Email"
-                  placeholder="you@example.com"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                  autoComplete="email"
-                  onBlur={onBlur}
-                  value={value}
-                  onChangeText={onChange}
-                  error={error?.message}
+              <View style={{ gap: theme.spacing.lg }}>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <Input
+                      label="Email"
+                      placeholder="you@example.com"
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      textContentType="emailAddress"
+                      autoComplete="email"
+                      onBlur={onBlur}
+                      value={value}
+                      onChangeText={onChange}
+                      error={error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-                <Input
-                  label="Password"
-                  placeholder="••••••••"
-                  secureTextEntry
-                  textContentType="password"
-                  autoComplete="password"
-                  onBlur={onBlur}
-                  value={value}
-                  onChangeText={onChange}
-                  error={error?.message}
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <Input
+                      label="Password"
+                      placeholder="********"
+                      secureTextEntry
+                      textContentType="password"
+                      autoComplete="password"
+                      onBlur={onBlur}
+                      value={value}
+                      onChangeText={onChange}
+                      error={error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
-          </View>
+              </View>
 
-          <Link href="/(auth)/forgot-password" asChild>
-            <Pressable style={{ alignSelf: 'flex-end', marginTop: theme.spacing.sm }}>
-              <Text style={{ 
-                color: theme.colors.primary, 
-                fontWeight: '600',
-                fontSize: theme.typography.bodySmall,
-              }}>
-                Forgot password?
-              </Text>
-            </Pressable>
-          </Link>
+              <Link href="/(auth)/forgot-password" asChild>
+                <Pressable style={{ alignSelf: 'flex-end' }}>
+                  <Text style={{ color: theme.colors.primaryDark, fontWeight: '800', fontSize: theme.typography.bodySmall }}>
+                    Forgot password?
+                  </Text>
+                </Pressable>
+              </Link>
 
-          <Button
-            label="Sign in"
-            size="md"
-            onPress={onSubmit}
-            loading={isSubmitting || loginState.isLoading}
-            disabled={loginState.isLoading}
-            style={{ marginTop: theme.spacing.md }}
-          />
+              <Button
+                label="Sign in"
+                size="md"
+                onPress={onSubmit}
+                loading={isSubmitting || loginState.isLoading}
+                disabled={loginState.isLoading}
+              />
 
-          {/* Spacer */}
-          <View style={{ height: theme.spacing.lg }} />
-
-          {/* Sign up link */}
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: theme.spacing.xs,
-          }}>
-            <Text style={{ 
-              color: theme.colors.foregroundSecondary, 
-              fontWeight: '400',
-              fontSize: theme.typography.body,
-            }}>
-              New here?
-            </Text>
-            <Link href="/(auth)/register" asChild>
-              <Pressable>
-                <Text style={{ 
-                  color: theme.colors.primary, 
-                  fontWeight: '600',
-                  fontSize: theme.typography.body,
-                }}>
-                  Create account
+              <View style={{ alignItems: 'center', gap: theme.spacing.xs }}>
+                <Text style={{ color: theme.colors.mutedForeground, fontWeight: '600', fontSize: theme.typography.bodySmall }}>
+                  New here?
                 </Text>
-              </Pressable>
-            </Link>
+                <Link href="/(auth)/register" asChild>
+                  <Pressable>
+                    <Text style={{ color: theme.colors.primaryDark, fontWeight: '900', fontSize: theme.typography.body }}>
+                      Create account
+                    </Text>
+                  </Pressable>
+                </Link>
+              </View>
+            </Card>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

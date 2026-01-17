@@ -46,8 +46,8 @@ export function Header({ title, subtitle, canGoBack, right, style }: Props) {
         styles.wrap,
         {
           gap: theme.spacing.xs,
-          paddingTop: theme.spacing.xs,
-          paddingBottom: theme.spacing.xs,
+          paddingTop: theme.spacing.sm,
+          paddingBottom: theme.spacing.sm,
         },
         style,
       ]}
@@ -66,9 +66,10 @@ export function Header({ title, subtitle, canGoBack, right, style }: Props) {
               {
                 width: 40,
                 height: 40,
-                borderRadius: theme.radius.sm,
-                backgroundColor: theme.colors.muted,
+                borderRadius: theme.radius.full,
+                backgroundColor: theme.colors.backgroundSecondary,
                 opacity: pressed ? 0.7 : 1,
+                ...theme.shadow.sm,
               },
             ]}
           >
@@ -84,9 +85,9 @@ export function Header({ title, subtitle, canGoBack, right, style }: Props) {
               styles.title,
               {
                 color: theme.colors.foreground,
-                fontSize: theme.typography.h2,
-                lineHeight: theme.typography.h2 * theme.typography.lineHeight.tight,
-                letterSpacing: -0.5,
+                fontSize: theme.typography.h1,
+                lineHeight: theme.typography.h1 * theme.typography.lineHeight.tight,
+                letterSpacing: -0.6,
               },
             ]}
             numberOfLines={1}

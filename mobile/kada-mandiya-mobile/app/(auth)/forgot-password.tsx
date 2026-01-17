@@ -1,13 +1,13 @@
 import React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Screen } from '../../src/components/layout/Screen';
-import { LogoHeader } from '../../src/components/branding/LogoHeader';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
+import { Card } from '../../src/components/ui/Card';
 import { useTheme } from '../../src/providers/ThemeProvider';
 
 const schema = z.object({
@@ -33,41 +33,60 @@ export default function ForgotPasswordScreen() {
   });
 
   return (
-    <Screen>
+    <Screen style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', gap: theme.spacing.lg }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: theme.spacing.xxxl }}
         >
-          <LogoHeader subtitle="Reset your password" />
-
-          <Text style={{ fontSize: 26, fontWeight: '800', color: theme.colors.foreground }}>
-            Forgot password
+          <Text
+            style={{
+              backgroundColor: theme.colors.primary,
+              paddingTop: theme.spacing.xxxl,
+              paddingBottom: theme.spacing.xxxxl,
+              paddingHorizontal: theme.spacing.md,
+              borderBottomLeftRadius: theme.radius.xxl,
+              borderBottomRightRadius: theme.radius.xxl,
+              color: '#FFFFFF',
+              fontWeight: '900',
+              fontSize: theme.typography.display,
+              letterSpacing: -0.8,
+            }}
+          >
+            Reset password
           </Text>
 
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-              <Input
-                label="Email"
-                placeholder="you@example.com"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                textContentType="emailAddress"
-                autoComplete="email"
-                onBlur={onBlur}
-                value={value}
-                onChangeText={onChange}
-                error={error?.message}
-              />
-            )}
-          />
+          <View style={{ marginTop: -theme.spacing.xl, paddingHorizontal: theme.spacing.md }}>
+            <Card variant="elevated" style={{ gap: theme.spacing.lg, padding: theme.spacing.lg }}>
+              <Text style={{ color: theme.colors.foregroundSecondary, fontWeight: '700', fontSize: theme.typography.body }}>
+                Enter your email address and we'll send you a reset link.
+              </Text>
 
-          <Button label="Send reset link" onPress={onSubmit} loading={isSubmitting} />
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                  <Input
+                    label="Email"
+                    placeholder="you@example.com"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    textContentType="emailAddress"
+                    autoComplete="email"
+                    onBlur={onBlur}
+                    value={value}
+                    onChangeText={onChange}
+                    error={error?.message}
+                  />
+                )}
+              />
+
+              <Button label="Send reset link" onPress={onSubmit} loading={isSubmitting} />
+            </Card>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
