@@ -70,6 +70,8 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
   tagTypes: ['Vendor', 'Me', 'Product', 'VendorProducts', 'VendorProduct', 'Cart', 'Orders', 'Order', 'Payment'],
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   endpoints: () => ({}),
 });
 

@@ -31,17 +31,17 @@ export function formatOrderIdShort(orderId: string): string {
 
 function accentForVariant(theme: AppTheme, variant: OrderBadgeVariant): string {
   if (variant === 'danger') return theme.colors.danger;
-  if (variant === 'info') return theme.colors.primary;
-  if (variant === 'success') return theme.colors.primary;
-  return theme.colors.placeholder;
+  if (variant === 'info') return theme.colors.primaryDark;
+  if (variant === 'success') return theme.colors.success;
+  return theme.colors.mutedForeground;
 }
 
 export function getOrderStatusBadgeStyle(theme: AppTheme, status: OrderStatus) {
   const meta = getOrderStatusBadgeMeta(status);
   const accent = accentForVariant(theme, meta.variant);
 
-  const bgAlpha = theme.scheme === 'dark' ? 0.18 : 0.1;
-  const borderAlpha = theme.scheme === 'dark' ? 0.35 : 0.22;
+  const bgAlpha = theme.scheme === 'dark' ? 0.24 : 0.14;
+  const borderAlpha = theme.scheme === 'dark' ? 0.5 : 0.28;
 
   return {
     ...meta,
@@ -74,8 +74,8 @@ export function getPaymentStatusBadgeStyle(theme: AppTheme, status: PaymentStatu
   const meta = getPaymentStatusBadgeMeta(status);
   const accent = accentForVariant(theme, meta.variant);
 
-  const bgAlpha = theme.scheme === 'dark' ? 0.18 : 0.1;
-  const borderAlpha = theme.scheme === 'dark' ? 0.35 : 0.22;
+  const bgAlpha = theme.scheme === 'dark' ? 0.24 : 0.14;
+  const borderAlpha = theme.scheme === 'dark' ? 0.5 : 0.28;
 
   return {
     ...meta,

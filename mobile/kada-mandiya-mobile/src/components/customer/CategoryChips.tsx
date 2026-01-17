@@ -58,13 +58,14 @@ function Chip({
           {
             transform: [{ scale }],
             borderRadius: theme.radius.full,
-            borderWidth: 0,
-            borderColor: 'transparent',
-            backgroundColor: selected ? theme.colors.primaryMuted : theme.colors.backgroundSecondary,
+            borderWidth: 1,
+            borderColor: selected ? theme.colors.primaryDark : theme.colors.borderSubtle,
+            backgroundColor: selected ? theme.colors.primaryMuted : theme.colors.card,
             paddingHorizontal: theme.spacing.lg,
             paddingVertical: theme.spacing.sm,
             height: 36,
             justifyContent: 'center',
+            ...theme.shadow.sm,
           },
         ]}
       >

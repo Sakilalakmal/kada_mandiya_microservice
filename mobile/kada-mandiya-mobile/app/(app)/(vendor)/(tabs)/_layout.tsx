@@ -1,12 +1,16 @@
 import React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '../../../../src/providers/ThemeProvider';
 
 export default function VendorTabsLayout() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, theme.spacing.sm);
+  const tabBarHeight = 60 + bottomPad;
 
   return (
     <Tabs
@@ -19,16 +23,20 @@ export default function VendorTabsLayout() {
         tabBarStyle: {
           backgroundColor: theme.colors.card,
           borderTopWidth: 0,
-          height: Platform.OS === 'ios' ? 92 : 72,
-          paddingHorizontal: theme.spacing.md,
+          height: tabBarHeight,
           paddingTop: theme.spacing.sm,
-          paddingBottom: Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.md,
-          borderTopLeftRadius: theme.radius.xxl,
-          borderTopRightRadius: theme.radius.xxl,
+          paddingBottom: bottomPad,
+          borderRadius: theme.radius.xxl,
+          left: theme.spacing.md,
+          right: theme.spacing.md,
+          bottom: theme.spacing.sm,
+          position: 'absolute',
+          overflow: 'hidden',
           ...theme.shadow.lg,
         },
         tabBarLabelStyle: { fontWeight: '700', fontSize: theme.typography.caption, marginTop: 2 },
         tabBarIconStyle: { marginTop: 4 },
+        tabBarItemStyle: { paddingVertical: theme.spacing.xxs },
       }}
     >
       <Tabs.Screen

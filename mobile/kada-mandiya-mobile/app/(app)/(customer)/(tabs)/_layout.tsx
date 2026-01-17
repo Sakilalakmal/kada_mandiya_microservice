@@ -1,18 +1,21 @@
 import React from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useGetCartQuery } from '../../../../src/api/cartApi';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
 
 export default function CustomerTabsLayout() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const { data: cart } = useGetCartQuery(undefined, { refetchOnFocus: true, refetchOnReconnect: true });
 
   const cartCount = (cart?.items ?? []).reduce((sum, item) => sum + Math.max(0, Math.floor(Number(item.qty ?? 0))), 0);
 
-  const tabBarHeight = Platform.OS === 'ios' ? 92 : 72;
+  const bottomPad = Math.max(insets.bottom, theme.spacing.sm);
+  const tabBarHeight = 60 + bottomPad;
 
   return (
     <Tabs
@@ -26,11 +29,14 @@ export default function CustomerTabsLayout() {
           backgroundColor: theme.colors.card,
           borderTopWidth: 0,
           height: tabBarHeight,
-          paddingHorizontal: theme.spacing.md,
           paddingTop: theme.spacing.sm,
-          paddingBottom: Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.md,
-          borderTopLeftRadius: theme.radius.xxl,
-          borderTopRightRadius: theme.radius.xxl,
+          paddingBottom: bottomPad,
+          borderRadius: theme.radius.xxl,
+          left: theme.spacing.md,
+          right: theme.spacing.md,
+          bottom: theme.spacing.sm,
+          position: 'absolute',
+          overflow: 'hidden',
           ...theme.shadow.lg,
         },
         tabBarLabelStyle: {
@@ -40,6 +46,9 @@ export default function CustomerTabsLayout() {
         },
         tabBarIconStyle: {
           marginTop: 4,
+        },
+        tabBarItemStyle: {
+          paddingVertical: theme.spacing.xxs,
         },
       }}
     >

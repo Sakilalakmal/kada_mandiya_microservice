@@ -22,9 +22,10 @@ export const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createOrder: builder.mutation<CreateOrderResponse, CreateOrderRequest>({
       query: (body) => ({ url: '/orders', method: 'POST', body }),
-      invalidatesTags: (_res, _err): (OrdersListTag | { type: 'Cart'; id: 'CURRENT' })[] => [
+      invalidatesTags: (_res, _err): (OrdersListTag | { type: 'Cart'; id: 'CURRENT' } | { type: 'Product'; id: 'LIST' })[] => [
         { type: 'Orders', id: 'LIST' },
         { type: 'Cart', id: 'CURRENT' },
+        { type: 'Product', id: 'LIST' },
       ],
       async onQueryStarted(_args, { dispatch, queryFulfilled }) {
         try {

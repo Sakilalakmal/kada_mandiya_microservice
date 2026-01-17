@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { orderApi, useGetMyOrdersQuery } from '../../../../src/api/orderApi';
 import { CategoryChips, type CategoryChip } from '../../../../src/components/customer/CategoryChips';
@@ -64,6 +65,7 @@ const CustomerOrderRow = React.memo(function CustomerOrderRow({
 
 export default function CustomerOrders() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const isFocused = useIsFocused();
   const [filter, setFilter] = useState(FILTERS[0]?.key ?? 'all');
@@ -128,8 +130,10 @@ export default function CustomerOrders() {
     [currency, openOrder, theme.spacing.md]
   );
 
+  const bottomSpacer = 60 + Math.max(insets.bottom, theme.spacing.sm) + theme.spacing.md;
+
   return (
-    <Screen style={{ paddingBottom: theme.spacing.lg }}>
+    <Screen style={{ paddingBottom: bottomSpacer }}>
       <Header title="Orders" subtitle="Your recent purchases." right={headerRight} />
 
       <View style={{ flex: 1, marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
@@ -169,7 +173,7 @@ export default function CustomerOrders() {
             showsVerticalScrollIndicator={false}
             refreshing={isFetching}
             onRefresh={() => refetch()}
-            contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
+            contentContainerStyle={{ paddingBottom: bottomSpacer }}
           />
         )}
       </View>

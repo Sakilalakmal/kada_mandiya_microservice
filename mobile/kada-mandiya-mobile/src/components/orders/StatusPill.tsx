@@ -18,16 +18,19 @@ function StatusPillInner({ label, accent, backgroundColor, borderColor, style }:
     () => ({
       backgroundColor,
       borderColor,
-      borderRadius: theme.radius.lg,
-      paddingHorizontal: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs / 2,
+      borderRadius: theme.radius.full,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      minHeight: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
     }),
-    [backgroundColor, borderColor, theme.radius.lg, theme.spacing.sm, theme.spacing.xs]
+    [backgroundColor, borderColor, theme.radius.full, theme.spacing.md, theme.spacing.xs]
   );
 
   return (
     <View style={[styles.pill, containerStyle, style]}>
-      <Text style={[styles.text, { color: accent, fontSize: theme.typography.small }]} numberOfLines={1}>
+      <Text style={[styles.text, { color: accent, fontSize: theme.typography.caption }]} numberOfLines={1}>
         {label}
       </Text>
     </View>

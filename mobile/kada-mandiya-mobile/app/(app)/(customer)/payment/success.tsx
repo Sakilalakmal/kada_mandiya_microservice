@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { cartApi } from '../../../../src/api/cartApi';
 import { orderApi } from '../../../../src/api/orderApi';
 import { paymentApi } from '../../../../src/api/paymentApi';
+import { publicProductApi } from '../../../../src/api/publicProductApi';
 import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
 import { Button } from '../../../../src/components/ui/Button';
@@ -31,6 +32,32 @@ export default function PaymentSuccessScreen() {
     dispatch(cartApi.util.invalidateTags([{ type: 'Cart', id: 'CURRENT' }]));
     dispatch(orderApi.util.invalidateTags([{ type: 'Orders', id: 'LIST' }]));
     if (orderId) dispatch(paymentApi.util.invalidateTags([{ type: 'Payment', id: orderId }]));
+  }, [dispatch, orderId]);
+
+  useEffect(() => {
+    const invalidate = (productIds: string[]) => {
+      const unique = Array.from(new Set(productIds.map((p) => String(p ?? '').trim()).filter(Boolean)));
+      dispatch(
+        publicProductApi.util.invalidateTags([
+          { type: 'Product', id: 'LIST' },
+          ...unique.map((id) => ({ type: 'Product' as const, id })),
+        ])
+      );
+    };
+
+    if (!orderId) {
+      invalidate([]);
+      return;
+    }
+
+    dispatch(orderApi.endpoints.getOrderById.initiate(orderId, { forceRefetch: true }))
+      .unwrap()
+      .then((order) => {
+        invalidate((order.items ?? []).map((i) => i.productId));
+      })
+      .catch(() => {
+        invalidate([]);
+      });
   }, [dispatch, orderId]);
 
   const subtitle = useMemo(() => {
