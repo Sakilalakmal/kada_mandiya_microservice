@@ -6,9 +6,9 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useLazyMeQuery, useLoginMutation, useRegisterMutation } from '../../src/api/authApi';
-import { LogoHeader } from '../../src/components/branding/LogoHeader';
 import { Screen } from '../../src/components/layout/Screen';
 import { Button } from '../../src/components/ui/Button';
+import { Card } from '../../src/components/ui/Card';
 import { Input } from '../../src/components/ui/Input';
 import { API_BASE_URL } from '../../src/constants/config';
 import { useTheme } from '../../src/providers/ThemeProvider';
@@ -90,177 +90,147 @@ export default function RegisterScreen() {
   const loading = isSubmitting || registerState.isLoading || loginState.isLoading;
 
   return (
-    <Screen>
+    <Screen style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ 
-            flexGrow: 1, 
-            justifyContent: 'center',
-            paddingHorizontal: theme.spacing.lg,
-            paddingTop: theme.spacing.xxxl,
-            paddingBottom: theme.spacing.xxl,
-            gap: theme.spacing.md 
-          }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: theme.spacing.xxxl }}
         >
-          {/* Welcome section */}
-          <View style={{ 
-            marginBottom: theme.spacing.xl,
-            gap: theme.spacing.xs 
-          }}>
-            <Text style={{ 
-              fontSize: theme.typography.displayLarge, 
-              fontWeight: '900', 
-              color: theme.colors.foreground,
-              letterSpacing: -0.5,
-            }}>
+          <View
+            style={{
+              backgroundColor: theme.colors.primary,
+              paddingTop: theme.spacing.xxxl,
+              paddingBottom: theme.spacing.xxxxl,
+              paddingHorizontal: theme.spacing.md,
+              borderBottomLeftRadius: theme.radius.xxl,
+              borderBottomRightRadius: theme.radius.xxl,
+            }}
+          >
+            <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: theme.typography.displayLarge, letterSpacing: -1 }}>
               Create account
             </Text>
-            <Text style={{ 
-              fontSize: theme.typography.bodyLarge, 
-              fontWeight: '500', 
-              color: theme.colors.foregroundSecondary,
-              marginTop: theme.spacing.xs,
-            }}>
+            <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '700', fontSize: theme.typography.body }}>
               Start your shopping journey today
             </Text>
           </View>
 
-          {serverError ? (
-            <View
-              style={{
-                padding: theme.spacing.lg,
-                borderRadius: theme.radius.lg,
-                borderWidth: 0,
-                backgroundColor: theme.colors.dangerMuted,
-                marginBottom: theme.spacing.sm,
-              }}
-            >
-              <Text style={{ 
-                color: theme.colors.danger, 
-                fontWeight: '600',
-                fontSize: theme.typography.bodySmall,
-                lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
-              }}>
-                {serverError}
-              </Text>
-            </View>
-          ) : null}
+          <View style={{ marginTop: -theme.spacing.xl, paddingHorizontal: theme.spacing.md }}>
+            <Card variant="elevated" style={{ gap: theme.spacing.lg, padding: theme.spacing.lg }}>
+              {serverError ? (
+                <View
+                  style={{
+                    padding: theme.spacing.md,
+                    borderRadius: theme.radius.lg,
+                    borderWidth: 1,
+                    borderColor: theme.colors.danger,
+                    backgroundColor: theme.colors.dangerMuted,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: theme.colors.danger,
+                      fontWeight: '700',
+                      fontSize: theme.typography.bodySmall,
+                      lineHeight: theme.typography.bodySmall * theme.typography.lineHeight.relaxed,
+                    }}
+                  >
+                    {serverError}
+                  </Text>
+                </View>
+              ) : null}
 
-          <View style={{ gap: theme.spacing.lg }}>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-                <Input
-                  label="Name"
-                  placeholder="Your name"
-                  textContentType="name"
-                  autoComplete="name"
-                  onBlur={onBlur}
-                  value={value}
-                  onChangeText={onChange}
-                  error={error?.message}
+              <View style={{ gap: theme.spacing.lg }}>
+                <Controller
+                  control={control}
+                  name="name"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <Input
+                      label="Name"
+                      placeholder="Your name"
+                      textContentType="name"
+                      autoComplete="name"
+                      onBlur={onBlur}
+                      value={value}
+                      onChangeText={onChange}
+                      error={error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-                <Input
-                  label="Email"
-                  placeholder="you@example.com"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                  autoComplete="email"
-                  onBlur={onBlur}
-                  value={value}
-                  onChangeText={onChange}
-                  error={error?.message}
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <Input
+                      label="Email"
+                      placeholder="you@example.com"
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      textContentType="emailAddress"
+                      autoComplete="email"
+                      onBlur={onBlur}
+                      value={value}
+                      onChangeText={onChange}
+                      error={error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-                <Input
-                  label="Password"
-                  placeholder="••••••••"
-                  secureTextEntry
-                  textContentType="newPassword"
-                  autoComplete="password-new"
-                  onBlur={onBlur}
-                  value={value}
-                  onChangeText={onChange}
-                  error={error?.message}
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <Input
+                      label="Password"
+                      placeholder="********"
+                      secureTextEntry
+                      textContentType="newPassword"
+                      autoComplete="password-new"
+                      onBlur={onBlur}
+                      value={value}
+                      onChangeText={onChange}
+                      error={error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Controller
-              control={control}
-              name="confirmPassword"
-              render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-                <Input
-                  label="Confirm password"
-                  placeholder="••••••••"
-                  secureTextEntry
-                  textContentType="newPassword"
-                  autoComplete="password-new"
-                  onBlur={onBlur}
-                  value={value}
-                  onChangeText={onChange}
-                  error={error?.message}
+                <Controller
+                  control={control}
+                  name="confirmPassword"
+                  render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+                    <Input
+                      label="Confirm password"
+                      placeholder="********"
+                      secureTextEntry
+                      textContentType="newPassword"
+                      autoComplete="password-new"
+                      onBlur={onBlur}
+                      value={value}
+                      onChangeText={onChange}
+                      error={error?.message}
+                    />
+                  )}
                 />
-              )}
-            />
-          </View>
+              </View>
 
-          <Button 
-            label="Create account" 
-            size="lg"
-            onPress={onSubmit} 
-            loading={loading} 
-            disabled={loading}
-            style={{ marginTop: theme.spacing.lg }}
-          />
+              <Button label="Create account" size="md" onPress={onSubmit} loading={loading} disabled={loading} />
 
-          {/* Spacer */}
-          <View style={{ height: theme.spacing.xl }} />
-
-          {/* Sign in link */}
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: theme.spacing.xs,
-          }}>
-            <Text style={{ 
-              color: theme.colors.foregroundSecondary, 
-              fontWeight: '500',
-              fontSize: theme.typography.body,
-            }}>
-              Already have an account?
-            </Text>
-            <Link href="/(auth)/login" asChild>
-              <Pressable>
-                <Text style={{ 
-                  color: theme.colors.primary, 
-                  fontWeight: '700',
-                  fontSize: theme.typography.body,
-                }}>
-                  Sign in
+              <View style={{ alignItems: 'center', gap: theme.spacing.xs }}>
+                <Text style={{ color: theme.colors.mutedForeground, fontWeight: '600', fontSize: theme.typography.bodySmall }}>
+                  Already have an account?
                 </Text>
-              </Pressable>
-            </Link>
+                <Link href="/(auth)/login" asChild>
+                  <Pressable>
+                    <Text style={{ color: theme.colors.primaryDark, fontWeight: '900', fontSize: theme.typography.body }}>
+                      Sign in
+                    </Text>
+                  </Pressable>
+                </Link>
+              </View>
+            </Card>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useAddToCartMutation } from '../../../../src/api/cartApi';
 import { useGetPublicProductByIdQuery } from '../../../../src/api/publicProductApi';
-import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
 import { Button } from '../../../../src/components/ui/Button';
 import { Card } from '../../../../src/components/ui/Card';
@@ -50,10 +49,89 @@ export default function CustomerProductDetailsScreen() {
   }, [toastVisible]);
 
   return (
-    <Screen scroll>
-      <Header title={title} subtitle="Product Details" canGoBack />
+    <Screen scroll style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
+      {/* Hero image */}
+      <View
+        style={{
+          backgroundColor: theme.colors.primary,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: theme.spacing.xxxxl,
+          borderBottomLeftRadius: theme.radius.xxl,
+          borderBottomRightRadius: theme.radius.xxl,
+        }}
+      >
+        <View style={{ paddingHorizontal: theme.spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: theme.radius.full,
+                backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="arrow-left" size={20} color="#FFFFFF" />
+            </View>
+          </Pressable>
 
-      <View style={{ marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
+          <View style={{ flex: 1, paddingHorizontal: theme.spacing.md }}>
+            <Text numberOfLines={1} style={{ color: '#FFFFFF', fontWeight: '900', fontSize: theme.typography.h4, letterSpacing: -0.4 }}>
+              {title}
+            </Text>
+            <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '700', fontSize: theme.typography.caption }}>
+              Product details
+            </Text>
+          </View>
+
+          <View style={{ width: 40 }} />
+        </View>
+
+        <View style={{ marginTop: theme.spacing.lg, paddingHorizontal: theme.spacing.md, alignItems: 'center' }}>
+          <View
+            style={{
+              width: '100%',
+              height: 300,
+              borderRadius: theme.radius.xl,
+              backgroundColor: 'rgba(255, 255, 255, 0.16)',
+              overflow: 'hidden',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" size="large" />
+            ) : imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+            ) : (
+              <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
+                <Feather name="image" size={48} color="rgba(255,255,255,0.9)" />
+                <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '700' }}>No image</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Bottom sheet */}
+      <View style={{ marginTop: -theme.spacing.xl }}>
+        <View
+          style={{
+            backgroundColor: theme.colors.background,
+            borderTopLeftRadius: theme.radius.xxl,
+            borderTopRightRadius: theme.radius.xxl,
+            paddingTop: theme.spacing.xl,
+            paddingHorizontal: theme.spacing.md,
+            paddingBottom: theme.spacing.xxxl,
+          }}
+        >
+          <View style={{ gap: theme.spacing.lg }}>
         {!id ? (
           <Card style={{ gap: theme.spacing.md }}>
             <Text style={{ color: theme.colors.foreground, fontWeight: '800', fontSize: theme.typography.h3 }}>
@@ -94,29 +172,8 @@ export default function CustomerProductDetailsScreen() {
           </Card>
         ) : (
           <>
-            {/* Large Product Image */}
-            <Card noPadding variant="elevated" style={{ overflow: 'hidden' }}>
-              <View
-                style={{
-                  height: 320,
-                  backgroundColor: theme.colors.backgroundSecondary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {imageUrl ? (
-                  <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                ) : (
-                  <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
-                    <Feather name="image" size={48} color={theme.colors.placeholder} />
-                    <Text style={{ color: theme.colors.placeholder, fontWeight: '600' }}>No image</Text>
-                  </View>
-                )}
-              </View>
-            </Card>
-
             {/* Product Info Card */}
-            <Card style={{ gap: theme.spacing.lg }}>
+            <Card variant="elevated" style={{ gap: theme.spacing.lg }}>
               <View style={{ gap: theme.spacing.xs }}>
                 <Text style={{ color: theme.colors.foreground, fontWeight: '900', fontSize: theme.typography.h2, letterSpacing: -0.5 }}>
                   {product.name}
@@ -264,6 +321,8 @@ export default function CustomerProductDetailsScreen() {
           </>
         )}
 
+          </View>
+        </View>
       </View>
 
       <Toast

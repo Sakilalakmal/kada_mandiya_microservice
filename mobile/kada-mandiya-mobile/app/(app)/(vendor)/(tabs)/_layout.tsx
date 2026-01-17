@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
@@ -12,32 +13,66 @@ export default function VendorTabsLayout() {
       initialRouteName="profile"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: theme.colors.placeholder,
+        tabBarActiveTintColor: theme.colors.primaryDark,
+        tabBarInactiveTintColor: theme.colors.mutedForeground,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
-          borderTopColor: theme.colors.border,
-          borderTopWidth: 1,
-          height: theme.spacing.xl + theme.spacing.lg + theme.spacing.xs,
-          paddingTop: theme.spacing.xs,
-          paddingBottom: theme.spacing.xs,
+          backgroundColor: theme.colors.card,
+          borderTopWidth: 0,
+          height: Platform.OS === 'ios' ? 92 : 72,
+          paddingHorizontal: theme.spacing.md,
+          paddingTop: theme.spacing.sm,
+          paddingBottom: Platform.OS === 'ios' ? theme.spacing.xl : theme.spacing.md,
+          borderTopLeftRadius: theme.radius.xxl,
+          borderTopRightRadius: theme.radius.xxl,
+          ...theme.shadow.lg,
         },
-        tabBarLabelStyle: { fontWeight: '700', fontSize: theme.typography.small },
+        tabBarLabelStyle: { fontWeight: '700', fontSize: theme.typography.caption, marginTop: 2 },
+        tabBarIconStyle: { marginTop: 4 },
       }}
     >
       <Tabs.Screen
         name="orders"
         options={{
           title: 'Orders',
-          tabBarIcon: ({ color, size }) => <Feather name="shopping-bag" size={size} color={color} />,
+          tabBarIcon: ({ size, focused }) => (
+            <View
+              style={{
+                width: 44,
+                height: 34,
+                borderRadius: theme.radius.full,
+                backgroundColor: focused ? theme.colors.primaryMuted : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather
+                name="shopping-bag"
+                size={size}
+                color={focused ? theme.colors.primaryDark : theme.colors.mutedForeground}
+              />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
+          tabBarIcon: ({ size, focused }) => (
+            <View
+              style={{
+                width: 44,
+                height: 34,
+                borderRadius: theme.radius.full,
+                backgroundColor: focused ? theme.colors.primaryMuted : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Feather name="user" size={size} color={focused ? theme.colors.primaryDark : theme.colors.mutedForeground} />
+            </View>
+          ),
         }}
       />
     </Tabs>

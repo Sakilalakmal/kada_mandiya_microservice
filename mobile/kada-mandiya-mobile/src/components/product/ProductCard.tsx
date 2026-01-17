@@ -29,7 +29,6 @@ type Props = {
 function ProductCardInner({ product, variant = 'featured', onPress, onPressProduct, style }: Props) {
   const { theme } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
 
   const handlePress = useMemo(() => {
     if (typeof onPress === 'function') return onPress;
@@ -90,10 +89,11 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
     <Pressable onPress={handlePress} onPressIn={animateIn} onPressOut={animateOut} style={style}>
       <Animated.View style={{ transform: [{ scale }] }}>
         <Card
-          variant="bordered"
+          variant="elevated"
           noPadding
           style={{
             overflow: 'hidden',
+            borderRadius: theme.radius.xl,
           }}
         >
           {/* Product Image */}
@@ -114,10 +114,29 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
                 <Feather name="image" size={20} color={theme.colors.placeholder} />
               </View>
             )}
+
+            {/* Wish icon (decorative) */}
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                top: theme.spacing.sm,
+                right: theme.spacing.sm,
+                width: 34,
+                height: 34,
+                borderRadius: theme.radius.full,
+                backgroundColor: 'rgba(255, 255, 255, 0.92)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                ...theme.shadow.sm,
+              }}
+            >
+              <Feather name="heart" size={16} color={theme.colors.mutedForeground} />
+            </View>
           </View>
 
           {/* Product Info */}
-          <View style={{ padding: theme.spacing.md, gap: 4 }}>
+          <View style={{ padding: theme.spacing.md, gap: 6 }}>
             <Text
               numberOfLines={2}
               style={{
@@ -129,16 +148,34 @@ function ProductCardInner({ product, variant = 'featured', onPress, onPressProdu
             >
               {product.name}
             </Text>
-            <Text
-              style={{
-                color: theme.colors.foreground,
-                fontWeight: '700',
-                fontSize: sizes.priceSize,
-                marginTop: 2,
-              }}
-            >
-              {formatMoney(product.price, product.currency)}
-            </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.sm }}>
+              <Text
+                style={{
+                  color: theme.colors.foreground,
+                  fontWeight: '900',
+                  fontSize: sizes.priceSize,
+                }}
+              >
+                {formatMoney(product.price, product.currency)}
+              </Text>
+
+              {variant === 'grid' ? (
+                <View
+                  pointerEvents="none"
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: theme.radius.full,
+                    backgroundColor: theme.colors.primaryMuted,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Feather name="plus" size={18} color={theme.colors.primaryDark} />
+                </View>
+              ) : null}
+            </View>
           </View>
         </Card>
       </Animated.View>

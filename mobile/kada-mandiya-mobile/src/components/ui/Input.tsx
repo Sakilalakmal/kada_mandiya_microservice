@@ -18,6 +18,7 @@ type Props = TextInputProps & {
   leadingIcon?: React.ReactNode;
   trailingIcon?: React.ReactNode;
   inputRef?: React.Ref<TextInput>;
+  variant?: 'default' | 'filled' | 'search';
 };
 
 export function Input({
@@ -27,6 +28,7 @@ export function Input({
   leadingIcon,
   trailingIcon,
   inputRef,
+  variant = 'filled',
   style,
   ...props
 }: Props) {
@@ -41,7 +43,10 @@ export function Input({
     ? theme.colors.danger
     : focused
       ? theme.colors.primary
-      : theme.colors.border;
+      : theme.colors.borderSubtle;
+
+  const backgroundColor =
+    variant === 'default' ? theme.colors.background : variant === 'search' ? theme.colors.backgroundSecondary : theme.colors.card;
 
   const hasLeadingIcon = Boolean(leadingIcon);
   const hasTrailingIcon = Boolean(trailingIcon);
@@ -67,7 +72,7 @@ export function Input({
     return {
       height: isMultiline ? undefined : controlHeight,
       minHeight: isMultiline ? controlHeight * 2 : controlHeight,
-      borderRadius: theme.radius.md,
+      borderRadius: variant === 'search' ? theme.radius.full : theme.radius.lg,
       paddingHorizontal: theme.spacing.md,
       paddingLeft: theme.spacing.md + iconPadding,
       paddingRight: theme.spacing.md + trailingPadding,
@@ -75,7 +80,7 @@ export function Input({
       fontSize: theme.typography.body,
       fontWeight: '500',
       color: theme.colors.foreground,
-      backgroundColor: theme.colors.background,
+      backgroundColor,
       textAlignVertical: isMultiline ? 'top' : 'center',
     } as const;
   }, [
@@ -83,11 +88,11 @@ export function Input({
     iconPadding,
     trailingPadding,
     isMultiline,
-    focused,
+    variant,
+    backgroundColor,
     theme.colors.foreground,
-    theme.colors.muted,
-    theme.colors.background,
-    theme.radius.md,
+    theme.radius.full,
+    theme.radius.lg,
     theme.spacing.md,
     theme.spacing.sm,
     theme.typography.body,
@@ -124,9 +129,9 @@ export function Input({
           style={[
             styles.inputWrapper,
             {
-              borderWidth: animatedBorderWidth,
-              borderColor,
-              borderRadius: theme.radius.lg,
+              borderWidth: variant === 'search' ? 0 : animatedBorderWidth,
+              borderColor: variant === 'search' ? 'transparent' : borderColor,
+              borderRadius: variant === 'search' ? theme.radius.full : theme.radius.lg,
             },
           ]}
         >

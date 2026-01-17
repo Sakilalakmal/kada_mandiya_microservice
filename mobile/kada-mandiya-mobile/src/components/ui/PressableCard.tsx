@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import {
   Animated,
   Pressable,
-  StyleSheet,
   type PressableProps,
   type ViewStyle,
 } from 'react-native';

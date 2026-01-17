@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useListPublicProductsQuery } from '../../../../src/api/publicProductApi';
 import { CategoryChips, type CategoryChip } from '../../../../src/components/customer/CategoryChips';
-import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
 import { ProductCard, ProductCardSkeleton } from '../../../../src/components/product/ProductCard';
 import { Button } from '../../../../src/components/ui/Button';
@@ -152,22 +151,64 @@ export default function CustomerProductsScreen() {
   const hasActiveFilters = Boolean(searchParam) || selectedCategory !== 'all';
 
   return (
-    <Screen scroll>
-      <Header title="Products" subtitle="Browse items from vendors" canGoBack />
+    <Screen scroll style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
+      <View
+        style={{
+          backgroundColor: theme.colors.primary,
+          paddingTop: theme.spacing.lg,
+          paddingBottom: theme.spacing.lg,
+          borderBottomLeftRadius: theme.radius.xxl,
+          borderBottomRightRadius: theme.radius.xxl,
+        }}
+      >
+        <View style={{ paddingHorizontal: theme.spacing.md, gap: theme.spacing.md }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              onPress={() => router.back()}
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: theme.radius.full,
+                  backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Feather name="arrow-left" size={20} color="#FFFFFF" />
+              </View>
+            </Pressable>
 
-      <View style={{ marginTop: theme.spacing.xl, gap: theme.spacing.xl }}>
-        <View style={{ gap: theme.spacing.sm }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: theme.typography.h2, letterSpacing: -0.6 }}>
+                Products
+              </Text>
+              <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '700', fontSize: theme.typography.caption }}>
+                Browse items from vendors
+              </Text>
+            </View>
+          </View>
+
           <Input
             inputRef={searchRef}
+            variant="search"
             label={undefined}
             placeholder="Search products"
             returnKeyType="search"
             value={draftSearch}
             onChangeText={setDraftSearch}
             onSubmitEditing={onSubmitSearch}
-            leadingIcon={<Feather name="search" size={18} color={theme.colors.placeholder} />}
+            leadingIcon={<Feather name="search" size={18} color={theme.colors.mutedForeground} />}
           />
+        </View>
+      </View>
 
+      <View style={{ marginTop: theme.spacing.xl, gap: theme.spacing.xl, paddingHorizontal: theme.spacing.md }}>
+        <View style={{ gap: theme.spacing.sm }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Pressable
               onPress={() => {
@@ -213,7 +254,7 @@ export default function CustomerProductsScreen() {
             </Text>
             <Text style={{ color: theme.colors.mutedForeground, fontWeight: '500', fontSize: theme.typography.bodySmall }}>
               {selectedCategory !== 'all' ? `Category: ${selectedCategory}` : 'Category: All'}
-              {searchParam ? ` • Search: "${searchParam}"` : ''}
+              {searchParam ? ` - Search: "${searchParam}"` : ''}
             </Text>
             <Button
               label="Clear filters"

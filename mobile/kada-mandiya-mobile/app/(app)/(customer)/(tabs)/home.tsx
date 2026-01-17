@@ -5,9 +5,8 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { useListPublicProductsQuery } from '../../../../src/api/publicProductApi';
-import { CategoryChips, type CategoryChip } from '../../../../src/components/customer/CategoryChips';
+import { CategoryQuickRow, type CategoryQuickItem } from '../../../../src/components/customer/CategoryQuickRow';
 import { HomeHero } from '../../../../src/components/customer/HomeHero';
-import { Header } from '../../../../src/components/layout/Header';
 import { Screen } from '../../../../src/components/layout/Screen';
 import { ProductCard, ProductCardSkeleton } from '../../../../src/components/product/ProductCard';
 import { Button } from '../../../../src/components/ui/Button';
@@ -17,7 +16,7 @@ import { useTheme } from '../../../../src/providers/ThemeProvider';
 import { useAppSelector } from '../../../../src/store/hooks';
 import { getApiErrorMessage } from '../../../../src/utils/apiError';
 
-const CATEGORIES: CategoryChip[] = [
+const CATEGORIES: CategoryQuickItem[] = [
   { key: 'all', label: 'All' },
   { key: 'Home', label: 'Home' },
   { key: 'Fashion', label: 'Fashion' },
@@ -133,69 +132,117 @@ export default function CustomerHomeScreen() {
         style={({ pressed }) => [
           styles.iconButton,
           {
-            opacity: pressed ? 0.6 : 1,
-            backgroundColor: theme.colors.backgroundSecondary,
+            opacity: pressed ? 0.7 : 1,
+            backgroundColor: 'rgba(255, 255, 255, 0.18)',
             borderRadius: theme.radius.full,
           },
         ]}
       >
-        <Feather name={icon} size={21} color={theme.colors.foreground} />
+        <Feather name={icon} size={20} color="#FFFFFF" />
       </Pressable>
     );
 
     return (
       <View style={{ gap: theme.spacing.sm, flexDirection: 'row' }}>
-        {iconButton('search', 'Search', () => searchRef.current?.focus())}
         {iconButton('bell', 'Notifications', () => router.push('/(app)/(customer)/settings'))}
       </View>
     );
-  }, [router, theme.colors.card, theme.colors.foreground, theme.radius.lg, theme.spacing.sm, theme.shadow.sm]);
+  }, [router, theme.radius.full, theme.spacing.sm]);
 
   return (
-    <Screen scroll>
+    <Screen scroll style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
       <Animated.View style={{ opacity: intro, transform: [{ translateY: introY }] }}>
-        <Header 
-          title={`Hello, ${firstName}`} 
-          subtitle="Discover unique products" 
-          right={headerRight} 
-        />
+        {/* Green header */}
+        <View
+          style={{
+            backgroundColor: theme.colors.primary,
+            paddingTop: theme.spacing.lg,
+            paddingBottom: theme.spacing.xxxxl,
+            borderBottomLeftRadius: theme.radius.xxl,
+            borderBottomRightRadius: theme.radius.xxl,
+          }}
+        >
+          <View style={{ paddingHorizontal: theme.spacing.md, gap: theme.spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.md }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: 'rgba(255,255,255,0.85)', fontWeight: '700', fontSize: theme.typography.caption }}>
+                  Welcome
+                </Text>
+                <Text
+                  style={{
+                    color: '#FFFFFF',
+                    fontWeight: '900',
+                    fontSize: theme.typography.display,
+                    letterSpacing: -0.8,
+                    marginTop: 2,
+                  }}
+                  numberOfLines={1}
+                >
+                  {firstName}
+                </Text>
+              </View>
+              {headerRight}
+            </View>
 
-        <View style={sectionTop}>
+            <Input
+              inputRef={searchRef}
+              variant="search"
+              label={undefined}
+              placeholder="Search products"
+              returnKeyType="search"
+              value={search}
+              onChangeText={setSearch}
+              onSubmitEditing={() => goToProducts({ search, category: selectedCategory })}
+              leadingIcon={<Feather name="search" size={18} color={theme.colors.mutedForeground} />}
+            />
+          </View>
+        </View>
+
+        {/* Promo card overlaps header */}
+        <View style={{ marginTop: -theme.spacing.xl, paddingHorizontal: theme.spacing.md }}>
           <HomeHero onBrowseProducts={goToProducts} />
         </View>
 
-        <View style={sectionTop}>
-          <Input
-            inputRef={searchRef}
-            label={undefined}
-            placeholder="Search for products..."
-            returnKeyType="search"
-            value={search}
-            onChangeText={setSearch}
-            onSubmitEditing={() => goToProducts({ search, category: selectedCategory })}
-            leadingIcon={<Feather name="search" size={20} color={theme.colors.placeholder} />}
-          />
-        </View>
+        {/* Categories */}
+        <View style={{ marginTop: theme.spacing.xl }}>
+          <View
+            style={{
+              paddingHorizontal: theme.spacing.md,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                {
+                  color: theme.colors.foreground,
+                  fontSize: theme.typography.h3,
+                },
+              ]}
+            >
+              Categories
+            </Text>
+            <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+              <Text style={{ color: theme.colors.primaryDark, fontWeight: '800', fontSize: theme.typography.bodySmall }}>
+                See all
+              </Text>
+            </Pressable>
+          </View>
 
-        <View style={sectionTop}>
-          <Text style={[styles.sectionTitle, { 
-            color: theme.colors.foreground,
-            fontSize: theme.typography.h3,
-            marginBottom: theme.spacing.md,
-          }]}>
-            Categories
-          </Text>
-          <CategoryChips
+          <CategoryQuickRow
             items={CATEGORIES}
             selectedKey={selectedCategory}
             onSelect={(key) => {
               setSelectedCategory(key);
               goToProducts(key === 'all' ? {} : { category: key });
             }}
+            style={{ marginTop: theme.spacing.md, paddingBottom: theme.spacing.sm }}
           />
         </View>
 
-        <View style={[sectionTop, { marginTop: theme.spacing.xxl }]}>
+        <View style={[sectionTop, { marginTop: theme.spacing.xxl, paddingHorizontal: theme.spacing.md }]}>
           <View style={styles.sectionRow}>
             <Text style={[styles.sectionTitle, { 
               color: theme.colors.foreground,
@@ -205,11 +252,11 @@ export default function CustomerHomeScreen() {
             </Text>
             <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
               <Text style={{ 
-                color: theme.colors.primary, 
-                fontWeight: '700',
+                color: theme.colors.primaryDark, 
+                fontWeight: '800',
                 fontSize: theme.typography.bodySmall,
               }}>
-                See all →
+                See all
               </Text>
             </Pressable>
           </View>
@@ -257,7 +304,12 @@ export default function CustomerHomeScreen() {
           )}
         </View>
 
-        <View style={[sectionTop, { marginTop: theme.spacing.xxl, marginBottom: theme.spacing.xxl }]}>
+        <View
+          style={[
+            sectionTop,
+            { marginTop: theme.spacing.xxl, marginBottom: theme.spacing.xxxl, paddingHorizontal: theme.spacing.md },
+          ]}
+        >
           <View style={styles.sectionRow}>
             <Text style={[styles.sectionTitle, { 
               color: theme.colors.foreground,
@@ -267,11 +319,11 @@ export default function CustomerHomeScreen() {
             </Text>
             <Pressable onPress={() => goToProducts()} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
               <Text style={{ 
-                color: theme.colors.primary, 
-                fontWeight: '700',
+                color: theme.colors.primaryDark, 
+                fontWeight: '800',
                 fontSize: theme.typography.bodySmall,
               }}>
-                See all →
+                See all
               </Text>
             </Pressable>
           </View>

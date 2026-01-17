@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, type ViewStyle } from 'react-native';
 
 import { useTheme } from '../../providers/ThemeProvider';
 
@@ -58,9 +58,9 @@ function Chip({
           {
             transform: [{ scale }],
             borderRadius: theme.radius.full,
-            borderWidth: 1,
-            borderColor: selected ? theme.colors.primary : theme.colors.border,
-            backgroundColor: selected ? theme.colors.primary : theme.colors.background,
+            borderWidth: 0,
+            borderColor: 'transparent',
+            backgroundColor: selected ? theme.colors.primaryMuted : theme.colors.backgroundSecondary,
             paddingHorizontal: theme.spacing.lg,
             paddingVertical: theme.spacing.sm,
             height: 36,
@@ -70,8 +70,8 @@ function Chip({
       >
         <Text
           style={{
-            color: selected ? theme.colors.primaryForeground : theme.colors.foreground,
-            fontWeight: '600',
+            color: selected ? theme.colors.primaryDark : theme.colors.foreground,
+            fontWeight: '700',
             fontSize: theme.typography.bodySmall,
           }}
         >

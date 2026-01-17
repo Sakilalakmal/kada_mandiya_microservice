@@ -32,7 +32,7 @@ export function Toast({ visible, message, actionLabel, onAction, onDismiss }: Pr
   const containerStyle = useMemo(
     () => [
       styles.container,
-      theme.shadow,
+      theme.shadow.float,
       {
         backgroundColor: theme.colors.foreground,
         borderColor: theme.colors.border,

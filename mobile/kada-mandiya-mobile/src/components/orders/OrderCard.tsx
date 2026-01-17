@@ -84,11 +84,11 @@ function OrderCardInner({
         <View
           style={[
             styles.card,
-            theme.shadow,
+            theme.shadow.md,
             {
-              backgroundColor: theme.colors.muted,
-              borderRadius: theme.radius.md,
-              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.card,
+              borderRadius: theme.radius.xl,
+              borderColor: theme.colors.borderSubtle,
               padding: theme.spacing.md,
             },
             containerStyle,
@@ -201,11 +201,11 @@ export function OrderCardSkeleton() {
     <View
       style={[
         styles.card,
-        theme.shadow,
+        theme.shadow.md,
         {
-          backgroundColor: theme.colors.muted,
-          borderRadius: theme.radius.md,
-          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.card,
+          borderRadius: theme.radius.xl,
+          borderColor: theme.colors.borderSubtle,
           padding: theme.spacing.md,
         },
       ]}
