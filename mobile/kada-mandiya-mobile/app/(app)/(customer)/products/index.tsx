@@ -68,7 +68,11 @@ export default function CustomerProductsScreen() {
     };
   }, [limit, page, searchParam, selectedCategory]);
 
-  const { data, isLoading, isFetching, error, refetch } = useListPublicProductsQuery(query);
+  const { data, isLoading, isFetching, error, refetch } = useListPublicProductsQuery(query, {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true,
+  });
 
   useEffect(() => {
     setPage(1);

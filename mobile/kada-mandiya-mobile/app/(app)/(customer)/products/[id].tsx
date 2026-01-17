@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -9,6 +9,7 @@ import { Screen } from '../../../../src/components/layout/Screen';
 import { Button } from '../../../../src/components/ui/Button';
 import { Card } from '../../../../src/components/ui/Card';
 import { Toast } from '../../../../src/components/ui/Toast';
+import { ProductImageCarousel } from '../../../../src/components/product/ProductImageCarousel';
 import { useTheme } from '../../../../src/providers/ThemeProvider';
 import { formatMoney } from '../../../../src/utils/money';
 import { getApiErrorMessage } from '../../../../src/utils/apiError';
@@ -27,6 +28,9 @@ export default function CustomerProductDetailsScreen() {
 
   const { data: product, isLoading, isFetching, error, refetch } = useGetPublicProductByIdQuery(id ?? '', {
     skip: !id,
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true,
   });
 
   const [addToCart, addState] = useAddToCartMutation();
@@ -105,16 +109,11 @@ export default function CustomerProductDetailsScreen() {
               justifyContent: 'center',
             }}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" size="large" />
-            ) : imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-            ) : (
-              <View style={{ alignItems: 'center', gap: theme.spacing.sm }}>
-                <Feather name="image" size={48} color="rgba(255,255,255,0.9)" />
-                <Text style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '700' }}>No image</Text>
-              </View>
-            )}
+            <ProductImageCarousel
+              height={300}
+              loading={isLoading}
+              imageUrls={product?.images?.map((i) => i.imageUrl) ?? (imageUrl ? [imageUrl] : [])}
+            />
           </View>
         </View>
       </View>

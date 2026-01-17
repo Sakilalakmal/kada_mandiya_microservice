@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useGetVendorOrdersQuery } from '../../../../src/api/orderApi';
 import { CategoryChips, type CategoryChip } from '../../../../src/components/customer/CategoryChips';
@@ -60,6 +61,7 @@ const VendorOrderRow = React.memo(function VendorOrderRow({
 
 export default function VendorOrders() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const isFocused = useIsFocused();
   const [filter, setFilter] = useState(FILTERS[0]?.key ?? 'all');
@@ -114,8 +116,10 @@ export default function VendorOrders() {
     [currency, openOrder, theme.spacing.md]
   );
 
+  const bottomSpacer = 60 + Math.max(insets.bottom, theme.spacing.sm) + theme.spacing.md;
+
   return (
-    <Screen style={{ paddingBottom: theme.spacing.lg }}>
+    <Screen style={{ paddingBottom: bottomSpacer }}>
       <Header title="Orders" subtitle="Orders for your shop." right={headerRight} />
 
       <View style={{ flex: 1, marginTop: theme.spacing.lg, gap: theme.spacing.lg }}>
@@ -152,7 +156,7 @@ export default function VendorOrders() {
             showsVerticalScrollIndicator={false}
             refreshing={isFetching}
             onRefresh={() => refetch()}
-            contentContainerStyle={{ paddingBottom: theme.spacing.lg }}
+            contentContainerStyle={{ paddingBottom: bottomSpacer }}
           />
         )}
       </View>

@@ -3,6 +3,7 @@ import { Animated, FlatList, Pressable, StyleSheet, Text, View, type ViewStyle }
 import type { TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useListPublicProductsQuery } from '../../../../src/api/publicProductApi';
 import { CategoryQuickRow, type CategoryQuickItem } from '../../../../src/components/customer/CategoryQuickRow';
@@ -39,6 +40,7 @@ function guessFirstName(value: string): string {
 
 export default function CustomerHomeScreen() {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const user = useAppSelector((s) => s.auth.user);
 
@@ -63,7 +65,10 @@ export default function CustomerHomeScreen() {
     isFetching,
     error,
     refetch,
-  } = useListPublicProductsQuery({ page: 1, limit: 10 });
+  } = useListPublicProductsQuery(
+    { page: 1, limit: 10 },
+    { refetchOnFocus: true, refetchOnReconnect: true, refetchOnMountOrArgChange: true }
+  );
 
   const featuredItems = useMemo(() => featured?.items ?? [], [featured?.items]);
   const trendingItems = useMemo(() => featuredItems.slice(0, 4), [featuredItems]);
@@ -149,8 +154,10 @@ export default function CustomerHomeScreen() {
     );
   }, [router, theme.radius.full, theme.spacing.sm]);
 
+  const bottomSpacer = 60 + Math.max(insets.bottom, theme.spacing.sm) + theme.spacing.md;
+
   return (
-    <Screen scroll style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
+    <Screen scroll style={{ paddingHorizontal: 0, paddingVertical: 0, paddingBottom: bottomSpacer }}>
       <Animated.View style={{ opacity: intro, transform: [{ translateY: introY }] }}>
         {/* Green header */}
         <View

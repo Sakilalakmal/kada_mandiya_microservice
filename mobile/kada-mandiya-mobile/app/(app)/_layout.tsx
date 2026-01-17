@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 
 import { Screen } from '../../src/components/layout/Screen';
@@ -40,8 +40,28 @@ export default function AppLayout() {
 
   if (isHydrating) {
     return (
-      <Screen style={styles.center}>
-        <ActivityIndicator color={theme.colors.primary} />
+      <Screen style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
+        <View style={[styles.splash, { backgroundColor: theme.colors.primary, paddingHorizontal: theme.spacing.lg }]}>
+          <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: theme.typography.displayLarge, letterSpacing: -1 }}>
+            Kada <Text style={{ color: theme.colors.accent }}>Mandiya</Text>
+          </Text>
+          <Text
+            style={{
+              marginTop: theme.spacing.sm,
+              color: 'rgba(255,255,255,0.92)',
+              fontWeight: '700',
+              fontSize: theme.typography.body,
+              textAlign: 'center',
+              lineHeight: theme.typography.body * theme.typography.lineHeight.relaxed,
+            }}
+          >
+            කඩ මණ්ඩිය — ශ්‍රී ලංකාවේ ඔබගේ නවීන ඔන්ලයින් වෙළඳපොළ.
+          </Text>
+
+          <View style={{ marginTop: theme.spacing.xl }}>
+            <ActivityIndicator color="#FFFFFF" />
+          </View>
+        </View>
       </Screen>
     );
   }
@@ -50,5 +70,5 @@ export default function AppLayout() {
 }
 
 const styles = StyleSheet.create({
-  center: { justifyContent: 'center', alignItems: 'center' },
+  splash: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
