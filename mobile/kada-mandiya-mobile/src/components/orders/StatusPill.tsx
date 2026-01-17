@@ -30,7 +30,17 @@ function StatusPillInner({ label, accent, backgroundColor, borderColor, style }:
 
   return (
     <View style={[styles.pill, containerStyle, style]}>
-      <Text style={[styles.text, { color: accent, fontSize: theme.typography.caption }]} numberOfLines={1}>
+      <Text
+        style={[
+          styles.text,
+          {
+            color: accent,
+            fontSize: theme.typography.caption,
+            lineHeight: Math.ceil(theme.typography.caption * 1.2),
+          },
+        ]}
+        numberOfLines={1}
+      >
         {label}
       </Text>
     </View>
@@ -41,6 +51,6 @@ export const StatusPill = memo(StatusPillInner);
 
 const styles = StyleSheet.create({
   pill: { borderWidth: 1, alignSelf: 'flex-start' },
-  text: { fontWeight: '800', letterSpacing: 0.3 },
+  text: { fontWeight: '800', letterSpacing: 0.3, includeFontPadding: false, textAlignVertical: 'center' },
 });
 

@@ -15,6 +15,7 @@ import { useTheme } from '../../src/providers/ThemeProvider';
 import { setUser } from '../../src/store/authSlice';
 import { useAppDispatch } from '../../src/store/hooks';
 import { getApiErrorMessage } from '../../src/utils/apiError';
+import { hasVendorRole, normalizeUserRoles } from '../../src/utils/roles';
 import { setTokens } from '../../src/utils/tokenStorage';
 
 const schema = z
@@ -67,11 +68,16 @@ export default function RegisterScreen() {
       await setTokens({ accessToken: auth.accessToken, refreshToken: auth.accessToken });
 
       const me = await triggerMe().unwrap();
-      const user = { id: me.payload.sub, email: me.payload.email, name: values.name.trim(), roles: me.payload.roles };
+      const user = {
+        id: me.payload.sub,
+        email: me.payload.email,
+        name: values.name.trim(),
+        roles: normalizeUserRoles(me.payload.roles as unknown),
+      };
       dispatch(setUser(user));
 
       router.replace(
-        user.roles.includes('vendor')
+        hasVendorRole(user.roles)
           ? '/(app)/(vendor)/(tabs)/profile'
           : '/(app)/(customer)/(tabs)/home'
       );

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 
@@ -6,6 +6,7 @@ import { Screen } from '../../src/components/layout/Screen';
 import { useTheme } from '../../src/providers/ThemeProvider';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { hydrateAuth } from '../../src/store/authSlice';
+import { hasVendorRole } from '../../src/utils/roles';
 
 export default function AppLayout() {
   const { theme } = useTheme();
@@ -13,19 +14,36 @@ export default function AppLayout() {
   const router = useRouter();
   const segments = useSegments();
   const { user, isHydrating } = useAppSelector((s) => s.auth);
+  const splashStart = useRef(Date.now());
+  const [minDelayDone, setMinDelayDone] = useState(false);
   const segmentsKey = segments.join('/');
   const isLoggedIn = Boolean(user);
-  const isVendor = user?.roles.includes('vendor') ?? false;
+  const isVendor = hasVendorRole(user?.roles);
   const roleKey = user?.roles.join(',') ?? '';
   const inVendorGroup = segmentsKey.includes('(vendor)');
   const inCustomerGroup = segmentsKey.includes('(customer)');
+
+  useEffect(() => {
+    const MIN_SPLASH_MS = 1500;
+
+    if (isHydrating) {
+      splashStart.current = Date.now();
+      setMinDelayDone(false);
+      return;
+    }
+
+    const elapsed = Date.now() - splashStart.current;
+    const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
+    const t = setTimeout(() => setMinDelayDone(true), remaining);
+    return () => clearTimeout(t);
+  }, [isHydrating]);
 
   useEffect(() => {
     dispatch(hydrateAuth());
   }, [dispatch]);
 
   useEffect(() => {
-    if (isHydrating) return;
+    if (isHydrating || !minDelayDone) return;
 
     if (!isLoggedIn) {
       router.replace('/(auth)/login');
@@ -36,9 +54,9 @@ export default function AppLayout() {
 
     if (isVendor && !inVendorGroup) router.replace(target);
     if (!isVendor && !inCustomerGroup) router.replace(target);
-  }, [inCustomerGroup, inVendorGroup, isHydrating, isLoggedIn, isVendor, roleKey, router, segmentsKey]);
+  }, [inCustomerGroup, inVendorGroup, isHydrating, isLoggedIn, isVendor, minDelayDone, roleKey, router, segmentsKey]);
 
-  if (isHydrating) {
+  if (isHydrating || !minDelayDone) {
     return (
       <Screen style={{ paddingHorizontal: 0, paddingVertical: 0 }}>
         <View style={[styles.splash, { backgroundColor: theme.colors.primary, paddingHorizontal: theme.spacing.lg }]}>

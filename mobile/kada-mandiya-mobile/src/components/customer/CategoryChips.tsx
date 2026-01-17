@@ -62,8 +62,8 @@ function Chip({
             borderColor: selected ? theme.colors.primaryDark : theme.colors.borderSubtle,
             backgroundColor: selected ? theme.colors.primaryMuted : theme.colors.card,
             paddingHorizontal: theme.spacing.lg,
-            paddingVertical: theme.spacing.sm,
-            height: 36,
+            paddingVertical: theme.spacing.xs,
+            minHeight: 36,
             justifyContent: 'center',
             ...theme.shadow.sm,
           },
@@ -74,6 +74,9 @@ function Chip({
             color: selected ? theme.colors.primaryDark : theme.colors.foreground,
             fontWeight: '700',
             fontSize: theme.typography.bodySmall,
+            lineHeight: Math.ceil(theme.typography.bodySmall * 1.25),
+            includeFontPadding: false,
+            textAlignVertical: 'center',
           }}
         >
           {item.label}

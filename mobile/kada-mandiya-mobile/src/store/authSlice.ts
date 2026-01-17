@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/tool
 
 import { authApi } from '../api/authApi';
 import type { User } from '../types/auth.types';
+import { normalizeUserRoles } from '../utils/roles';
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../utils/tokenStorage';
 
 type AuthState = {
@@ -25,7 +26,7 @@ export const hydrateAuth = createAsyncThunk<User | null>('auth/hydrateAuth', asy
 
   try {
     const me = await thunkApi.dispatch(authApi.endpoints.me.initiate()).unwrap();
-    return { id: me.payload.sub, email: me.payload.email, roles: me.payload.roles };
+    return { id: me.payload.sub, email: me.payload.email, roles: normalizeUserRoles(me.payload.roles as unknown) };
   } catch {
     await clearTokens();
     return null;
